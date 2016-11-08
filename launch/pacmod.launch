@@ -1,0 +1,35 @@
+<launch>
+<!--
+  <group ns="gem">
+    <node pkg="gem" type="gem_node" name="gem" args="2"/>
+  </group>
+-->
+  <group ns="steering">
+    <node pkg="steering" type="steering_node" name="steering" args="1"/>
+  </group>
+ 
+  <group ns="accelerator">
+    <node pkg="accelerator" type="accelerator_node" name="accelerator" args="0"/>
+  </group>
+
+  <group ns="brake_globe">
+    <node pkg="brake_globe" type="brake_globe" name="brake_globe" args="2"/>
+  </group>
+
+  <group ns="turn_signal">
+    <node pkg="turn_signal" type="turn_signal_node" name="turn_signal" args="0"/>
+  </group>
+
+  <group ns="shift">
+    <node pkg="shift" type="shift_node" name="shift" args="0"/>
+  </group>  
+  
+  <group ns="pacmod">
+    <node pkg="joy" type="joy_node" name="joy">
+      <param name="autorepeat_rate" type="double" value="10"/>
+    </node>
+  
+    <node pkg="pacmod_gamepad_control" type="pacmod_gamepad_control_node" name="pacmod_gamepad_control" args="0"/>
+  </group>  
+  
+</launch>
