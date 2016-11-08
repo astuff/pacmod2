@@ -213,7 +213,17 @@ int main(int argc, char *argv[]) {
       
     switch (ret) { 
     case ok:
-      if(id==TURN_RPT_CAN_ID) {  
+      if(id==GLOBAL_RPT_CAN_ID) {    
+        bool enabled =    msg[0]&0b00000001;
+        bool overridden = msg[0]&0b00000010;
+                             
+        if(!pacmod_override&&overridden) {
+          std_msgs::Bool bool_pub_msg;
+          bool_pub_msg.data=true;
+          override_pub.publish(bool_pub_msg);
+          pacmod_override=true;
+        }           
+      } else if(id==TURN_RPT_CAN_ID) {  
         uint16_t manual_input=msg[0];
         uint16_t command=msg[1];
         uint16_t output=msg[2]; 
