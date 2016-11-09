@@ -1,18 +1,19 @@
 <launch>
-  <group ns="steering">
-    <node pkg="globe_epas" type="globe_epas" name="steering" args="1"/>
-  </group>
- 
-  <group ns="brake">
-    <node pkg="globe_epas" type="globe_epas" name="brake" args="2"/>
-  </group>
- 
   <group ns="pacmod">
-    <node pkg="pacmod" type="pacmod" name="pacmod" args="0"/>
+    <group ns="steering">
+      <node pkg="globe_epas" type="globe_epas" name="steering" args="0 10326"/>
+    </group>
+   
+    <group ns="brake">
+      <node pkg="globe_epas" type="globe_epas" name="brake" args="1 10326"/>
+    </group>
+  
+    <node pkg="pacmod" type="pacmod_node" name="pacmod" args="0 10241"/>
+  
     <node pkg="joy" type="joy_node" name="joy">
       <param name="autorepeat_rate" type="double" value="10"/>
     </node>
-  </group>
   
-  <node pkg="pacmod_game_control" type="pacmod_game_control_node" name="pacmod_game_control"/>
+    <node pkg="pacmod_game_control" type="pacmod_game_control_node" name="pacmod_game_control"/>
+  </group>
 </launch>
