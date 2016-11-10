@@ -11,7 +11,7 @@
     <node pkg="pacmod" type="pacmod_node" name="pacmod" args="0 10241"/>
   
     <node pkg="joy" type="joy_node" name="joy">
-      <param name="autorepeat_rate" type="double" value="10"/>
+    <!--  <param name="autorepeat_rate" type="double" value="10"/>-->
     </node>
   
     <node pkg="pacmod_game_control" type="pacmod_game_control_node" name="pacmod_game_control"/>
