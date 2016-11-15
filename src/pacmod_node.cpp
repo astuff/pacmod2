@@ -19,6 +19,7 @@
 #include "as_can_interface/CanMessage.h"
 #include <stdio.h>
 #include <signal.h>
+#include <mutex>
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
@@ -34,12 +35,11 @@ using namespace AS::CAN;
 
 const int BITRATE=500000;
 
-CanInterface can;
-double vehicle_speed=-999.9;
-
-void set_override(bool);
+CanInterface can_reader, can_writer;
+std::mutex can_mut;
 
 void callback_can_rx(const as_can_interface::CanMessage::ConstPtr& msg) {
+  std::lock_guard<std::mutex> lock(can_mut);
   if((msg->dlc)!=8) {
     return;
   }
@@ -49,7 +49,19 @@ void callback_can_rx(const as_can_interface::CanMessage::ConstPtr& msg) {
     msg_buf[i]=(msg->data)[i];
   }
   
-  return_statuses ret = can.send(msg->id, msg_buf, msg->dlc, true);
+  return_statuses ret = can_writer.send(msg->id, msg_buf, msg->dlc, true);
+  if(ret!=ok) {
+    ROS_INFO("CAN send error: %d\n", ret);
+  }
+}
+
+void set_override(bool val) {
+  std::lock_guard<std::mutex> lock(can_mut);
+  uint8_t msg_buf[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}; 
+  if(!val) {
+    msg_buf[0]=0x03;
+  }
+  return_statuses ret = can_writer.send(GLOBAL_CMD_CAN_ID, msg_buf, 8, true);
   if(ret!=ok) {
     ROS_INFO("CAN send error: %d\n", ret);
   }
@@ -60,42 +72,30 @@ void callback_pacmod_override(const std_msgs::Bool::ConstPtr& msg) {
   ROS_INFO("Setting override to %d\n\r", msg->data);
 }
 
-void set_override(bool val) {
-  uint8_t msg_buf[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}; 
-  if(!val) {
-    msg_buf[0]=0x03;
-  }
-  return_statuses ret = can.send(GLOBAL_CMD_CAN_ID, msg_buf, 8, true);
-  if(ret!=ok) {
-    ROS_INFO("CAN send error: %d\n", ret);
-  }
-}
-
 void callback_turn_signal_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg) {
+  std::lock_guard<std::mutex> lock(can_mut);
   uint8_t msg_buf[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}; 
   msg_buf[0]=(uint8_t)(msg->ui16_cmd);
-  return_statuses ret = can.send(TURN_CMD_CAN_ID, msg_buf, 8, true);
+  return_statuses ret = can_writer.send(TURN_CMD_CAN_ID, msg_buf, 8, true);
   if(ret!=ok) {
     ROS_INFO("CAN send error: %d\n", ret);
   }
 }
 
 void callback_shift_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg) {
-  // Only shift F->R or R->F when motor speed is zero
-  if(((msg->ui16_cmd)!=1)&&(fabs(vehicle_speed)>max_vehicle_speed_for_shifting)) {
- //   ROS_INFO("Ignoring shift command. Motor speed: %f, max for shifting: %f\n", fabs(gem_motor_speed), max_motor_speed_for_shifting);
- //   return;
-  }
+  std::lock_guard<std::mutex> lock(can_mut);
 
   uint8_t msg_buf[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}; 
   msg_buf[0]=(uint8_t)(msg->ui16_cmd);
-  return_statuses ret = can.send(SHIFT_CMD_CAN_ID, msg_buf, 8, true);
+  return_statuses ret = can_writer.send(SHIFT_CMD_CAN_ID, msg_buf, 8, true);
   if(ret!=ok) {
     ROS_INFO("CAN send error: %d\n", ret);
   }
 }
 
 void callback_accelerator_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg) { 
+  std::lock_guard<std::mutex> lock(can_mut);
+  
   uint8_t msg_buf[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   uint16_t cmd=(uint16_t)(1000*(msg->f64_cmd));
 
@@ -103,7 +103,35 @@ ROS_INFO("pacmod_node setting accel to %f\n\r", cmd/1000.0);
 
   msg_buf[0]=cmd&0x00FF;
   msg_buf[1]=(cmd&0xFF00)>>8;
-  return_statuses ret = can.send(ACCEL_CMD_CAN_ID, msg_buf, 8, true);
+  return_statuses ret = can_writer.send(ACCEL_CMD_CAN_ID, msg_buf, 8, true);
+  if(ret!=ok) {
+    ROS_INFO("CAN send error: %d\n", ret);
+  }
+}
+
+void callback_steering_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg) { 
+  std::lock_guard<std::mutex> lock(can_mut);
+  
+  uint8_t msg_buf[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  uint16_t cmd=(uint16_t)(1000*(msg->f64_cmd));
+
+  msg_buf[0]=cmd&0x00FF;
+  msg_buf[1]=(cmd&0xFF00)>>8;
+  return_statuses ret = can_writer.send(STEERING_CMD_CAN_ID, msg_buf, 8, true);
+  if(ret!=ok) {
+    ROS_INFO("CAN send error: %d\n", ret);
+  }
+}
+
+void callback_brake_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg) { 
+  std::lock_guard<std::mutex> lock(can_mut);
+  
+  uint8_t msg_buf[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  uint16_t cmd=(uint16_t)(1000*(msg->f64_cmd));
+
+  msg_buf[0]=cmd&0x00FF;
+  msg_buf[1]=(cmd&0xFF00)>>8;
+  return_statuses ret = can_writer.send(BRAKE_CMD_CAN_ID, msg_buf, 8, true);
   if(ret!=ok) {
     ROS_INFO("CAN send error: %d\n", ret);
   }
@@ -132,8 +160,11 @@ int main(int argc, char *argv[]) {
   ///////////////
   // ROS setup //
   ///////////////
+  
   ros::init(argc, argv, "pacmod");
+  ros::AsyncSpinner spinner(2);
   ros::NodeHandle n;
+  ros::Rate loop_rate(20);
   
   ros::Publisher turn_manual_input_pub = n.advertise<std_msgs::Int16>("turn_signal/as_tx/manual_input", 20);
   ros::Publisher turn_command_pub = n.advertise<std_msgs::Int16>("turn_signal/as_tx/command", 20);
@@ -147,6 +178,14 @@ int main(int argc, char *argv[]) {
   ros::Publisher accelerator_command_pub = n.advertise<std_msgs::Float64>("accelerator/as_tx/command", 20);
   ros::Publisher accelerator_output_pub = n.advertise<std_msgs::Float64>("accelerator/as_tx/output", 20);
   
+  ros::Publisher steering_manual_input_pub = n.advertise<std_msgs::Float64>("steering/as_tx/manual_input", 20);
+  ros::Publisher steering_command_pub = n.advertise<std_msgs::Float64>("steering/as_tx/command", 20);
+  ros::Publisher steering_output_pub = n.advertise<std_msgs::Float64>("steering/as_tx/output", 20);
+
+  ros::Publisher brake_manual_input_pub = n.advertise<std_msgs::Float64>("brake/as_tx/manual_input", 20);
+  ros::Publisher brake_command_pub = n.advertise<std_msgs::Float64>("brake/as_tx/command", 20);
+  ros::Publisher brake_output_pub = n.advertise<std_msgs::Float64>("brake/as_tx/output", 20);
+    
   ros::Publisher vehicle_speed_pub = n.advertise<std_msgs::Float64>("as_tx/vehicle_speed", 20);
   ros::Publisher override_pub = n.advertise<std_msgs::Bool>("as_tx/override", 20, true);
   ros::Publisher can_tx_pub = n.advertise<as_can_interface::CanMessage>("can_tx", 20);
@@ -155,18 +194,21 @@ int main(int argc, char *argv[]) {
   ros::Subscriber turn_set_cmd_sub = n.subscribe("turn_signal/as_rx/set_cmd", 20, callback_turn_signal_set_cmd);  
   ros::Subscriber shift_set_cmd_sub = n.subscribe("shift/as_rx/set_cmd", 20, callback_shift_set_cmd);  
   ros::Subscriber accelerator_set_cmd = n.subscribe("accelerator/as_rx/set_cmd", 1, callback_accelerator_set_cmd);
+  ros::Subscriber steering_set_cmd = n.subscribe("steering/as_rx/set_cmd", 1, callback_steering_set_cmd);
+  ros::Subscriber brake_set_cmd = n.subscribe("brake/as_rx/set_cmd", 1, callback_brake_set_cmd);
   ros::Subscriber can_rx_sub = n.subscribe("can_rx", 20, callback_can_rx);
     
-  ros::Timer timer = n.createTimer(ros::Duration(0.1), timerCallback);
-    
+  //ros::Timer timer = n.createTimer(ros::Duration(0.1), timerCallback);
+      
+  spinner.start();
+  
   ///////////////
   // CAN setup //
   ///////////////
 
-  can.open(hardware_id, channel, BITRATE);
-  
-  ros::Rate loop_rate(20);
-  
+  can_reader.open(hardware_id, channel, BITRATE);
+  can_writer.open(hardware_id, channel, BITRATE);
+      
   // Set initial state
   set_override(true);
   
@@ -177,9 +219,9 @@ int main(int argc, char *argv[]) {
     uint8_t msg[8];
     unsigned int size;
     bool extended;
-    unsigned long t;
-          
-    while(can.read(&id, msg, &size, &extended, &t)==ok) {
+    unsigned long t;          
+  
+    while(can_reader.read(&id, msg, &size, &extended, &t)==ok) {
       as_can_interface::CanMessage can_pub_msg;
       can_pub_msg.header.stamp = ros::Time::now();
       can_pub_msg.header.frame_id = "0";
@@ -246,23 +288,52 @@ int main(int argc, char *argv[]) {
             float64_pub_msg.data = d_output;
             accelerator_output_pub.publish( float64_pub_msg );
             break;
-          case GEM_RPT_CAN_ID:
+          case STEERING_RPT_CAN_ID:
+            d_manual_input=(msg[1]*256 + msg[0])/1000.0;
+            d_command=(msg[3]*256 + msg[2])/1000.0;
+            d_output=(msg[5]*256 + msg[4])/1000.0;             
+           
+            float64_pub_msg.data = d_manual_input;
+            steering_manual_input_pub.publish( float64_pub_msg );
+
+            float64_pub_msg.data = d_command;
+            steering_command_pub.publish( float64_pub_msg );
+
+            float64_pub_msg.data = d_output;
+            steering_output_pub.publish( float64_pub_msg );
+            break;            
+          case BRAKE_RPT_CAN_ID:
+            d_manual_input=(msg[1]*256 + msg[0])/1000.0;
+            d_command=(msg[3]*256 + msg[2])/1000.0;
+            d_output=(msg[5]*256 + msg[4])/1000.0;             
+           
+            float64_pub_msg.data = d_manual_input;
+            brake_manual_input_pub.publish( float64_pub_msg );
+
+            float64_pub_msg.data = d_command;
+            brake_command_pub.publish( float64_pub_msg );
+
+            float64_pub_msg.data = d_output;
+            brake_output_pub.publish( float64_pub_msg );
+            break;                       
+          case VEHICLE_SPEED_RPT_CAN_ID:
             // (Assuming GEM) Shift to center value around zero, then convert from native (thousandths of) m/s to MPH    
-            vehicle_speed=((double)(msg[6]*256+msg[5])-32768.0)/100.0*0.44704; 
+            double vehicle_speed=(msg[1]*256 + msg[0])/1000.0;
             float64_pub_msg.data=vehicle_speed;
             vehicle_speed_pub.publish(float64_pub_msg);         
             break;    
           }
-    }
-    // Wait for next loop
-    loop_rate.sleep();
+       }
     
-    ros::spinOnce(); 
-  } 
+       // Wait for next loop
+       loop_rate.sleep();
+   } 
 
-  can.close();    
-  ros::shutdown();
-
-  return 0;
+   can_reader.close();    
+   can_writer.close();
+   spinner.stop();
+   ros::shutdown();
+   
+   return 0;
 }
 

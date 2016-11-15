@@ -11,8 +11,11 @@ const long GLOBAL_CMD_CAN_ID=0x69;
 const long GLOBAL_RPT_CAN_ID=0x70;
 const long BRAKE_CMD_CAN_ID=0x71;
 const long BRAKE_RPT_CAN_ID=0x72;
+const long STEERING_CMD_CAN_ID=0x73;
+const long STEERING_RPT_CAN_ID=0x74;
+const long VEHICLE_SPEED_RPT_CAN_ID=0x75;
 
-const long GEM_RPT_CAN_ID=0x8FF07EF;
+const long VEHICLE_SPEED_CAN_ID=0x8FF07EF; // assuming GEM
 
 const long STEERING_GLOBE_CMD_CAN_ID=0x18FF00F9; // ID for EPAS command message
 const long STEERING_GLOBE_RPT_1_CAN_ID=0x18ff0113; // ID for EPAS report message 1
