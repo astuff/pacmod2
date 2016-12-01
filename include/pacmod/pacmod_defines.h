@@ -22,10 +22,10 @@ const long STEERING_GLOBE_RPT_1_CAN_ID=0x18ff0113; // ID for EPAS report message
 const long STEERING_GLOBE_RPT_2_CAN_ID=0x18ff0213; // ID for EPAS report message 2
 const long STEERING_GLOBE_RPT_3_CAN_ID=0x18ff0313; // ID for EPAS report message 3
 
-const long BRAKE_GLOBE_CMD_CAN_ID=0x18FF00F9; // ID for EPAS command message
-const long BRAKE_GLOBE_RPT_1_CAN_ID=0x18ff0113; // ID for EPAS report message 1
-const long BRAKE_GLOBE_RPT_2_CAN_ID=0x18ff0213; // ID for EPAS report message 2
-const long BRAKE_GLOBE_RPT_3_CAN_ID=0x18ff0313; // ID for EPAS report message 3
+const long BRAKE_GLOBE_CMD_CAN_ID=0x18FF10F9; // ID for EPAS command message
+const long BRAKE_GLOBE_RPT_1_CAN_ID=0x18ff1113; // ID for EPAS report message 1
+const long BRAKE_GLOBE_RPT_2_CAN_ID=0x18ff1213; // ID for EPAS report message 2
+const long BRAKE_GLOBE_RPT_3_CAN_ID=0x18ff1313; // ID for EPAS report message 3
 
 const double gear_ratio=16.5;
 const double STEERING_TORQUE_OVERRIDE_THRESHOLD=6.0;

@@ -5,13 +5,13 @@
     
     <arg name="vehicle_can_hardware_id" default="10241"/>
     <arg name="vehicle_can_circuit_id" default="1"/>
-<!--    
+    
     <arg name="steering_can_hardware_id" default="10326"/>
     <arg name="steering_can_circuit_id" default="0"/>
     
     <arg name="brake_can_hardware_id" default="10326"/>
     <arg name="brake_can_circuit_id" default="0"/>
--->                
+                
     <group ns="pacmod">
   
         <node pkg="pacmod" type="pacmod_node" name="pacmod" args="0 10241">
@@ -25,7 +25,7 @@
                 <param name="can_circuit_id" value="$(arg vehicle_can_circuit_id)"/>
             </node>               
         </group>
-        
+-->  
         <group ns="steering">
             <node pkg="globe_epas" type="globe_epas" name="steering">
                 <param name="can_hardware_id" value="$(arg steering_can_hardware_id)"/>
@@ -41,7 +41,7 @@
                 <param name="actuator_type" value="1"/> <!-- 0=steering, 1=brake -->                
             </node>           
         </group>       
--->      
+      
         <node pkg="joy" type="joy_node" name="joy">
         <!--  <param name="autorepeat_rate" type="double" value="10"/>-->
             <param name="coalesce_interval" type="double" value="0.1"/>

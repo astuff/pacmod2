@@ -15,6 +15,8 @@
 * TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS, OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 */
 
+#define USING_PERFBOARD 1
+
 #include <as_can_interface.hpp>
 #include "as_can_interface/CanMessage.h"
 #include <stdio.h>
@@ -29,6 +31,7 @@
 #include "std_msgs/Float64.h"
 #include "pacmod/pacmod_cmd.h"
 #include <pacmod_defines.h>
+#include "globe_epas/position_with_speed.h"
 
 using namespace std;
 using namespace AS::CAN;
@@ -37,6 +40,9 @@ const int BITRATE=500000;
 
 CanInterface can_reader, can_writer;
 std::mutex can_mut;
+
+ros::Publisher steering_set_position_with_speed_limit_pub;
+ros::Publisher brake_globe_set_position_with_speed_limit_pub;
 
 void callback_can_rx(const as_can_interface::CanMessage::ConstPtr& msg) {
   std::lock_guard<std::mutex> lock(can_mut);
@@ -84,7 +90,6 @@ void callback_turn_signal_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg) {
 
 void callback_shift_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg) {
   std::lock_guard<std::mutex> lock(can_mut);
-
   uint8_t msg_buf[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}; 
   msg_buf[0]=(uint8_t)(msg->ui16_cmd);
   return_statuses ret = can_writer.send(SHIFT_CMD_CAN_ID, msg_buf, 8, true);
@@ -95,12 +100,8 @@ void callback_shift_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg) {
 
 void callback_accelerator_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg) { 
   std::lock_guard<std::mutex> lock(can_mut);
-  
   uint8_t msg_buf[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   uint16_t cmd=(uint16_t)(1000*(msg->f64_cmd));
-
-ROS_INFO("pacmod_node setting accel to %f\n\r", cmd/1000.0);
-
   msg_buf[0]=cmd&0x00FF;
   msg_buf[1]=(cmd&0xFF00)>>8;
   return_statuses ret = can_writer.send(ACCEL_CMD_CAN_ID, msg_buf, 8, true);
@@ -109,32 +110,63 @@ ROS_INFO("pacmod_node setting accel to %f\n\r", cmd/1000.0);
   }
 }
 
-void callback_steering_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg) { 
+void callback_steering_set_cmd(const globe_epas::position_with_speed::ConstPtr& msg) { 
+#ifdef USING_PERFBOARD
+  // PERFBOARD
+  double new_position=msg->angular_position;
+  /*if((new_position-steering_position)>5.0) {
+    new_position = steering_position+1.0;
+  } else if((new_position-steering_position)<5.0) {
+    new_position = steering_position-1.0;
+  }
+  */
+  globe_epas::position_with_speed pub_msg1;
+  pub_msg1.angular_position=(new_position);
+  pub_msg1.speed_limit=180.0;//fabs(STEERING_SPEED_LIMIT*(msg->axes[3]));  // to help smooth the steering
+  steering_set_position_with_speed_limit_pub.publish(pub_msg1);
+#else
+  // NON-PERFBOARD
   std::lock_guard<std::mutex> lock(can_mut);
-  
   uint8_t msg_buf[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-  uint16_t cmd=(uint16_t)(1000*(msg->f64_cmd));
-
+  uint16_t cmd=(uint16_t)(1000*(msg->angular_position));
   msg_buf[0]=cmd&0x00FF;
   msg_buf[1]=(cmd&0xFF00)>>8;
   return_statuses ret = can_writer.send(STEERING_CMD_CAN_ID, msg_buf, 8, true);
   if(ret!=ok) {
     ROS_INFO("CAN send error: %d\n", ret);
   }
+#endif
 }
 
-void callback_brake_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg) { 
-  std::lock_guard<std::mutex> lock(can_mut);
-  
-  uint8_t msg_buf[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-  uint16_t cmd=(uint16_t)(1000*(msg->f64_cmd));
+void callback_brake_set_cmd(const globe_epas::position_with_speed::ConstPtr& msg) { 
 
+#ifdef USING_PERFBOARD
+  // PERFBOARD
+  double new_position=msg->angular_position;  
+  if(new_position<-25.0) 
+    new_position=-25.0;
+  /*if((new_position-brake_globe_position)>5.0) {
+    new_position = brake_globe_position+1.0;
+  } else if((new_position-brake_globe_position)<5.0) {
+    new_position = brake_globe_position-1.0;
+  }
+  */
+  globe_epas::position_with_speed pub_msg1;
+  pub_msg1.angular_position=(new_position);
+  pub_msg1.speed_limit=90.0;//fabs(BRAKE_GLOBE_SPEED_LIMIT*(msg->axes[2]));  // to help smooth the motion
+  brake_globe_set_position_with_speed_limit_pub.publish(pub_msg1);    
+#else
+  // NON-PERFBOARD
+  std::lock_guard<std::mutex> lock(can_mut);
+  uint8_t msg_buf[]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  uint16_t cmd=(uint16_t)(1000*(msg->angular_position));
   msg_buf[0]=cmd&0x00FF;
   msg_buf[1]=(cmd&0xFF00)>>8;
   return_statuses ret = can_writer.send(BRAKE_CMD_CAN_ID, msg_buf, 8, true);
   if(ret!=ok) {
     ROS_INFO("CAN send error: %d\n", ret);
   }
+#endif
 }
 
 // This serves as a heartbeat signal. If the PACMod doesn't receive this signal at the expected frequency,
@@ -164,7 +196,8 @@ int main(int argc, char *argv[]) {
   ros::init(argc, argv, "pacmod");
   ros::AsyncSpinner spinner(2);
   ros::NodeHandle n;
-  ros::Rate loop_rate(20);
+  ros::NodeHandle priv("~");
+  ros::Rate loop_rate(1.0/0.01);
   
   ros::Publisher turn_manual_input_pub = n.advertise<std_msgs::Int16>("turn_signal/as_tx/manual_input", 20);
   ros::Publisher turn_command_pub = n.advertise<std_msgs::Int16>("turn_signal/as_tx/command", 20);
@@ -177,7 +210,13 @@ int main(int argc, char *argv[]) {
   ros::Publisher accelerator_manual_input_pub = n.advertise<std_msgs::Float64>("accelerator/as_tx/manual_input", 20);
   ros::Publisher accelerator_command_pub = n.advertise<std_msgs::Float64>("accelerator/as_tx/command", 20);
   ros::Publisher accelerator_output_pub = n.advertise<std_msgs::Float64>("accelerator/as_tx/output", 20);
-  
+
+#ifdef USING_PERFBOARD
+  // PERFBOARD
+  steering_set_position_with_speed_limit_pub = n.advertise<globe_epas::position_with_speed>("steering/as_rx/set_position_with_speed_limit", 20);
+  brake_globe_set_position_with_speed_limit_pub = n.advertise<globe_epas::position_with_speed>("brake/as_rx/set_position_with_speed_limit", 20);
+#else
+  // NON-PERFBOARD
   ros::Publisher steering_manual_input_pub = n.advertise<std_msgs::Float64>("steering/as_tx/manual_input", 20);
   ros::Publisher steering_command_pub = n.advertise<std_msgs::Float64>("steering/as_tx/command", 20);
   ros::Publisher steering_output_pub = n.advertise<std_msgs::Float64>("steering/as_tx/output", 20);
@@ -185,7 +224,8 @@ int main(int argc, char *argv[]) {
   ros::Publisher brake_manual_input_pub = n.advertise<std_msgs::Float64>("brake/as_tx/manual_input", 20);
   ros::Publisher brake_command_pub = n.advertise<std_msgs::Float64>("brake/as_tx/command", 20);
   ros::Publisher brake_output_pub = n.advertise<std_msgs::Float64>("brake/as_tx/output", 20);
-    
+#endif  
+  
   ros::Publisher vehicle_speed_pub = n.advertise<std_msgs::Float64>("as_tx/vehicle_speed", 20);
   ros::Publisher override_pub = n.advertise<std_msgs::Bool>("as_tx/override", 20, true);
   ros::Publisher can_tx_pub = n.advertise<as_can_interface::CanMessage>("can_tx", 20);
@@ -288,6 +328,7 @@ int main(int argc, char *argv[]) {
             float64_pub_msg.data = d_output;
             accelerator_output_pub.publish( float64_pub_msg );
             break;
+#ifndef USING_PERFBOARD            
           case STEERING_RPT_CAN_ID:
             d_manual_input=(msg[1]*256 + msg[0])/1000.0;
             d_command=(msg[3]*256 + msg[2])/1000.0;
@@ -321,7 +362,8 @@ int main(int argc, char *argv[]) {
             double vehicle_speed=(msg[1]*256 + msg[0])/1000.0;
             float64_pub_msg.data=vehicle_speed;
             vehicle_speed_pub.publish(float64_pub_msg);         
-            break;    
+            break;   
+#endif             
           }
        }
     
