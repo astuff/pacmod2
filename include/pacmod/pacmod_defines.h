@@ -27,15 +27,15 @@ const long BRAKE_GLOBE_RPT_1_CAN_ID=0x18ff1113; // ID for EPAS report message 1
 const long BRAKE_GLOBE_RPT_2_CAN_ID=0x18ff1213; // ID for EPAS report message 2
 const long BRAKE_GLOBE_RPT_3_CAN_ID=0x18ff1313; // ID for EPAS report message 3
 
-const double gear_ratio=16.5;
-const double STEERING_TORQUE_OVERRIDE_THRESHOLD=6.0;
+const double GLOBE_EPAS_GEAR_RATIO=16.5;
+const double STEERING_GLOBE_TORQUE_OVERRIDE_THRESHOLD=6.0;
 const double BRAKE_GLOBE_TORQUE_OVERRIDE_THRESHOLD=3.0;
 const double ACCELERATOR_OVERRIDE_THRESHOLD=0.275;
 const double max_vehicle_speed_for_shifting=1.0;  // in MPH
 const double steering_EOT_CURRENT=20.0;
 const double MOTOR_CURRENT_MAX=40.0;
-const double STEERING_SPEED_LIMIT=180.0;
-const double steering_deadband=5.0;
-const double steering_max_delta = 10.0;  
+const double STEERING_SPEED_LIMIT=720.0;
+//const double steering_deadband=5.0;
+//const double steering_max_delta = 10.0;  
 
 #endif
