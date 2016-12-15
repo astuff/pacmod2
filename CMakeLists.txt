@@ -9,7 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
-  as_can_interface
+  can_interface
   globe_epas
 )
 

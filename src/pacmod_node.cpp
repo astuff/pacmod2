@@ -15,8 +15,8 @@
 * TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS, OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 */
 
-#include <as_can_interface.hpp>
-#include <as_can_interface/CanMessage.h>
+#include <can_interface.h>
+#include <can_interface/can_frame.h>
 #include <stdio.h>
 #include <signal.h>
 #include <mutex>
@@ -45,7 +45,7 @@ CanInterface can_reader, can_writer;
 std::mutex can_mut;
 ros::Publisher can_rx_echo_pub;
 
-void callback_can_rx(const as_can_interface::CanMessage::ConstPtr& msg)
+void callback_can_rx(const can_interface::can_frame::ConstPtr& msg)
 {
     std::lock_guard<std::mutex> lock(can_mut);
 
@@ -77,7 +77,7 @@ void set_override(bool val)
     }
     else
     {
-        as_can_interface::CanMessage can_msg;
+        can_interface::can_frame can_msg;
         can_msg.header.stamp = ros::Time::now();
         can_msg.id = GLOBAL_CMD_CAN_ID;
         can_msg.dlc = 8;
@@ -106,7 +106,7 @@ void callback_turn_signal_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
     }
     else
     {
-        as_can_interface::CanMessage can_msg;
+        can_interface::can_frame can_msg;
         can_msg.header.stamp = ros::Time::now();
         can_msg.id = TURN_CMD_CAN_ID;
         can_msg.dlc = 8;
@@ -129,7 +129,7 @@ void callback_shift_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
     }
     else
     {
-        as_can_interface::CanMessage can_msg;
+        can_interface::can_frame can_msg;
         can_msg.header.stamp = ros::Time::now();
         can_msg.id = SHIFT_CMD_CAN_ID;
         can_msg.dlc = 8;
@@ -275,8 +275,8 @@ int main(int argc, char *argv[])
       
     ros::Publisher override_pub = n.advertise<std_msgs::Bool>("as_tx/override", 20, true);
     ros::Publisher vehicle_speed_pub = n.advertise<std_msgs::Float64>("parsed_tx/vehicle_speed_rpt", 20);
-    ros::Publisher can_tx_pub = n.advertise<as_can_interface::CanMessage>("can_tx", 20);
-    can_rx_echo_pub = n.advertise<as_can_interface::CanMessage>("can_rx_echo", 20);
+    ros::Publisher can_tx_pub = n.advertise<can_interface::can_frame>("can_tx", 20);
+    can_rx_echo_pub = n.advertise<can_interface::can_frame>("can_rx_echo", 20);
     
     // Subscribe to messages
     ros::Subscriber override_sub = n.subscribe("as_rx/override", 20, callback_pacmod_override);
@@ -313,7 +313,7 @@ int main(int argc, char *argv[])
         {
             ros::Time now = ros::Time::now();
 
-            as_can_interface::CanMessage can_pub_msg;
+            can_interface::can_frame can_pub_msg;
             can_pub_msg.header.stamp = now;
             can_pub_msg.header.frame_id = "0";
             can_pub_msg.id=id;
