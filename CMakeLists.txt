@@ -28,6 +28,9 @@ add_message_files(
   global_rpt.msg
   system_rpt_int.msg
   system_rpt_float.msg
+  motor_rpt_1.msg
+  motor_rpt_2.msg
+  motor_rpt_3.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

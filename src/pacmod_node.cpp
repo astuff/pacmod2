@@ -34,6 +34,9 @@
 #include <pacmod/global_rpt.h>
 #include <pacmod/system_rpt_int.h>
 #include <pacmod/system_rpt_float.h>
+#include <pacmod/motor_rpt_1.h>
+#include <pacmod/motor_rpt_2.h>
+#include <pacmod/motor_rpt_3.h>
 
 #include <pacmod_defines.h>
 #include <pacmod_core.h>
@@ -141,15 +144,24 @@ void callback_shift_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 void callback_accelerator_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 {
     std::lock_guard<std::mutex> lock(can_mut);
-    uint8_t msg_buf[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-    uint16_t cmd = (uint16_t)(1000*(msg->f64_cmd));
+    AccelCmdMsg obj;
+    obj.encode(msg->f64_cmd);
 
-    msg_buf[0] = cmd&0x00FF;
-    msg_buf[1] = (cmd&0xFF00) >> 8;
-    return_statuses ret = can_writer.send(ACCEL_CMD_CAN_ID, msg_buf, 8, true);
+    return_statuses ret = can_writer.send(ACCEL_CMD_CAN_ID, obj.data, 8, true);
 
     if (ret != ok)
+    {
         ROS_INFO("CAN send error: %d\n", ret);
+    }
+    else
+    {
+        can_interface::can_frame can_msg;
+        can_msg.header.stamp = ros::Time::now();
+        can_msg.id = ACCEL_CMD_CAN_ID;
+        can_msg.dlc = 8;
+        can_msg.data.insert(can_msg.data.end(), &obj.data[0], &obj.data[8]);
+        can_rx_echo_pub.publish(can_msg);
+    }
 }
 
 void callback_steering_set_cmd(const globe_epas::position_with_speed::ConstPtr& msg)
@@ -256,23 +268,13 @@ int main(int argc, char *argv[])
     ros::Publisher accel_rpt_pub = n.advertise<pacmod::system_rpt_float>("parsed_tx/accel_rpt", 20);
     ros::Publisher steer_rpt_pub = n.advertise<pacmod::system_rpt_float>("parsed_tx/steer_rpt", 20);
     ros::Publisher brake_rpt_pub = n.advertise<pacmod::system_rpt_float>("parsed_tx/brake_rpt", 20);
+    ros::Publisher steering_rpt_detail_1_pub = n.advertise<pacmod::motor_rpt_1>("parsed_tx/steer_rpt_detail_1", 20);
+    ros::Publisher steering_rpt_detail_2_pub = n.advertise<pacmod::motor_rpt_2>("parsed_tx/steer_rpt_detail_2", 20);
+    ros::Publisher steering_rpt_detail_3_pub = n.advertise<pacmod::motor_rpt_3>("parsed_tx/steer_rpt_detail_3", 20);
+    ros::Publisher brake_rpt_detail_1_pub = n.advertise<pacmod::motor_rpt_1>("parsed_tx/brake_rpt_detail_1", 20);
+    ros::Publisher brake_rpt_detail_2_pub = n.advertise<pacmod::motor_rpt_2>("parsed_tx/brake_rpt_detail_2", 20);
+    ros::Publisher brake_rpt_detail_3_pub = n.advertise<pacmod::motor_rpt_3>("parsed_tx/brake_rpt_detail_3", 20);
     
-    ros::Publisher steering_inc_position_pub = n.advertise<std_msgs::Float64>("steering/as_tx/inc_position", 1000);
-    ros::Publisher steering_current_pub = n.advertise<std_msgs::Float64>("steering/as_tx/current", 1000);
-    ros::Publisher steering_velocity_pub = n.advertise<std_msgs::Float64>("steering/as_tx/velocity", 1000);
-    ros::Publisher steering_unit_temp_pub = n.advertise<std_msgs::Float64>("steering/as_tx/unit_temp", 1000);
-    ros::Publisher steering_encoder_temp_pub = n.advertise<std_msgs::Float64>("steering/as_tx/encoder_temp", 1000);
-    ros::Publisher steering_torque_input_pub = n.advertise<std_msgs::Float64>("steering/as_tx/torque_input", 1000);
-    ros::Publisher steering_torque_output_pub = n.advertise<std_msgs::Float64>("steering/as_tx/torque_output", 1000);
-
-    ros::Publisher brake_inc_position_pub = n.advertise<std_msgs::Float64>("brake/as_tx/inc_position", 1000);
-    ros::Publisher brake_current_pub = n.advertise<std_msgs::Float64>("brake/as_tx/current", 1000);
-    ros::Publisher brake_velocity_pub = n.advertise<std_msgs::Float64>("brake/as_tx/velocity", 1000);
-    ros::Publisher brake_unit_temp_pub = n.advertise<std_msgs::Float64>("brake/as_tx/unit_temp", 1000);
-    ros::Publisher brake_encoder_temp_pub = n.advertise<std_msgs::Float64>("brake/as_tx/encoder_temp", 1000);
-    ros::Publisher brake_torque_input_pub = n.advertise<std_msgs::Float64>("brake/as_tx/torque_input", 1000);
-    ros::Publisher brake_torque_output_pub = n.advertise<std_msgs::Float64>("brake/as_tx/torque_output", 1000);
-      
     ros::Publisher override_pub = n.advertise<std_msgs::Bool>("as_tx/override", 20, true);
     ros::Publisher vehicle_speed_pub = n.advertise<std_msgs::Float64>("parsed_tx/vehicle_speed_rpt", 20);
     ros::Publisher can_tx_pub = n.advertise<can_interface::can_frame>("can_tx", 20);
@@ -396,48 +398,6 @@ int main(int argc, char *argv[])
                     steer_rpt_msg.output = obj.output;
                     steer_rpt_pub.publish(steer_rpt_msg);
                 } break;                      
-                case STEERING_GLOBE_RPT_1_CAN_ID:
-                {
-                    double inc_position = ((msg[3]<<24) + (msg[2]<<16) + (msg[1]<<8) + msg[0])*360.0/pow(2,20);
-                    double current = ((msg[7]<<24) + (msg[6]<<16) + (msg[5]<<8) + msg[4])/pow(2,20);
-
-                    float64_pub_msg.data=inc_position;
-                    steering_inc_position_pub.publish(float64_pub_msg);
-                    
-                    float64_pub_msg.data=current;
-                    steering_current_pub.publish(float64_pub_msg);
-                } break;
-                case STEERING_GLOBE_RPT_2_CAN_ID:
-                {
-                    double velocity = ((msg[3]<<24) + (msg[2]<<16) + (msg[1]<<8) + msg[0])*360.0/pow(2,20)/GLOBE_EPAS_GEAR_RATIO;
-                    double unit_temp = msg[4]-40.0;
-                    double encoder_temp = msg[5]-40.0;  
-                            
-                    float64_pub_msg.data=velocity;
-                    steering_velocity_pub.publish(float64_pub_msg);
-
-                    float64_pub_msg.data=unit_temp;
-                    steering_unit_temp_pub.publish(float64_pub_msg);
-
-                    float64_pub_msg.data=encoder_temp;
-                    steering_encoder_temp_pub.publish(float64_pub_msg);
-                } break;
-                case STEERING_GLOBE_RPT_3_CAN_ID:
-                {
-                    double torque_input = ((msg[3]<<24) + (msg[2]<<16) + (msg[1]<<8) + msg[0])/pow(2,20);
-                    double torque_output = ((msg[7]<<24) + (msg[6]<<16) + (msg[5]<<8) + msg[4])/pow(2,20);
-                    
-                    //if(fabs(torque_input)>=STEERING_GLOBE_TORQUE_OVERRIDE_THRESHOLD) {
-                    //  motor_off();
-                    //  command_mode=globe_epas::cmd::OFF;
-                    //}
-                    
-                    float64_pub_msg.data=torque_input;
-                    steering_torque_input_pub.publish(float64_pub_msg);
-
-                    float64_pub_msg.data=torque_output;
-                    steering_torque_output_pub.publish(float64_pub_msg);
-                } break;
                 case BRAKE_RPT_CAN_ID:
                 {
                     SystemRptFloatMsg obj;
@@ -450,48 +410,6 @@ int main(int argc, char *argv[])
                     brake_rpt_msg.output = obj.output;
                     brake_rpt_pub.publish(brake_rpt_msg);
                 } break;   
-                case BRAKE_GLOBE_RPT_1_CAN_ID:
-                {
-                    double inc_position = ((msg[3]<<24) + (msg[2]<<16) + (msg[1]<<8) + msg[0])*360.0/pow(2,20);
-                    double current = ((msg[7]<<24) + (msg[6]<<16) + (msg[5]<<8) + msg[4])/pow(2,20);
-
-                    float64_pub_msg.data=inc_position;
-                    brake_inc_position_pub.publish(float64_pub_msg);
-                    
-                    float64_pub_msg.data=current;
-                    brake_current_pub.publish(float64_pub_msg);
-                } break;
-                case BRAKE_GLOBE_RPT_2_CAN_ID:
-                {
-                    double velocity = ((msg[3]<<24) + (msg[2]<<16) + (msg[1]<<8) + msg[0])*360.0/pow(2,20)/GLOBE_EPAS_GEAR_RATIO;
-                    double unit_temp = msg[4]-40.0;
-                    double encoder_temp = msg[5]-40.0;  
-                            
-                    float64_pub_msg.data=velocity;
-                    brake_velocity_pub.publish(float64_pub_msg);
-
-                    float64_pub_msg.data=unit_temp;
-                    brake_unit_temp_pub.publish(float64_pub_msg);
-
-                    float64_pub_msg.data=encoder_temp;
-                    brake_encoder_temp_pub.publish(float64_pub_msg);
-                } break;
-                case BRAKE_GLOBE_RPT_3_CAN_ID:
-                {
-                    double torque_input = ((msg[3]<<24) + (msg[2]<<16) + (msg[1]<<8) + msg[0])/pow(2,20);
-                    double torque_output = ((msg[7]<<24) + (msg[6]<<16) + (msg[5]<<8) + msg[4])/pow(2,20);
-                    
-                    //if(fabs(torque_input)>=STEERING_GLOBE_TORQUE_OVERRIDE_THRESHOLD) {
-                    //  motor_off();
-                    //  command_mode=globe_epas::cmd::OFF;
-                    //}
-                    
-                    float64_pub_msg.data=torque_input;
-                    brake_torque_input_pub.publish(float64_pub_msg);
-
-                    float64_pub_msg.data=torque_output;
-                    brake_torque_output_pub.publish(float64_pub_msg);
-                } break;
                 case VEHICLE_SPEED_RPT_CAN_ID:
                 {
                     VehicleSpeedRptMsg obj;
@@ -501,6 +419,74 @@ int main(int argc, char *argv[])
                     // Convert from (thousandths of) m/s to MPH.
                     float64_pub_msg.data = obj.vehicle_speed;
                     vehicle_speed_pub.publish(float64_pub_msg);         
+                } break;
+                case BRAKE_MOTOR_RPT_1_CAN_ID:
+                {
+                    MotorRpt1Msg obj;
+                    obj.parse(msg);
+
+                    pacmod::motor_rpt_1 motor_rpt_1_msg;
+                    motor_rpt_1_msg.header.stamp = now;
+                    motor_rpt_1_msg.current = obj.current;
+                    motor_rpt_1_msg.position_deg = obj.position_deg;
+                    brake_rpt_detail_1_pub.publish(motor_rpt_1_msg);
+                } break;
+                case BRAKE_MOTOR_RPT_2_CAN_ID:
+                {
+                    MotorRpt2Msg obj;
+                    obj.parse(msg);
+
+                    pacmod::motor_rpt_2 motor_rpt_2_msg;
+                    motor_rpt_2_msg.header.stamp = now;
+                    motor_rpt_2_msg.encoder_temp = obj.encoder_temp;
+                    motor_rpt_2_msg.motor_temp = obj.motor_temp;
+                    motor_rpt_2_msg.velocity_rps = obj.velocity_rps;
+                    brake_rpt_detail_2_pub.publish(motor_rpt_2_msg);
+                } break;
+                case BRAKE_MOTOR_RPT_3_CAN_ID:
+                {
+                    MotorRpt3Msg obj;
+                    obj.parse(msg);
+
+                    pacmod::motor_rpt_3 motor_rpt_3_msg;
+                    motor_rpt_3_msg.header.stamp = now;
+                    motor_rpt_3_msg.torque_output_nm = obj.torque_output_nm;
+                    motor_rpt_3_msg.torque_input_nm = obj.torque_input_nm;
+                    brake_rpt_detail_2_pub.publish(motor_rpt_3_msg);
+                } break;
+                case STEERING_MOTOR_RPT_1_CAN_ID:
+                {
+                    MotorRpt1Msg obj;
+                    obj.parse(msg);
+
+                    pacmod::motor_rpt_1 motor_rpt_1_msg;
+                    motor_rpt_1_msg.header.stamp = now;
+                    motor_rpt_1_msg.current = obj.current;
+                    motor_rpt_1_msg.position_deg = obj.position_deg;
+                    steering_rpt_detail_1_pub.publish(motor_rpt_1_msg);
+                } break;
+                case STEERING_MOTOR_RPT_2_CAN_ID:
+                {
+                    MotorRpt2Msg obj;
+                    obj.parse(msg);
+
+                    pacmod::motor_rpt_2 motor_rpt_2_msg;
+                    motor_rpt_2_msg.header.stamp = now;
+                    motor_rpt_2_msg.encoder_temp = obj.encoder_temp;
+                    motor_rpt_2_msg.motor_temp = obj.motor_temp;
+                    motor_rpt_2_msg.velocity_rps = obj.velocity_rps;
+                    steering_rpt_detail_2_pub.publish(motor_rpt_2_msg);
+                } break;
+                case STEERING_MOTOR_RPT_3_CAN_ID:
+                {
+                    MotorRpt3Msg obj;
+                    obj.parse(msg);
+
+                    pacmod::motor_rpt_3 motor_rpt_3_msg;
+                    motor_rpt_3_msg.header.stamp = now;
+                    motor_rpt_3_msg.torque_output_nm = obj.torque_output_nm;
+                    motor_rpt_3_msg.torque_input_nm = obj.torque_input_nm;
+                    steering_rpt_detail_2_pub.publish(motor_rpt_3_msg);
                 } break;
             }
         }
