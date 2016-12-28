@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
                     motor_rpt_3_msg.header.stamp = now;
                     motor_rpt_3_msg.torque_output_nm = obj.torque_output_nm;
                     motor_rpt_3_msg.torque_input_nm = obj.torque_input_nm;
-                    brake_rpt_detail_2_pub.publish(motor_rpt_3_msg);
+                    brake_rpt_detail_3_pub.publish(motor_rpt_3_msg);
                 } break;
                 case STEERING_MOTOR_RPT_1_CAN_ID:
                 {
@@ -486,7 +486,7 @@ int main(int argc, char *argv[])
                     motor_rpt_3_msg.header.stamp = now;
                     motor_rpt_3_msg.torque_output_nm = obj.torque_output_nm;
                     motor_rpt_3_msg.torque_input_nm = obj.torque_input_nm;
-                    steering_rpt_detail_2_pub.publish(motor_rpt_3_msg);
+                    steering_rpt_detail_3_pub.publish(motor_rpt_3_msg);
                 } break;
             }
         }
