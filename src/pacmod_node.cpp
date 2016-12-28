@@ -44,7 +44,7 @@
 using namespace std;
 using namespace AS::CAN;
 
-CanInterface can_reader;
+CanInterface can_reader, can_writer;
 std::mutex can_mut;
 ros::Publisher can_rx_echo_pub;
 int hardware_id = 0;
@@ -53,7 +53,6 @@ int bit_rate = 500000;
 
 void callback_can_rx(const can_interface::can_frame::ConstPtr& msg)
 {
-    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
     
     if (ret != ok)
@@ -81,7 +80,6 @@ void callback_can_rx(const can_interface::can_frame::ConstPtr& msg)
 
 void set_override(bool val)
 {
-    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
@@ -118,7 +116,6 @@ void callback_pacmod_override(const std_msgs::Bool::ConstPtr& msg)
 
 void callback_turn_signal_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 {
-    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
@@ -149,7 +146,6 @@ void callback_turn_signal_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 
 void callback_shift_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 {
-    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
@@ -180,7 +176,6 @@ void callback_shift_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 
 void callback_accelerator_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 {
-    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
@@ -211,7 +206,6 @@ void callback_accelerator_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 
 void callback_steering_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
 {
-    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
@@ -242,7 +236,6 @@ void callback_steering_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
 
 void callback_brake_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
 {
-    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
@@ -375,10 +368,10 @@ int main(int argc, char *argv[])
             can_interface::can_frame can_pub_msg;
             can_pub_msg.header.stamp = now;
             can_pub_msg.header.frame_id = "0";
-            can_pub_msg.id=id;
-            can_pub_msg.dlc=size;
+            can_pub_msg.id = id;
+            can_pub_msg.dlc = size;
 
-            for(int i=0; i<size; i++)
+            for(int i = 0; i < size; i++)
             {
                 can_pub_msg.data.push_back(msg[i]);
             }
@@ -390,7 +383,7 @@ int main(int argc, char *argv[])
             std_msgs::Int16 int16_pub_msg;  
             std_msgs::Bool bool_pub_msg;
             std_msgs::Float64 float64_pub_msg;                  
-            
+
             switch(id)
             {
                 case GLOBAL_RPT_CAN_ID:
@@ -551,6 +544,9 @@ int main(int argc, char *argv[])
         // Wait for next loop
         loop_rate.sleep();
     }
+
+    //Make sure it's disabled when node shuts down.
+    set_override(true);
 
     can_reader.close();
     spinner.stop();
