@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
     ros::AsyncSpinner spinner(2);
     ros::NodeHandle n;
     ros::NodeHandle priv("~");
-    ros::Rate loop_rate(1.0/0.01);
+    ros::Rate loop_rate(25.0);
   
     // Wait for time to be valid
     while (ros::Time::now().nsec == 0);
