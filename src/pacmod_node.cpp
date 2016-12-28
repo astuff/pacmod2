@@ -44,39 +44,60 @@
 using namespace std;
 using namespace AS::CAN;
 
-CanInterface can_reader, can_writer;
+CanInterface can_reader;
 std::mutex can_mut;
 ros::Publisher can_rx_echo_pub;
+int hardware_id = 0;
+int circuit_id = -1;
+int bit_rate = 500000;
 
 void callback_can_rx(const can_interface::can_frame::ConstPtr& msg)
 {
-    std::lock_guard<std::mutex> lock(can_mut);
-
-    if ((msg->dlc) != 8)
+    CanInterface can_writer;
+    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
+    
+    if (ret != ok)
+    {
+        ROS_WARN("CAN handle error: %d\n", ret);
         return;
+    }
+    else if ((msg->dlc) != 8)
+    {
+        ROS_WARN("CAN message error: %d\n", ret);
+        can_writer.close();
+        return;
+    }
   
     uint8_t msg_buf[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}; 
 
     for (int i=0; i<8; i++)
         msg_buf[i] = (msg->data)[i];
 
-    return_statuses ret = can_writer.send(msg->id, msg_buf, msg->dlc, true);
+    ret = can_writer.send(msg->id, msg_buf, msg->dlc, true);
 
     if (ret != ok)
-        ROS_INFO("CAN send error: %d\n", ret);
+        ROS_WARN("CAN send error: %d\n", ret);
 }
 
 void set_override(bool val)
 {
-    std::lock_guard<std::mutex> lock(can_mut);
-    OverrideMsg obj;
-    obj.encode(val);
-
-    return_statuses ret = can_writer.send(GLOBAL_CMD_CAN_ID, obj.data, 8, true);
+    CanInterface can_writer;
+    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
     {
-        ROS_INFO("CAN send error: %d\n", ret);
+        ROS_WARN("CAN handle error: %d\n", ret);
+        return;
+    }
+
+    OverrideMsg obj;
+    obj.encode(val);
+
+    ret = can_writer.send(GLOBAL_CMD_CAN_ID, obj.data, 8, true);
+
+    if (ret != ok)
+    {
+        ROS_WARN("CAN send error: %d\n", ret);
     }
     else
     {
@@ -97,15 +118,23 @@ void callback_pacmod_override(const std_msgs::Bool::ConstPtr& msg)
 
 void callback_turn_signal_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 {
-    std::lock_guard<std::mutex> lock(can_mut);
-    TurnSignalCmdMsg obj;
-    obj.encode(msg->ui16_cmd);
-
-    return_statuses ret = can_writer.send(TURN_CMD_CAN_ID, obj.data, 8, true);
+    CanInterface can_writer;
+    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
     {
-        ROS_INFO("CAN send error: %d\n", ret);
+        ROS_WARN("CAN handle error: %d\n", ret);
+        return;
+    }
+
+    TurnSignalCmdMsg obj;
+    obj.encode(msg->ui16_cmd);
+
+    ret = can_writer.send(TURN_CMD_CAN_ID, obj.data, 8, true);
+
+    if (ret != ok)
+    {
+        ROS_WARN("CAN send error: %d\n", ret);
     }
     else
     {
@@ -120,15 +149,23 @@ void callback_turn_signal_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 
 void callback_shift_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 {
-    std::lock_guard<std::mutex> lock(can_mut);
-    ShiftCmdMsg obj;
-    obj.encode(msg->ui16_cmd);
-
-    return_statuses ret = can_writer.send(SHIFT_CMD_CAN_ID, obj.data, 8, true);
+    CanInterface can_writer;
+    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
     {
-        ROS_INFO("CAN send error: %d\n", ret);
+        ROS_WARN("CAN handle error: %d\n", ret);
+        return;
+    }
+
+    ShiftCmdMsg obj;
+    obj.encode(msg->ui16_cmd);
+
+    ret = can_writer.send(SHIFT_CMD_CAN_ID, obj.data, 8, true);
+
+    if (ret != ok)
+    {
+        ROS_WARN("CAN send error: %d\n", ret);
     }
     else
     {
@@ -143,15 +180,23 @@ void callback_shift_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 
 void callback_accelerator_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 {
-    std::lock_guard<std::mutex> lock(can_mut);
-    AccelCmdMsg obj;
-    obj.encode(msg->f64_cmd);
-
-    return_statuses ret = can_writer.send(ACCEL_CMD_CAN_ID, obj.data, 8, true);
+    CanInterface can_writer;
+    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
     {
-        ROS_INFO("CAN send error: %d\n", ret);
+        ROS_WARN("CAN handle error: %d\n", ret);
+        return;
+    }
+
+    AccelCmdMsg obj;
+    obj.encode(msg->f64_cmd);
+
+    ret = can_writer.send(ACCEL_CMD_CAN_ID, obj.data, 8, true);
+
+    if (ret != ok)
+    {
+        ROS_WARN("CAN send error: %d\n", ret);
     }
     else
     {
@@ -166,7 +211,15 @@ void callback_accelerator_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 
 void callback_steering_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
 {
-    std::lock_guard<std::mutex> lock(can_mut);
+    CanInterface can_writer;
+    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
+
+    if (ret != ok)
+    {
+        ROS_WARN("CAN handle error: %d\n", ret);
+        return;
+    }
+
     uint8_t msg_buf[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
     int32_t cmd = (int32_t)(1000*(msg->angular_position));
     uint32_t speed_limit = (uint32_t)(1000*(msg->speed_limit));
@@ -179,17 +232,25 @@ void callback_steering_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
     msg_buf[5] = (speed_limit & 0x0000FF00) >> 8;
     msg_buf[6] = (speed_limit & 0x00FF0000) >> 16;
     msg_buf[7] = (speed_limit & 0xFF000000) >> 24;    
-    return_statuses ret = can_writer.send(STEERING_CMD_CAN_ID, msg_buf, 8, true);
+    ret = can_writer.send(STEERING_CMD_CAN_ID, msg_buf, 8, true);
 
     ROS_INFO("Set steering to %d\n", cmd);
 
     if (ret != ok)
-        ROS_INFO("CAN send error: %d\n", ret);
+        ROS_WARN("CAN send error: %d\n", ret);
 }
 
 void callback_brake_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
 {
-    std::lock_guard<std::mutex> lock(can_mut);
+    CanInterface can_writer;
+    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
+
+    if (ret != ok)
+    {
+        ROS_WARN("CAN handle error: %d\n", ret);
+        return;
+    }
+
     uint8_t msg_buf[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
     int32_t cmd = (int32_t)(1000*(msg->angular_position));
     uint32_t speed_limit = (uint32_t)(1000*(msg->speed_limit));
@@ -202,10 +263,10 @@ void callback_brake_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
     msg_buf[5] = (speed_limit & 0x0000FF00) >> 8;
     msg_buf[6] = (speed_limit & 0x00FF0000) >> 16;
     msg_buf[7] = (speed_limit & 0xFF000000) >> 24;  
-    return_statuses ret = can_writer.send(BRAKE_CMD_CAN_ID, msg_buf, 8, true);
+    ret = can_writer.send(BRAKE_CMD_CAN_ID, msg_buf, 8, true);
 
     if(ret!=ok)
-        ROS_INFO("CAN send error: %d\n", ret);
+        ROS_WARN("CAN send error: %d\n", ret);
 }
 
 // This serves as a heartbeat signal. If the PACMod doesn't receive this signal at the expected frequency,
@@ -218,10 +279,7 @@ void timerCallback(const ros::TimerEvent& evt)
 
 int main(int argc, char *argv[])
 { 
-    int hardware_id = 0;
-    int circuit_id = -1;
     int actuator_type = -1; 
-    int bitRate = 500000;
     bool willExit = false;
         
     ros::init(argc, argv, "pacmod");
@@ -294,9 +352,8 @@ int main(int argc, char *argv[])
     spinner.start();
     
     // CAN setup
-    can_reader.open(hardware_id, circuit_id, bitRate);
-    can_writer.open(hardware_id, circuit_id, bitRate);
-        
+    can_reader.open(hardware_id, circuit_id, bit_rate);
+    
     // Set initial state
     set_override(true);
   
@@ -496,7 +553,6 @@ int main(int argc, char *argv[])
     }
 
     can_reader.close();
-    can_writer.close();
     spinner.stop();
     ros::shutdown();
    
