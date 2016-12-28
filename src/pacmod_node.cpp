@@ -29,7 +29,6 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
 
-#include <globe_epas/position_with_speed.h>
 #include <pacmod/pacmod_cmd.h>
 #include <pacmod/global_rpt.h>
 #include <pacmod/system_rpt_int.h>
@@ -37,6 +36,7 @@
 #include <pacmod/motor_rpt_1.h>
 #include <pacmod/motor_rpt_2.h>
 #include <pacmod/motor_rpt_3.h>
+#include <pacmod/position_with_speed.h>
 
 #include <pacmod_defines.h>
 #include <pacmod_core.h>
@@ -164,7 +164,7 @@ void callback_accelerator_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
     }
 }
 
-void callback_steering_set_cmd(const globe_epas::position_with_speed::ConstPtr& msg)
+void callback_steering_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
 {
     std::lock_guard<std::mutex> lock(can_mut);
     uint8_t msg_buf[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -187,7 +187,7 @@ void callback_steering_set_cmd(const globe_epas::position_with_speed::ConstPtr& 
         ROS_INFO("CAN send error: %d\n", ret);
 }
 
-void callback_brake_set_cmd(const globe_epas::position_with_speed::ConstPtr& msg)
+void callback_brake_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
 {
     std::lock_guard<std::mutex> lock(can_mut);
     uint8_t msg_buf[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};

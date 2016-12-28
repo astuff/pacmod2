@@ -10,7 +10,6 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   message_generation
   can_interface
-  globe_epas
 )
 
 ## System dependencies are found with CMake's conventions
@@ -31,6 +30,7 @@ add_message_files(
   motor_rpt_1.msg
   motor_rpt_2.msg
   motor_rpt_3.msg
+  position_with_speed.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
