@@ -214,27 +214,27 @@ void callback_steering_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
         return;
     }
 
-    uint8_t msg_buf[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-    int32_t cmd = (int32_t)(1000*(msg->angular_position));
-    uint32_t speed_limit = (uint32_t)(1000*(msg->speed_limit));
+    SteerCmdMsg obj;
+    obj.encode(msg->angular_position, msg->speed_limit);
 
-    msg_buf[0] = cmd & 0x000000FF;
-    msg_buf[1] = (cmd & 0x0000FF00) >> 8;
-    msg_buf[2] = (cmd & 0x00FF0000) >> 16;
-    msg_buf[3] = (cmd & 0xFF000000) >> 24;
-    msg_buf[4] = speed_limit & 0x000000FF;
-    msg_buf[5] = (speed_limit & 0x0000FF00) >> 8;
-    msg_buf[6] = (speed_limit & 0x00FF0000) >> 16;
-    msg_buf[7] = (speed_limit & 0xFF000000) >> 24;    
-    ret = can_writer.send(STEERING_CMD_CAN_ID, msg_buf, 8, true);
-
-    ROS_INFO("Set steering to %d\n", cmd);
+    ret = can_writer.send(STEERING_CMD_CAN_ID, obj.data, 8, true);
 
     if (ret != ok)
+    {
         ROS_WARN("CAN send error: %d\n", ret);
+    }
+    else
+    {
+        can_interface::can_frame can_msg;
+        can_msg.header.stamp = ros::Time::now();
+        can_msg.id = STEERING_CMD_CAN_ID;
+        can_msg.dlc = 8;
+        can_msg.data.insert(can_msg.data.end(), &obj.data[0], &obj.data[8]);
+        can_rx_echo_pub.publish(can_msg);
+    }
 }
 
-void callback_brake_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
+void callback_brake_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 {
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
@@ -244,22 +244,24 @@ void callback_brake_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
         return;
     }
 
-    uint8_t msg_buf[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-    int32_t cmd = (int32_t)(1000*(msg->angular_position));
-    uint32_t speed_limit = (uint32_t)(1000*(msg->speed_limit));
+    BrakeCmdMsg obj;
+    obj.encode(msg->f64_cmd);
 
-    msg_buf[0] = cmd & 0x000000FF;
-    msg_buf[1] = (cmd & 0x0000FF00) >> 8;
-    msg_buf[2] = (cmd & 0x00FF0000) >> 16;
-    msg_buf[3] = (cmd & 0xFF000000) >> 24;
-    msg_buf[4] = speed_limit & 0x000000FF;
-    msg_buf[5] = (speed_limit & 0x0000FF00) >> 8;
-    msg_buf[6] = (speed_limit & 0x00FF0000) >> 16;
-    msg_buf[7] = (speed_limit & 0xFF000000) >> 24;  
-    ret = can_writer.send(BRAKE_CMD_CAN_ID, msg_buf, 8, true);
+    ret = can_writer.send(BRAKE_CMD_CAN_ID, obj.data, 8, true);
 
-    if(ret!=ok)
+    if(ret != ok)
+    {
         ROS_WARN("CAN send error: %d\n", ret);
+    }
+    else
+    {
+        can_interface::can_frame can_msg;
+        can_msg.header.stamp = ros::Time::now();
+        can_msg.id = BRAKE_CMD_CAN_ID;
+        can_msg.dlc = 8;
+        can_msg.data.insert(can_msg.data.end(), &obj.data[0], &obj.data[8]);
+        can_rx_echo_pub.publish(can_msg);
+    }
 }
 
 // This serves as a heartbeat signal. If the PACMod doesn't receive this signal at the expected frequency,
