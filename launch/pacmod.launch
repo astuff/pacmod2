@@ -44,7 +44,7 @@
 -->      
         <node pkg="joy" type="joy_node" name="joy">
         <!--  <param name="autorepeat_rate" type="double" value="10"/>-->
-              <param name="coalesce_interval" type="double" value="0.1"/>
+              <param name="coalesce_interval" type="double" value="0.02"/>
         </node>
       
         <node pkg="pacmod_game_control" type="pacmod_game_control_node" name="pacmod_game_control"/>
