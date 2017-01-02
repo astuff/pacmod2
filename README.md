@@ -5,8 +5,8 @@ with the PACMod system. It publishes and subscribes to the following:
 
 ### PUBLISHERS ###
 
-- `[can_interface/can_frame] *can_tx*` - A copy of all raw CAN data received by the driver from the PACMod.
-- `[can_interface/can_frame] *can_rx_echo*` - A copy of all raw CAN data sent to the PACMod from the driver.
+- `[can_interface/can_frame]` _*can_tx*_ - A copy of all raw CAN data received by the driver from the PACMod.
+- `[can_interface/can_frame]` *can_rx_echo* - A copy of all raw CAN data sent to the PACMod from the driver.
 - `[pacmod/global_rpt] *parsed_tx/global_rpt*` - High-level data about the entire PACMod system.
 - `[pacmod/system_rpt_int] *parsed_tx/turn_rpt*` - Status and parsed values[enum] of the turn signal subsystem.
 - `[pacmod/system_rpt_int] *parsed_tx/shift_rpt*` - Status and parsed values[enum] of the gear/transmission subsystem.
