@@ -50,7 +50,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include/${PROJECT_NAME}
-#  LIBRARIES globe_epas
+#  LIBRARIES
   CATKIN_DEPENDS roscpp std_msgs message_runtime 
 #  DEPENDS system_lib
 )

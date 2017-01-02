@@ -21,9 +21,7 @@ const long STEERING_MOTOR_RPT_1_CAN_ID=0x73;
 const long STEERING_MOTOR_RPT_2_CAN_ID=0x74;
 const long STEERING_MOTOR_RPT_3_CAN_ID=0x75;
 
-const double GLOBE_EPAS_GEAR_RATIO=16.5;
-const double STEERING_GLOBE_TORQUE_OVERRIDE_THRESHOLD=6.0;
-const double BRAKE_GLOBE_TORQUE_OVERRIDE_THRESHOLD=3.0;
+const double MOTOR_GEAR_RATIO=16.5;
 const double ACCELERATOR_OVERRIDE_THRESHOLD=0.275;
 const double max_vehicle_speed_for_shifting=1.0;  // in MPH
 const double steering_EOT_CURRENT=20.0;
