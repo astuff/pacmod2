@@ -1,4 +1,4 @@
 Header header
 
-float64 current
-float64 position_deg
+float64 current         # Motor current in Ampres
+float64 position        # Motor position in Radians
