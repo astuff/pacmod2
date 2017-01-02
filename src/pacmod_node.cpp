@@ -43,6 +43,7 @@
 
 using namespace std;
 using namespace AS::CAN;
+using namespace AS::Drivers::PACMod;
 
 CanInterface can_reader, can_writer;
 std::mutex can_mut;
@@ -492,7 +493,7 @@ int main(int argc, char *argv[])
                     motor_rpt_1_msg.header.stamp = now;
                     motor_rpt_1_msg.current = obj.current;
                     //TODO: Move deg/rad conversion to PACMod firmware.
-                    motor_rpt_1_msg.position = (obj.position_deg * 0.0174533);
+                    motor_rpt_1_msg.position = (obj.position * 0.0174533);
                     brake_rpt_detail_1_pub.publish(motor_rpt_1_msg);
                 } break;
                 case BRAKE_MOTOR_RPT_2_CAN_ID:
@@ -505,7 +506,7 @@ int main(int argc, char *argv[])
                     motor_rpt_2_msg.encoder_temp = obj.encoder_temp;
                     motor_rpt_2_msg.motor_temp = obj.motor_temp;
                     //TODO: Move deg/rad conversion to PACMod firmware.
-                    motor_rpt_2_msg.shaft_velocity.angular.z = (obj.velocity_rps * 0.0174533);
+                    motor_rpt_2_msg.shaft_velocity.angular.z = (obj.velocity * 0.0174533);
                     brake_rpt_detail_2_pub.publish(motor_rpt_2_msg);
                 } break;
                 case BRAKE_MOTOR_RPT_3_CAN_ID:
@@ -515,8 +516,8 @@ int main(int argc, char *argv[])
 
                     pacmod::motor_rpt_3 motor_rpt_3_msg;
                     motor_rpt_3_msg.header.stamp = now;
-                    motor_rpt_3_msg.torque_output = obj.torque_output_nm;
-                    motor_rpt_3_msg.torque_input = obj.torque_input_nm;
+                    motor_rpt_3_msg.torque_output = obj.torque_output;
+                    motor_rpt_3_msg.torque_input = obj.torque_input;
                     brake_rpt_detail_3_pub.publish(motor_rpt_3_msg);
                 } break;
                 case STEERING_MOTOR_RPT_1_CAN_ID:
@@ -528,7 +529,7 @@ int main(int argc, char *argv[])
                     motor_rpt_1_msg.header.stamp = now;
                     motor_rpt_1_msg.current = obj.current;
                     //TODO: Move deg/rad conversion to PACMod firmware.
-                    motor_rpt_1_msg.position = (obj.position_deg * 0.0174533);
+                    motor_rpt_1_msg.position = (obj.position * 0.0174533);
                     steering_rpt_detail_1_pub.publish(motor_rpt_1_msg);
                 } break;
                 case STEERING_MOTOR_RPT_2_CAN_ID:
@@ -541,7 +542,7 @@ int main(int argc, char *argv[])
                     motor_rpt_2_msg.encoder_temp = obj.encoder_temp;
                     motor_rpt_2_msg.motor_temp = obj.motor_temp;
                     //TODO: Move deg/rad conversion to PACMod firmware.
-                    motor_rpt_2_msg.shaft_velocity.angular.z = (obj.velocity_rps * 0.0174533);
+                    motor_rpt_2_msg.shaft_velocity.angular.z = (obj.velocity * 0.0174533);
                     steering_rpt_detail_2_pub.publish(motor_rpt_2_msg);
                 } break;
                 case STEERING_MOTOR_RPT_3_CAN_ID:
@@ -551,8 +552,8 @@ int main(int argc, char *argv[])
 
                     pacmod::motor_rpt_3 motor_rpt_3_msg;
                     motor_rpt_3_msg.header.stamp = now;
-                    motor_rpt_3_msg.torque_output = obj.torque_output_nm;
-                    motor_rpt_3_msg.torque_input = obj.torque_input_nm;
+                    motor_rpt_3_msg.torque_output = obj.torque_output;
+                    motor_rpt_3_msg.torque_input = obj.torque_input;
                     steering_rpt_detail_3_pub.publish(motor_rpt_3_msg);
                 } break;
             }
