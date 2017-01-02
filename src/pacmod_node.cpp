@@ -327,19 +327,20 @@ int main(int argc, char *argv[])
     ros::Publisher brake_rpt_detail_1_pub = n.advertise<pacmod::motor_rpt_1>("parsed_tx/brake_rpt_detail_1", 20);
     ros::Publisher brake_rpt_detail_2_pub = n.advertise<pacmod::motor_rpt_2>("parsed_tx/brake_rpt_detail_2", 20);
     ros::Publisher brake_rpt_detail_3_pub = n.advertise<pacmod::motor_rpt_3>("parsed_tx/brake_rpt_detail_3", 20);
+    ros::Publisher vehicle_speed_pub = n.advertise<std_msgs::Float64>("parsed_tx/vehicle_speed_rpt", 20);
     
     ros::Publisher override_pub = n.advertise<std_msgs::Bool>("as_tx/override", 20, true);
-    ros::Publisher vehicle_speed_pub = n.advertise<std_msgs::Float64>("parsed_tx/vehicle_speed_rpt", 20);
+
     ros::Publisher can_tx_pub = n.advertise<can_interface::can_frame>("can_tx", 20);
     can_rx_echo_pub = n.advertise<can_interface::can_frame>("can_rx_echo", 20);
     
     // Subscribe to messages
     ros::Subscriber override_sub = n.subscribe("as_rx/override", 20, callback_pacmod_override);
-    ros::Subscriber turn_set_cmd_sub = n.subscribe("turn_signal/as_rx/set_cmd", 20, callback_turn_signal_set_cmd);  
-    ros::Subscriber shift_set_cmd_sub = n.subscribe("shift/as_rx/set_cmd", 20, callback_shift_set_cmd);  
-    ros::Subscriber accelerator_set_cmd = n.subscribe("accelerator/as_rx/set_cmd", 20, callback_accelerator_set_cmd);
-    ros::Subscriber steering_set_cmd = n.subscribe("steering/as_rx/set_cmd", 20, callback_steering_set_cmd);
-    ros::Subscriber brake_set_cmd = n.subscribe("brake/as_rx/set_cmd", 20, callback_brake_set_cmd);
+    ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);  
+    ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);  
+    ros::Subscriber accelerator_set_cmd = n.subscribe("as_rx/accelerator_cmd", 20, callback_accelerator_set_cmd);
+    ros::Subscriber steering_set_cmd = n.subscribe("as_rx/steering_cmd", 20, callback_steering_set_cmd);
+    ros::Subscriber brake_set_cmd = n.subscribe("as_rx/brake_cmd", 20, callback_brake_set_cmd);
     ros::Subscriber can_rx_sub = n.subscribe("can_rx_forward", 20, callback_can_rx);
       
     //ros::Timer timer = n.createTimer(ros::Duration(0.1), timerCallback);
