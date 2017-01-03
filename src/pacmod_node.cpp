@@ -224,7 +224,7 @@ void callback_steering_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
 
     SteerCmdMsg obj;
     //TODO: Move rad/deg conversion to PACMod firmware.
-    obj.encode((msg->angular_position * 57.2958), (msg->speed_limit.angular.z * 57.2958));
+    obj.encode((msg->angular_position * 57.2958), (msg->angular_velocity_limit * 57.2958));
 
     ret = can_writer.send(STEERING_CMD_CAN_ID, obj.data, 8, true);
 
@@ -506,7 +506,7 @@ int main(int argc, char *argv[])
                     motor_rpt_2_msg.encoder_temp = obj.encoder_temp;
                     motor_rpt_2_msg.motor_temp = obj.motor_temp;
                     //TODO: Move deg/rad conversion to PACMod firmware.
-                    motor_rpt_2_msg.shaft_velocity.angular.z = (obj.velocity * 0.0174533);
+                    motor_rpt_2_msg.angular_velocity = (obj.velocity * 0.0174533);
                     brake_rpt_detail_2_pub.publish(motor_rpt_2_msg);
                 } break;
                 case BRAKE_MOTOR_RPT_3_CAN_ID:
@@ -542,7 +542,7 @@ int main(int argc, char *argv[])
                     motor_rpt_2_msg.encoder_temp = obj.encoder_temp;
                     motor_rpt_2_msg.motor_temp = obj.motor_temp;
                     //TODO: Move deg/rad conversion to PACMod firmware.
-                    motor_rpt_2_msg.shaft_velocity.angular.z = (obj.velocity * 0.0174533);
+                    motor_rpt_2_msg.angular_velocity = (obj.velocity * 0.0174533);
                     steering_rpt_detail_2_pub.publish(motor_rpt_2_msg);
                 } break;
                 case STEERING_MOTOR_RPT_3_CAN_ID:

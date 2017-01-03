@@ -1,4 +1,4 @@
 Header header
 
 float64 angular_position                # The desired rotational position of the motor shaft about it's z axis in Radians
-geometry_msgs/Twist speed_limit         # The desired speed limit to acheive the desired position in Radians/second (angular->z)
+float64 angular_velocity_limit          # The desired speed limit to acheive the desired position in Radians/second (z axis)
