@@ -29,14 +29,14 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
 
-#include <pacmod/pacmod_cmd.h>
-#include <pacmod/global_rpt.h>
-#include <pacmod/system_rpt_int.h>
-#include <pacmod/system_rpt_float.h>
-#include <pacmod/motor_rpt_1.h>
-#include <pacmod/motor_rpt_2.h>
-#include <pacmod/motor_rpt_3.h>
-#include <pacmod/position_with_speed.h>
+#include <pacmod/PacmodCmd.h>
+#include <pacmod/GlobalRpt.h>
+#include <pacmod/SystemRptInt.h>
+#include <pacmod/SystemRptFloat.h>
+#include <pacmod/MotorRpt1.h>
+#include <pacmod/MotorRpt2.h>
+#include <pacmod/MotorRpt3.h>
+#include <pacmod/PositionWithSpeed.h>
 
 #include <pacmod_defines.h>
 #include <pacmod_core.h>
@@ -119,7 +119,7 @@ void callback_pacmod_override(const std_msgs::Bool::ConstPtr& msg)
 }
 
 // Lists for incoming requests to change the state of the turn signals.
-void callback_turn_signal_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
+void callback_turn_signal_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
 {
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
@@ -150,7 +150,7 @@ void callback_turn_signal_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 }
 
 // Listens for incoming requests to change the gear state.
-void callback_shift_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
+void callback_shift_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
 {
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
@@ -181,7 +181,7 @@ void callback_shift_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 }
 
 // Listens for incoming requests to change the position of the throttle pedal.
-void callback_accelerator_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
+void callback_accelerator_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
 {
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
@@ -212,7 +212,7 @@ void callback_accelerator_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
 }
 
 // Listens for incoming requests to change the position of the steering wheel with a speed limit.
-void callback_steering_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
+void callback_steering_set_cmd(const pacmod::PositionWithSpeed::ConstPtr& msg)
 {
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
@@ -244,7 +244,7 @@ void callback_steering_set_cmd(const pacmod::position_with_speed::ConstPtr& msg)
 }
 
 // Listens for incoming requests to change the position of the brake pedal.
-void callback_brake_set_cmd(const pacmod::pacmod_cmd::ConstPtr& msg)
+void callback_brake_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
 {
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
@@ -328,18 +328,18 @@ int main(int argc, char *argv[])
     ros::Publisher can_tx_pub = n.advertise<can_interface::can_frame>("can_tx", 20);
     can_rx_echo_pub = n.advertise<can_interface::can_frame>("can_rx_echo", 20);
 
-    ros::Publisher global_rpt_pub = n.advertise<pacmod::global_rpt>("parsed_tx/global_rpt", 20);
-    ros::Publisher turn_rpt_pub = n.advertise<pacmod::system_rpt_int>("parsed_tx/turn_rpt", 20);
-    ros::Publisher shift_rpt_pub = n.advertise<pacmod::system_rpt_int>("parsed_tx/shift_rpt", 20);
-    ros::Publisher accel_rpt_pub = n.advertise<pacmod::system_rpt_float>("parsed_tx/accel_rpt", 20);
-    ros::Publisher steer_rpt_pub = n.advertise<pacmod::system_rpt_float>("parsed_tx/steer_rpt", 20);
-    ros::Publisher brake_rpt_pub = n.advertise<pacmod::system_rpt_float>("parsed_tx/brake_rpt", 20);
-    ros::Publisher steering_rpt_detail_1_pub = n.advertise<pacmod::motor_rpt_1>("parsed_tx/steer_rpt_detail_1", 20);
-    ros::Publisher steering_rpt_detail_2_pub = n.advertise<pacmod::motor_rpt_2>("parsed_tx/steer_rpt_detail_2", 20);
-    ros::Publisher steering_rpt_detail_3_pub = n.advertise<pacmod::motor_rpt_3>("parsed_tx/steer_rpt_detail_3", 20);
-    ros::Publisher brake_rpt_detail_1_pub = n.advertise<pacmod::motor_rpt_1>("parsed_tx/brake_rpt_detail_1", 20);
-    ros::Publisher brake_rpt_detail_2_pub = n.advertise<pacmod::motor_rpt_2>("parsed_tx/brake_rpt_detail_2", 20);
-    ros::Publisher brake_rpt_detail_3_pub = n.advertise<pacmod::motor_rpt_3>("parsed_tx/brake_rpt_detail_3", 20);
+    ros::Publisher global_rpt_pub = n.advertise<pacmod::GlobalRpt>("parsed_tx/global_rpt", 20);
+    ros::Publisher turn_rpt_pub = n.advertise<pacmod::SystemRptInt>("parsed_tx/turn_rpt", 20);
+    ros::Publisher shift_rpt_pub = n.advertise<pacmod::SystemRptInt>("parsed_tx/shift_rpt", 20);
+    ros::Publisher accel_rpt_pub = n.advertise<pacmod::SystemRptFloat>("parsed_tx/accel_rpt", 20);
+    ros::Publisher steer_rpt_pub = n.advertise<pacmod::SystemRptFloat>("parsed_tx/steer_rpt", 20);
+    ros::Publisher brake_rpt_pub = n.advertise<pacmod::SystemRptFloat>("parsed_tx/brake_rpt", 20);
+    ros::Publisher steering_rpt_detail_1_pub = n.advertise<pacmod::MotorRpt1>("parsed_tx/steer_rpt_detail_1", 20);
+    ros::Publisher steering_rpt_detail_2_pub = n.advertise<pacmod::MotorRpt2>("parsed_tx/steer_rpt_detail_2", 20);
+    ros::Publisher steering_rpt_detail_3_pub = n.advertise<pacmod::MotorRpt3>("parsed_tx/steer_rpt_detail_3", 20);
+    ros::Publisher brake_rpt_detail_1_pub = n.advertise<pacmod::MotorRpt1>("parsed_tx/brake_rpt_detail_1", 20);
+    ros::Publisher brake_rpt_detail_2_pub = n.advertise<pacmod::MotorRpt2>("parsed_tx/brake_rpt_detail_2", 20);
+    ros::Publisher brake_rpt_detail_3_pub = n.advertise<pacmod::MotorRpt3>("parsed_tx/brake_rpt_detail_3", 20);
     ros::Publisher vehicle_speed_pub = n.advertise<std_msgs::Float64>("parsed_tx/vehicle_speed_rpt", 20);
     
     ros::Publisher override_pub = n.advertise<std_msgs::Bool>("as_tx/override", 20, true);
@@ -406,7 +406,7 @@ int main(int argc, char *argv[])
                     GlobalRptMsg obj;
                     obj.parse(msg);
 
-                    pacmod::global_rpt global_rpt_msg;
+                    pacmod::GlobalRpt global_rpt_msg;
                     global_rpt_msg.header.stamp = now;
                     global_rpt_msg.enabled = obj.enabled;
                     global_rpt_msg.overridden = obj.overridden;
@@ -420,7 +420,7 @@ int main(int argc, char *argv[])
                     SystemRptIntMsg obj;
                     obj.parse(msg);
 
-                    pacmod::system_rpt_int turn_rpt_msg;
+                    pacmod::SystemRptInt turn_rpt_msg;
                     turn_rpt_msg.header.stamp = now;
                     turn_rpt_msg.manual_input = obj.manual_input;
                     turn_rpt_msg.command = obj.command;
@@ -432,7 +432,7 @@ int main(int argc, char *argv[])
                     SystemRptIntMsg obj;
                     obj.parse(msg);
 
-                    pacmod::system_rpt_int shift_rpt_msg;
+                    pacmod::SystemRptInt shift_rpt_msg;
                     shift_rpt_msg.header.stamp = now;
                     shift_rpt_msg.manual_input = obj.manual_input;
                     shift_rpt_msg.command = obj.command;
@@ -444,7 +444,7 @@ int main(int argc, char *argv[])
                     SystemRptFloatMsg obj;
                     obj.parse(msg);
 
-                    pacmod::system_rpt_float accel_rpt_msg;
+                    pacmod::SystemRptFloat accel_rpt_msg;
                     accel_rpt_msg.header.stamp = now;
                     accel_rpt_msg.manual_input = obj.manual_input;
                     accel_rpt_msg.command = obj.command;
@@ -456,7 +456,7 @@ int main(int argc, char *argv[])
                     SystemRptFloatMsg obj;
                     obj.parse(msg);
 
-                    pacmod::system_rpt_float steer_rpt_msg;
+                    pacmod::SystemRptFloat steer_rpt_msg;
                     steer_rpt_msg.header.stamp = now;
                     //TODO: Move deg/rad conversion to PACMod firmware.
                     steer_rpt_msg.manual_input = (obj.manual_input * 0.0174533);
@@ -469,7 +469,7 @@ int main(int argc, char *argv[])
                     SystemRptFloatMsg obj;
                     obj.parse(msg);
 
-                    pacmod::system_rpt_float brake_rpt_msg;
+                    pacmod::SystemRptFloat brake_rpt_msg;
                     brake_rpt_msg.header.stamp = now;
                     brake_rpt_msg.manual_input = obj.manual_input;
                     brake_rpt_msg.command = obj.command;
@@ -489,7 +489,7 @@ int main(int argc, char *argv[])
                     MotorRpt1Msg obj;
                     obj.parse(msg);
 
-                    pacmod::motor_rpt_1 motor_rpt_1_msg;
+                    pacmod::MotorRpt1 motor_rpt_1_msg;
                     motor_rpt_1_msg.header.stamp = now;
                     motor_rpt_1_msg.current = obj.current;
                     //TODO: Move deg/rad conversion to PACMod firmware.
@@ -501,7 +501,7 @@ int main(int argc, char *argv[])
                     MotorRpt2Msg obj;
                     obj.parse(msg);
 
-                    pacmod::motor_rpt_2 motor_rpt_2_msg;
+                    pacmod::MotorRpt2 motor_rpt_2_msg;
                     motor_rpt_2_msg.header.stamp = now;
                     motor_rpt_2_msg.encoder_temp = obj.encoder_temp;
                     motor_rpt_2_msg.motor_temp = obj.motor_temp;
@@ -514,7 +514,7 @@ int main(int argc, char *argv[])
                     MotorRpt3Msg obj;
                     obj.parse(msg);
 
-                    pacmod::motor_rpt_3 motor_rpt_3_msg;
+                    pacmod::MotorRpt3 motor_rpt_3_msg;
                     motor_rpt_3_msg.header.stamp = now;
                     motor_rpt_3_msg.torque_output = obj.torque_output;
                     motor_rpt_3_msg.torque_input = obj.torque_input;
@@ -525,7 +525,7 @@ int main(int argc, char *argv[])
                     MotorRpt1Msg obj;
                     obj.parse(msg);
 
-                    pacmod::motor_rpt_1 motor_rpt_1_msg;
+                    pacmod::MotorRpt1 motor_rpt_1_msg;
                     motor_rpt_1_msg.header.stamp = now;
                     motor_rpt_1_msg.current = obj.current;
                     //TODO: Move deg/rad conversion to PACMod firmware.
@@ -537,7 +537,7 @@ int main(int argc, char *argv[])
                     MotorRpt2Msg obj;
                     obj.parse(msg);
 
-                    pacmod::motor_rpt_2 motor_rpt_2_msg;
+                    pacmod::MotorRpt2 motor_rpt_2_msg;
                     motor_rpt_2_msg.header.stamp = now;
                     motor_rpt_2_msg.encoder_temp = obj.encoder_temp;
                     motor_rpt_2_msg.motor_temp = obj.motor_temp;
@@ -550,7 +550,7 @@ int main(int argc, char *argv[])
                     MotorRpt3Msg obj;
                     obj.parse(msg);
 
-                    pacmod::motor_rpt_3 motor_rpt_3_msg;
+                    pacmod::MotorRpt3 motor_rpt_3_msg;
                     motor_rpt_3_msg.header.stamp = now;
                     motor_rpt_3_msg.torque_output = obj.torque_output;
                     motor_rpt_3_msg.torque_input = obj.torque_input;

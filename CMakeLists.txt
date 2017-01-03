@@ -23,14 +23,14 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  pacmod_cmd.msg
-  global_rpt.msg
-  system_rpt_int.msg
-  system_rpt_float.msg
-  motor_rpt_1.msg
-  motor_rpt_2.msg
-  motor_rpt_3.msg
-  position_with_speed.msg
+  PacmodCmd.msg
+  GlobalRpt.msg
+  SystemRptInt.msg
+  SystemRptFloat.msg
+  MotorRpt1.msg
+  MotorRpt2.msg
+  MotorRpt3.msg
+  PositionWithSpeed.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
