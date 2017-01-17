@@ -222,7 +222,7 @@ void callback_steering_set_cmd(const pacmod::PositionWithSpeed::ConstPtr& msg)
     }
 
     SteerCmdMsg obj;
-    obj.encode((msg->angular_position * 10000.0), (msg->angular_velocity_limit * 10000.0));
+    obj.encode(msg->angular_position, msg->angular_velocity_limit);
 
     ret = can_writer.send(STEERING_CMD_CAN_ID, obj.data, 8, true);
 
