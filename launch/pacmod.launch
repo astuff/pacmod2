@@ -1,6 +1,6 @@
 <launch>
 
-    <arg name="pacmod_can_hardware_id" default="10051"/>
+    <arg name="pacmod_can_hardware_id" default="27791"/>
     <arg name="pacmod_can_circuit_id" default="0"/>
 
     <group ns="pacmod">

@@ -15,7 +15,7 @@
 * TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS, OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 */
 
-#include <can_interface.h>
+#include <can_interface/can_interface.h>
 #include <can_interface/can_frame.h>
 #include <stdio.h>
 #include <signal.h>
