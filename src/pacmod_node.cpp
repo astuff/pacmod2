@@ -45,7 +45,7 @@ using namespace std;
 using namespace AS::CAN;
 using namespace AS::Drivers::PACMod;
 
-CanInterface can_reader, can_writer;
+CanInterface can_reader;
 ros::Publisher can_rx_echo_pub;
 int hardware_id = 0;
 int circuit_id = -1;
@@ -54,6 +54,7 @@ int bit_rate = 500000;
 // Listens for incoming raw CAN messages and forwards them to the PACMod.
 void callback_can_rx(const can_interface::can_frame::ConstPtr& msg)
 {
+    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
     
     if (ret != ok)
@@ -82,6 +83,7 @@ void callback_can_rx(const can_interface::can_frame::ConstPtr& msg)
 // Sets the PACMod override flag through CAN.
 void set_override(bool val)
 {
+    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
@@ -120,6 +122,7 @@ void callback_pacmod_override(const std_msgs::Bool::ConstPtr& msg)
 // Lists for incoming requests to change the state of the turn signals.
 void callback_turn_signal_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
 {
+    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
@@ -151,6 +154,7 @@ void callback_turn_signal_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
 // Listens for incoming requests to change the gear state.
 void callback_shift_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
 {
+    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
@@ -182,6 +186,7 @@ void callback_shift_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
 // Listens for incoming requests to change the position of the throttle pedal.
 void callback_accelerator_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
 {
+    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
@@ -213,6 +218,7 @@ void callback_accelerator_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
 // Listens for incoming requests to change the position of the steering wheel with a speed limit.
 void callback_steering_set_cmd(const pacmod::PositionWithSpeed::ConstPtr& msg)
 {
+    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
@@ -244,6 +250,7 @@ void callback_steering_set_cmd(const pacmod::PositionWithSpeed::ConstPtr& msg)
 // Listens for incoming requests to change the position of the brake pedal.
 void callback_brake_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
 {
+    CanInterface can_writer;
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
     if (ret != ok)
