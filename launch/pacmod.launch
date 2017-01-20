@@ -9,12 +9,6 @@
             <param name="can_hardware_id" value="$(arg pacmod_can_hardware_id)"/>
             <param name="can_circuit_id" value="$(arg pacmod_can_circuit_id)"/>
         </node>  
-
-        <node pkg="joy" type="joy_node" name="joy">
-              <param name="coalesce_interval" type="double" value="0.02"/>
-        </node>
-      
-        <node pkg="pacmod_game_control" type="pacmod_game_control_node" name="pacmod_game_control"/>
     
     </group>
   
