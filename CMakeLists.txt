@@ -15,7 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
-
 ################################################
 ## Declare ROS messages, services and actions ##
 ################################################
@@ -79,3 +78,17 @@ add_dependencies(pacmod_node pacmod_generate_messages_cpp ${${PROJECT_NAME}_EXPO
 target_link_libraries(pacmod_node
   ${catkin_LIBRARIES}
 )
+
+install(TARGETS pacmod_node
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+    )
+
+install(DIRECTORY launch/
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+    )
+
+install(FILES README.md
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+    )
