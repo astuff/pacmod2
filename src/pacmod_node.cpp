@@ -38,7 +38,6 @@
 #include <pacmod/MotorRpt3.h>
 #include <pacmod/PositionWithSpeed.h>
 
-#include <pacmod_defines.h>
 #include <pacmod_core.h>
 
 using namespace std;

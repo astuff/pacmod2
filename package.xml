@@ -1,11 +1,10 @@
 <?xml version="1.0"?>
 <package>
   <name>pacmod</name>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
   <description>The pacmod package</description>
   <maintainer email="software@autonomoustuff.com">AutonomouStuff Software Team</maintainer>
   <license>Closed Source</license>
-  <!-- <url type="website">http://wiki.ros.org/pacmod</url> -->
   <author email="jdriscoll@autonomoustuff.com">Joe Driscoll</author> -->
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
