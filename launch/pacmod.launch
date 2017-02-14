@@ -3,11 +3,36 @@
     <arg name="pacmod_can_hardware_id" default="27791"/>
     <arg name="pacmod_can_circuit_id" default="0"/>
 
+<!-- Steering and brake calibration values are below. Comment out one set only. -->
+
+<!-- e4 #1 -->
+<!--    
+    <arg name="pacmod_steering_offset_rad" default="3.01"/>
+    <arg name="pacmod_brake_min_brake_offset_rad" default="8.159"/>
+    <arg name="pacmod_brake_max_brake_offset_rad" default="6.883"/>
+-->    
+
+<!-- e6 #1 -->
+<!-- 
+    <arg name="pacmod_steering_offset_rad" default="-1.7"/>
+    <arg name="pacmod_brake_min_brake_offset_rad" default="-2.04"/>
+    <arg name="pacmod_brake_max_brake_offset_rad" default="-3.84"/>
+-->
+
+<!-- eLXD #1 -->
+
+    <arg name="pacmod_steering_offset_rad" default="-3.846"/>
+    <arg name="pacmod_brake_min_brake_offset_rad" default="-2.04"/>
+    <arg name="pacmod_brake_max_brake_offset_rad" default="-3.84"/>
+
     <group ns="pacmod">
   
         <node pkg="pacmod" type="pacmod_node" name="pacmod">
             <param name="can_hardware_id" value="$(arg pacmod_can_hardware_id)"/>
             <param name="can_circuit_id" value="$(arg pacmod_can_circuit_id)"/>
+            <param name="steering_offset_rad" value="$(arg pacmod_steering_offset_rad)"/>
+            <param name="brake_min_brake_offset_rad" value="$(arg pacmod_brake_min_brake_offset_rad)"/>
+            <param name="brake_max_brake_offset_rad" value="$(arg pacmod_brake_max_brake_offset_rad)"/>
         </node>  
     
     </group>

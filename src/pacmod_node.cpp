@@ -50,6 +50,7 @@ ros::Publisher can_rx_echo_pub;
 int hardware_id = 0;
 int circuit_id = -1;
 int bit_rate = 500000;
+double steering_offset_rad, brake_min_brake_offset_rad, brake_max_brake_offset_rad;
 
 // Listens for incoming raw CAN messages and forwards them to the PACMod.
 void callback_can_rx(const can_interface::can_frame::ConstPtr& msg)
@@ -228,7 +229,7 @@ void callback_steering_set_cmd(const pacmod::PositionWithSpeed::ConstPtr& msg)
     }
 
     SteerCmdMsg obj;
-    obj.encode(msg->angular_position, msg->angular_velocity_limit);
+    obj.encode(msg->angular_position - steering_offset_rad, msg->angular_velocity_limit);
 
     ret = can_writer.send(STEERING_CMD_CAN_ID, obj.data, 8, true);
 
@@ -260,7 +261,8 @@ void callback_brake_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
     }
 
     BrakeCmdMsg obj;
-    obj.encode(msg->f64_cmd);
+    double brake_delta=brake_min_brake_offset_rad-brake_max_brake_offset_rad;
+    obj.encode(msg->f64_cmd * brake_delta + brake_min_brake_offset_rad);
 
     ret = can_writer.send(BRAKE_CMD_CAN_ID, obj.data, 8, true);
 
@@ -325,7 +327,23 @@ int main(int argc, char *argv[])
             willExit = true;
         }
     }
-
+    
+    if (priv.getParam("steering_offset_rad", steering_offset_rad))
+    {
+        ROS_INFO("Got steering_offset_rad: %f", steering_offset_rad);
+    }
+    
+    if (priv.getParam("brake_min_brake_offset_rad", brake_min_brake_offset_rad))
+    {
+        ROS_INFO("Got brake_min_brake_offset_rad: %f", brake_min_brake_offset_rad);
+    }
+    
+    if (priv.getParam("brake_max_brake_offset_rad", brake_max_brake_offset_rad))
+    {
+        ROS_INFO("Got brake_max_brake_offset_rad: %f", brake_max_brake_offset_rad);
+    }
+    
+    
     if (willExit)
         return 0;
             
