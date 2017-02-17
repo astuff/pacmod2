@@ -16,7 +16,7 @@
 */
 
 #include <can_interface/can_interface.h>
-#include <can_interface/can_frame.h>
+#include <can_interface/CanFrame.h>
 #include <stdio.h>
 #include <signal.h>
 #include <mutex>
@@ -52,7 +52,7 @@ int circuit_id = -1;
 int bit_rate = 500000;
 
 // Listens for incoming raw CAN messages and forwards them to the PACMod.
-void callback_can_rx(const can_interface::can_frame::ConstPtr& msg)
+void callback_can_rx(const can_interface::CanFrame::ConstPtr& msg)
 {
     lock_guard<mutex> lck(writerMut);
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
@@ -103,7 +103,7 @@ void set_override(bool val)
     }
     else
     {
-        can_interface::can_frame can_msg;
+        can_interface::CanFrame can_msg;
         can_msg.header.stamp = ros::Time::now();
         can_msg.id = GLOBAL_CMD_CAN_ID;
         can_msg.dlc = 8;
@@ -142,7 +142,7 @@ void callback_turn_signal_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
     }
     else
     {
-        can_interface::can_frame can_msg;
+        can_interface::CanFrame can_msg;
         can_msg.header.stamp = ros::Time::now();
         can_msg.id = TURN_CMD_CAN_ID;
         can_msg.dlc = 8;
@@ -174,7 +174,7 @@ void callback_shift_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
     }
     else
     {
-        can_interface::can_frame can_msg;
+        can_interface::CanFrame can_msg;
         can_msg.header.stamp = ros::Time::now();
         can_msg.id = SHIFT_CMD_CAN_ID;
         can_msg.dlc = 8;
@@ -206,7 +206,7 @@ void callback_accelerator_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
     }
     else
     {
-        can_interface::can_frame can_msg;
+        can_interface::CanFrame can_msg;
         can_msg.header.stamp = ros::Time::now();
         can_msg.id = ACCEL_CMD_CAN_ID;
         can_msg.dlc = 8;
@@ -238,7 +238,7 @@ void callback_steering_set_cmd(const pacmod::PositionWithSpeed::ConstPtr& msg)
     }
     else
     {
-        can_interface::can_frame can_msg;
+        can_interface::CanFrame can_msg;
         can_msg.header.stamp = ros::Time::now();
         can_msg.id = STEERING_CMD_CAN_ID;
         can_msg.dlc = 8;
@@ -270,7 +270,7 @@ void callback_brake_set_cmd(const pacmod::PacmodCmd::ConstPtr& msg)
     }
     else
     {
-        can_interface::can_frame can_msg;
+        can_interface::CanFrame can_msg;
         can_msg.header.stamp = ros::Time::now();
         can_msg.id = BRAKE_CMD_CAN_ID;
         can_msg.dlc = 8;
@@ -330,8 +330,8 @@ int main(int argc, char *argv[])
         return 0;
             
     // Advertise published messages
-    ros::Publisher can_tx_pub = n.advertise<can_interface::can_frame>("can_tx", 20);
-    can_rx_echo_pub = n.advertise<can_interface::can_frame>("can_rx_echo", 20);
+    ros::Publisher can_tx_pub = n.advertise<can_interface::CanFrame>("can_tx", 20);
+    can_rx_echo_pub = n.advertise<can_interface::CanFrame>("can_rx_echo", 20);
 
     ros::Publisher global_rpt_pub = n.advertise<pacmod::GlobalRpt>("parsed_tx/global_rpt", 20);
     ros::Publisher turn_rpt_pub = n.advertise<pacmod::SystemRptInt>("parsed_tx/turn_rpt", 20);
@@ -385,7 +385,7 @@ int main(int argc, char *argv[])
         {
             ros::Time now = ros::Time::now();
 
-            can_interface::can_frame can_pub_msg;
+            can_interface::CanFrame can_pub_msg;
             can_pub_msg.header.stamp = now;
             can_pub_msg.header.frame_id = "0";
             can_pub_msg.id = id;
