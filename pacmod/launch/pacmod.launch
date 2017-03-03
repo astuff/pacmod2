@@ -5,7 +5,7 @@
 
     <group ns="pacmod">
   
-        <node pkg="pacmod" type="pacmod_node" name="pacmod">
+        <node pkg="pacmod" type="pacmod" name="pacmod">
             <param name="can_hardware_id" value="$(arg pacmod_can_hardware_id)"/>
             <param name="can_circuit_id" value="$(arg pacmod_can_circuit_id)"/>
         </node>  
