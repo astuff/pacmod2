@@ -51,7 +51,7 @@ ros::Publisher can_rx_echo_pub;
 int hardware_id = 0;
 int circuit_id = -1;
 int bit_rate = 500000;
-bool overridden = false;
+bool overridden = true;
 int override_debounce_count = 0;
 
 // Listens for incoming raw CAN messages and forwards them to the PACMod.
