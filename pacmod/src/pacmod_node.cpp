@@ -50,6 +50,7 @@ ros::Publisher can_rx_echo_pub;
 int hardware_id = 0;
 int circuit_id = -1;
 int bit_rate = 500000;
+bool overridden = false;
 
 // Listens for incoming raw CAN messages and forwards them to the PACMod.
 void callback_can_rx(const can_interface::CanFrame::ConstPtr& msg)
@@ -83,6 +84,8 @@ void callback_can_rx(const can_interface::CanFrame::ConstPtr& msg)
 // Sets the PACMod override flag through CAN.
 void set_override(bool val)
 {
+    overridden = val;
+
     lock_guard<mutex> lck(writerMut);
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
@@ -284,7 +287,7 @@ void callback_brake_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 // command is made by the user.
 void timerCallback(const ros::TimerEvent& evt)
 {
-//  set_override(pacmod_override);
+    set_override(overridden);
 }
 
 int main(int argc, char *argv[])
@@ -360,7 +363,7 @@ int main(int argc, char *argv[])
 
     ros::Subscriber override_sub = n.subscribe("as_rx/override", 20, callback_pacmod_override);
       
-    //ros::Timer timer = n.createTimer(ros::Duration(0.1), timerCallback);
+    ros::Timer timer = n.createTimer(ros::Duration(0.02), timerCallback);
         
     spinner.start();
     
@@ -419,6 +422,11 @@ int main(int argc, char *argv[])
 
                     bool_pub_msg.data = (!obj.enabled || obj.overridden);
                     override_pub.publish(bool_pub_msg);
+
+                    if (obj.overridden)
+                    {
+                        overridden = true;
+                    }
                 } break;
                 case TURN_RPT_CAN_ID:
                 {
