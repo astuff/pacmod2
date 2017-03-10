@@ -44,6 +44,7 @@ using namespace std;
 using namespace AS::CAN;
 using namespace AS::Drivers::PACMod;
 
+const static int OVERRIDE_DEBOUNCE = 8;
 CanInterface can_reader, can_writer;
 mutex writerMut;
 ros::Publisher can_rx_echo_pub;
@@ -51,6 +52,7 @@ int hardware_id = 0;
 int circuit_id = -1;
 int bit_rate = 500000;
 bool overridden = false;
+int override_debounce_count = 0;
 
 // Listens for incoming raw CAN messages and forwards them to the PACMod.
 void callback_can_rx(const can_interface::CanFrame::ConstPtr& msg)
@@ -85,6 +87,7 @@ void callback_can_rx(const can_interface::CanFrame::ConstPtr& msg)
 void set_override(bool val)
 {
     overridden = val;
+    override_debounce_count = 0;
 
     lock_guard<mutex> lck(writerMut);
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
@@ -425,7 +428,14 @@ int main(int argc, char *argv[])
 
                     if (obj.overridden)
                     {
-                        overridden = true;
+		        if (override_debounce_count > OVERRIDE_DEBOUNCE)
+		        {
+			    overridden = true;
+		        }
+                        else
+                        {
+                            override_debounce_count++;
+                        }
                     }
                 } break;
                 case TURN_RPT_CAN_ID:
