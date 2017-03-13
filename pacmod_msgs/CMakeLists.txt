@@ -20,6 +20,7 @@ add_message_files(
   MotorRpt2.msg
   MotorRpt3.msg
   PositionWithSpeed.msg
+  VehicleSpeedRpt.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
