@@ -389,6 +389,7 @@ int main(int argc, char *argv[])
     ros::Publisher brake_rpt_detail_2_pub = n.advertise<pacmod_msgs::MotorRpt2>("parsed_tx/brake_rpt_detail_2", 20);
     ros::Publisher brake_rpt_detail_3_pub = n.advertise<pacmod_msgs::MotorRpt3>("parsed_tx/brake_rpt_detail_3", 20);
     ros::Publisher vehicle_speed_pub = n.advertise<pacmod_msgs::VehicleSpeedRpt>("parsed_tx/vehicle_speed_rpt", 20);
+    ros::Publisher vehicle_speed_ms_pub = n.advertise<std_msgs::Float64>("as_tx/vehicle_speed", 20);
     
     ros::Publisher enable_pub = n.advertise<std_msgs::Bool>("as_tx/enable", 20, true);
     
@@ -545,7 +546,12 @@ int main(int argc, char *argv[])
                     veh_spd_rpt_msg.vehicle_speed_valid = obj.vehicle_speed_valid;
 					veh_spd_rpt_msg.vehicle_speed_raw[0] = obj.vehicle_speed_raw[0];
 					veh_spd_rpt_msg.vehicle_speed_raw[1] = obj.vehicle_speed_raw[1];
-                    vehicle_speed_pub.publish(veh_spd_rpt_msg);         
+                    vehicle_speed_pub.publish(veh_spd_rpt_msg);  
+
+                    // Now publish in m/s
+                    std_msgs::Float64 veh_spd_ms_msg;
+                    veh_spd_ms_msg.data = (obj.vehicle_speed)*0.44704;
+                    vehicle_speed_ms_pub.publish(veh_spd_ms_msg);
                 } break;
                 case BRAKE_MOTOR_RPT_1_CAN_ID:
                 {
