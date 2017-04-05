@@ -10,12 +10,14 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   can_interface
   pacmod_msgs
+  can_msgs
 )
 
 catkin_package(CATKIN_DEPENDS
   roscpp
   std_msgs 
   pacmod_msgs
+  can_msgs
 )
 
 ## Specify additional locations of header files
