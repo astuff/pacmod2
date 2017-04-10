@@ -390,7 +390,7 @@ int main(int argc, char *argv[])
     ros::Publisher enable_pub = n.advertise<std_msgs::Bool>("as_tx/enable", 20, true);
     
     // Subscribe to messages
-    ros::Subscriber can_rx_sub = n.subscribe("can_rx_forward", 20, callback_can_rx);
+    ros::Subscriber can_rx_sub = n.subscribe("can_rx", 20, callback_can_rx);
 
     ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);  
     ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);  
