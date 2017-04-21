@@ -16,7 +16,7 @@
 */
 
 #include <can_interface/can_interface.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <signal.h>
 #include <mutex>
 #include <errno.h>
@@ -28,8 +28,8 @@
 #include <std_msgs/Int16.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
-
 #include <can_msgs/Frame.h>
+
 #include <pacmod_msgs/PacmodCmd.h>
 #include <pacmod_msgs/GlobalRpt.h>
 #include <pacmod_msgs/SystemRptInt.h>
@@ -39,14 +39,13 @@
 #include <pacmod_msgs/MotorRpt3.h>
 #include <pacmod_msgs/PositionWithSpeed.h>
 #include <pacmod_msgs/VehicleSpeedRpt.h>
-
 #include <pacmod_core.h>
 
 using namespace std;
 using namespace AS::CAN;
 using namespace AS::Drivers::PACMod;
 
-const static int OVERRIDE_DEBOUNCE = 8;
+//const static int OVERRIDE_DEBOUNCE = 8;
 CanInterface can_reader, can_writer;
 mutex writerMut;
 ros::Publisher can_rx_echo_pub;
@@ -56,7 +55,7 @@ int bit_rate = 500000;
 //bool overridden = true;
 //int override_debounce_count = 0;
 
-// Listens for incoming raw CAN messages and forwards them to the PACMod.
+// Listens for incoming raw CAN messages and forwards them to the PACMod
 void callback_can_rx(const can_msgs::Frame::ConstPtr& msg)
 {
     lock_guard<mutex> lck(writerMut);
@@ -93,8 +92,8 @@ void send_heartbeat()
     }
 
     HeartbeatMsg obj;
-	unsigned char code = 0x65;
-	obj.encode(code);
+    unsigned char code = 0x65;
+    obj.encode(code);
 
     ret = can_writer.send(HEARTBEAT_CAN_ID, obj.data, 8, true);
 
@@ -158,7 +157,7 @@ void callback_pacmod_enable(const std_msgs::Bool::ConstPtr& msg)
     ROS_INFO("Setting enable to %d\n\r", msg->data);
 }
 
-// Lists for incoming requests to change the state of the turn signals.
+// Listens for incoming requests to change the state of the turn signals
 void callback_turn_signal_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
     lock_guard<mutex> lck(writerMut);
@@ -190,7 +189,7 @@ void callback_turn_signal_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
     }
 }
 
-// Listens for incoming requests to change the gear shifter state.
+// Listens for incoming requests to change the gear shifter state
 void callback_shift_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
     lock_guard<mutex> lck(writerMut);
@@ -222,7 +221,7 @@ void callback_shift_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
     }
 }
 
-// Listens for incoming requests to change the position of the throttle pedal.
+// Listens for incoming requests to change the position of the throttle pedal
 void callback_accelerator_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
     lock_guard<mutex> lck(writerMut);
@@ -254,7 +253,7 @@ void callback_accelerator_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
     }
 }
 
-// Listens for incoming requests to change the position of the steering wheel with a speed limit.
+// Listens for incoming requests to change the position of the steering wheel with a speed limit
 void callback_steering_set_cmd(const pacmod_msgs::PositionWithSpeed::ConstPtr& msg)
 {
     lock_guard<mutex> lck(writerMut);
@@ -286,7 +285,7 @@ void callback_steering_set_cmd(const pacmod_msgs::PositionWithSpeed::ConstPtr& m
     }
 }
 
-// Listens for incoming requests to change the position of the brake pedal.
+// Listens for incoming requests to change the position of the brake pedal
 void callback_brake_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
     lock_guard<mutex> lck(writerMut);
@@ -328,7 +327,6 @@ void timerCallback(const ros::TimerEvent& evt)
 
 int main(int argc, char *argv[])
 { 
-    int actuator_type = -1; 
     bool willExit = false;
         
     ros::init(argc, argv, "pacmod");
@@ -346,9 +344,7 @@ int main(int argc, char *argv[])
         ROS_INFO("Got hardware_id: %d", hardware_id);
         if (hardware_id <= 0)
         {
-            cout << endl;
-            cerr << "CAN hardware ID is invalid" << endl;
-            cout << endl;
+            ROS_INFO("\nCAN hardware ID is invalid\n";
             willExit = true;
         }
     }
@@ -358,9 +354,7 @@ int main(int argc, char *argv[])
         ROS_INFO("Got can_circuit_id: %d", circuit_id);
         if (circuit_id < 0)
         {
-            cout << endl;
-            cerr << "Circuit ID is invalid" << endl;
-            cout << endl;
+            ROS_INFO("\nCAN circuit ID is invalid\n";
             willExit = true;
         }
     }
@@ -370,8 +364,6 @@ int main(int argc, char *argv[])
             
     // Advertise published messages
     ros::Publisher can_tx_pub = n.advertise<can_msgs::Frame>("can_tx", 20);
-    can_rx_echo_pub = n.advertise<can_msgs::Frame>("can_rx_echo", 20);
-
     ros::Publisher global_rpt_pub = n.advertise<pacmod_msgs::GlobalRpt>("parsed_tx/global_rpt", 20);
     ros::Publisher turn_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/turn_rpt", 20);
     ros::Publisher shift_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/shift_rpt", 20);
@@ -386,18 +378,16 @@ int main(int argc, char *argv[])
     ros::Publisher brake_rpt_detail_3_pub = n.advertise<pacmod_msgs::MotorRpt3>("parsed_tx/brake_rpt_detail_3", 20);
     ros::Publisher vehicle_speed_pub = n.advertise<pacmod_msgs::VehicleSpeedRpt>("parsed_tx/vehicle_speed_rpt", 20);
     ros::Publisher vehicle_speed_ms_pub = n.advertise<std_msgs::Float64>("as_tx/vehicle_speed", 20);
-    
     ros::Publisher enable_pub = n.advertise<std_msgs::Bool>("as_tx/enable", 20, true);
-    
+    can_rx_echo_pub = n.advertise<can_msgs::Frame>("can_rx_echo", 20);
+        
     // Subscribe to messages
     ros::Subscriber can_rx_sub = n.subscribe("can_rx", 20, callback_can_rx);
-
     ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);  
     ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);  
     ros::Subscriber accelerator_set_cmd = n.subscribe("as_rx/accel_cmd", 20, callback_accelerator_set_cmd);
     ros::Subscriber steering_set_cmd = n.subscribe("as_rx/steer_cmd", 20, callback_steering_set_cmd);
     ros::Subscriber brake_set_cmd = n.subscribe("as_rx/brake_cmd", 20, callback_brake_set_cmd);
-
     ros::Subscriber enable_sub = n.subscribe("as_rx/enable", 20, callback_pacmod_enable);
       
     ros::Timer timer = n.createTimer(ros::Duration(0.05), timerCallback);
@@ -412,7 +402,7 @@ int main(int argc, char *argv[])
   
     return_statuses ret;
 
-    // Main loop, waiting for the report message
+    // Main loop: wait for the report messages via CAN, then publish to ROS topics
     while (ros::ok())
     {
         long id;
@@ -457,10 +447,10 @@ int main(int argc, char *argv[])
 
                     /*if (obj.overridden)
                     {
-						if (override_debounce_count > OVERRIDE_DEBOUNCE)
-						{
-							overridden = true;
-						}
+						            if (override_debounce_count > OVERRIDE_DEBOUNCE)
+						            {
+							              overridden = true;
+						            }
                         else
                         {
                             override_debounce_count++;
@@ -532,11 +522,11 @@ int main(int argc, char *argv[])
                     VehicleSpeedRptMsg obj;
                     obj.parse(msg);
 					
-					pacmod_msgs::VehicleSpeedRpt veh_spd_rpt_msg;
+					          pacmod_msgs::VehicleSpeedRpt veh_spd_rpt_msg;
                     veh_spd_rpt_msg.vehicle_speed = obj.vehicle_speed;
                     veh_spd_rpt_msg.vehicle_speed_valid = obj.vehicle_speed_valid;
-					veh_spd_rpt_msg.vehicle_speed_raw[0] = obj.vehicle_speed_raw[0];
-					veh_spd_rpt_msg.vehicle_speed_raw[1] = obj.vehicle_speed_raw[1];
+                    veh_spd_rpt_msg.vehicle_speed_raw[0] = obj.vehicle_speed_raw[0];
+					          veh_spd_rpt_msg.vehicle_speed_raw[1] = obj.vehicle_speed_raw[1];
                     vehicle_speed_pub.publish(veh_spd_rpt_msg);  
 
                     // Now publish in m/s
@@ -552,7 +542,7 @@ int main(int argc, char *argv[])
                     pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
                     motor_rpt_1_msg.header.stamp = now;
                     motor_rpt_1_msg.current = obj.current;
-                    motor_rpt_1_msg.position = (obj.position);
+                    motor_rpt_1_msg.position = obj.position;
                     brake_rpt_detail_1_pub.publish(motor_rpt_1_msg);
                 } break;
                 case BRAKE_MOTOR_RPT_2_CAN_ID:
@@ -619,7 +609,7 @@ int main(int argc, char *argv[])
         loop_rate.sleep();
     }
 
-    //Make sure it's disabled when node shuts down.
+    // Make sure it's disabled when node shuts down
     set_enable(false);
 
     can_reader.close();
