@@ -199,7 +199,7 @@ void timerCallback(const ros::TimerEvent& evt)
   GlobalCmdMsg global_obj;
 
   enable_mut.lock();
-  global_obj.encode(enable_state, false, false);
+  global_obj.encode(enable_state, true, false);
   enable_mut.unlock();
 
   //Write the Global message.
@@ -470,6 +470,11 @@ int main(int argc, char *argv[])
 
                     bool_pub_msg.data = (obj.enabled);// || obj.overridden);
                     enable_pub.publish(bool_pub_msg);
+
+                    if (global_rpt_msg.overridden)
+                    {
+                      set_enable(false);
+                    }
                 } break;
                 case TURN_RPT_CAN_ID:
                 {
