@@ -19,6 +19,9 @@
 //#include <stdio.h>
 #include <signal.h>
 #include <mutex>
+#include <queue>
+#include <condition_variable>
+#include <thread>
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
@@ -41,13 +44,12 @@
 #include <pacmod_msgs/VehicleSpeedRpt.h>
 #include <pacmod_core.h>
 
-using namespace std;
 using namespace AS::CAN;
 using namespace AS::Drivers::PACMod;
 
 //const static int OVERRIDE_DEBOUNCE = 8;
 CanInterface can_reader, can_writer;
-mutex writerMut;
+std::mutex writerMut;
 ros::Publisher can_rx_echo_pub;
 int hardware_id = 0;
 int circuit_id = -1;
@@ -55,274 +57,298 @@ int bit_rate = 500000;
 //bool overridden = true;
 //int override_debounce_count = 0;
 
+class ThreadSafeCANQueue
+{
+  public:
+    ThreadSafeCANQueue(void) :
+      q(),
+      m(),
+      c()
+    {}
+
+    ~ThreadSafeCANQueue(void)
+    {}
+
+    void push(can_msgs::Frame::ConstPtr frame)
+    {
+      std::lock_guard<std::mutex> lock(m);
+      q.push(frame);
+      c.notify_one();
+    }
+
+    can_msgs::Frame::ConstPtr pop(void)
+    {
+      std::unique_lock<std::mutex> lock(m);
+      while (q.empty())
+      {
+        c.wait(lock);
+      }
+      can_msgs::Frame::ConstPtr& val = q.front();
+      q.pop();
+      return val;
+    }
+
+    bool empty()
+    {
+      std::lock_guard<std::mutex> lock(m);
+      return q.empty();
+    }
+
+  private:
+    std::queue<can_msgs::Frame::ConstPtr> q;
+    mutable std::mutex m;
+    std::condition_variable c;
+};
+
+bool enable_state;
+std::mutex enable_mut;
+pacmod_msgs::PacmodCmd::ConstPtr latest_turn_msg;
+std::mutex turn_mut;
+pacmod_msgs::PacmodCmd::ConstPtr latest_shift_msg;
+std::mutex shift_mut;
+pacmod_msgs::PacmodCmd::ConstPtr latest_accel_msg;
+std::mutex accel_mut;
+pacmod_msgs::PositionWithSpeed::ConstPtr latest_steer_msg;
+std::mutex steer_mut;
+pacmod_msgs::PacmodCmd::ConstPtr latest_brake_msg;
+std::mutex brake_mut;
+ThreadSafeCANQueue can_queue;
+
 // Listens for incoming raw CAN messages and forwards them to the PACMod
 void callback_can_rx(const can_msgs::Frame::ConstPtr& msg)
 {
-    lock_guard<mutex> lck(writerMut);
-    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
-    
-    if (ret != ok)
-    {
-        ROS_WARN("CAN handle error: %d\n", ret);
-        return;
-    }
-    else if ((msg->dlc) != 8)
-    {
-        ROS_WARN("CAN message error: %d\n", ret);
-        can_writer.close();
-        return;
-    }
-  
-    ret = can_writer.send(msg->id, const_cast<unsigned char*>(&msg->data[0]), msg->dlc, true);
-
-    if (ret != ok)
-        ROS_WARN("CAN send error: %d\n", ret);
-}
-
-// Send the heartbeat message
-void send_heartbeat()
-{
-    lock_guard<mutex> lck(writerMut);
-    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
-
-    if (ret != ok)
-    {
-        ROS_WARN("CAN handle error: %d\n", ret);
-        return;
-    }
-
-    HeartbeatMsg obj;
-    unsigned char code = 0x65;
-    obj.encode(code);
-
-    ret = can_writer.send(HEARTBEAT_CAN_ID, obj.data, 8, true);
-
-    if (ret != ok)
-    {
-        ROS_WARN("CAN send error: %d\n", ret);
-    }
-    else
-    {
-        can_msgs::Frame can_msg;
-        can_msg.header.stamp = ros::Time::now();
-        can_msg.id = HEARTBEAT_CAN_ID;
-        can_msg.dlc = 8;
-        copy(obj.data, obj.data + 8, can_msg.data.begin());
-        can_rx_echo_pub.publish(can_msg);
-    }
+  can_queue.push(msg);
 }
 
 // Sets the PACMod enable flag through CAN.
 void set_enable(bool val)
 {
- //   overridden = val;
-   // override_debounce_count = 0;
-
-    lock_guard<mutex> lck(writerMut);
-    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
-
-    if (ret != ok)
-    {
-        ROS_WARN("CAN handle error: %d\n", ret);
-        return;
-    }
-
-    GlobalCmdMsg obj;
-	bool enable = val;
-	bool clear_override = val;
-	bool ignore_override = false;
-    obj.encode(enable, clear_override, ignore_override);
-
-    ret = can_writer.send(GLOBAL_CMD_CAN_ID, obj.data, 8, true);
-
-    if (ret != ok)
-    {
-        ROS_WARN("CAN send error: %d\n", ret);
-    }
-    else
-    {
-        can_msgs::Frame can_msg;
-        can_msg.header.stamp = ros::Time::now();
-        can_msg.id = GLOBAL_CMD_CAN_ID;
-        can_msg.dlc = 8;
-        copy(obj.data, obj.data + 8, can_msg.data.begin());
-        can_rx_echo_pub.publish(can_msg);
-    }
+  std::lock_guard<std::mutex> lck(enable_mut);
+  enable_state = val;
 }
 
 // Listens for incoming requests to enable the PACMod
 void callback_pacmod_enable(const std_msgs::Bool::ConstPtr& msg)
 {
-    set_enable(msg->data);  
-    ROS_INFO("Setting enable to %d\n\r", msg->data);
+  set_enable(msg->data);  
+  ROS_INFO("Setting enable to %d\n\r", msg->data);
 }
 
 // Listens for incoming requests to change the state of the turn signals
 void callback_turn_signal_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-    lock_guard<mutex> lck(writerMut);
-    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
-
-    if (ret != ok)
-    {
-        ROS_WARN("CAN handle error: %d\n", ret);
-        return;
-    }
-
-    TurnSignalCmdMsg obj;
-    obj.encode(msg->ui16_cmd);
-
-    ret = can_writer.send(TURN_CMD_CAN_ID, obj.data, 8, true);
-
-    if (ret != ok)
-    {
-        ROS_WARN("CAN send error: %d\n", ret);
-    }
-    else
-    {
-        can_msgs::Frame can_msg;
-        can_msg.header.stamp = ros::Time::now();
-        can_msg.id = TURN_CMD_CAN_ID;
-        can_msg.dlc = 8;
-        copy(obj.data, obj.data + 8, can_msg.data.begin());
-        can_rx_echo_pub.publish(can_msg);
-    }
+  std::lock_guard<std::mutex> lck(turn_mut);
+  latest_turn_msg = msg;
 }
 
 // Listens for incoming requests to change the gear shifter state
 void callback_shift_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-    lock_guard<mutex> lck(writerMut);
-    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
-
-    if (ret != ok)
-    {
-        ROS_WARN("CAN handle error: %d\n", ret);
-        return;
-    }
-
-    ShiftCmdMsg obj;
-    obj.encode(msg->ui16_cmd);
-
-    ret = can_writer.send(SHIFT_CMD_CAN_ID, obj.data, 8, true);
-
-    if (ret != ok)
-    {
-        ROS_WARN("CAN send error: %d\n", ret);
-    }
-    else
-    {
-        can_msgs::Frame can_msg;
-        can_msg.header.stamp = ros::Time::now();
-        can_msg.id = SHIFT_CMD_CAN_ID;
-        can_msg.dlc = 8;
-        copy(obj.data, obj.data + 8, can_msg.data.begin());
-        can_rx_echo_pub.publish(can_msg);
-    }
+  std::lock_guard<std::mutex> lck(shift_mut);
+  latest_shift_msg = msg;
 }
 
 // Listens for incoming requests to change the position of the throttle pedal
 void callback_accelerator_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-    lock_guard<mutex> lck(writerMut);
-    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
-
-    if (ret != ok)
-    {
-        ROS_WARN("CAN handle error: %d\n", ret);
-        return;
-    }
-
-    AccelCmdMsg obj;
-    obj.encode(msg->f64_cmd);
-
-    ret = can_writer.send(ACCEL_CMD_CAN_ID, obj.data, 8, true);
-
-    if (ret != ok)
-    {
-        ROS_WARN("CAN send error: %d\n", ret);
-    }
-    else
-    {
-        can_msgs::Frame can_msg;
-        can_msg.header.stamp = ros::Time::now();
-        can_msg.id = ACCEL_CMD_CAN_ID;
-        can_msg.dlc = 8;
-        copy(obj.data, obj.data + 8, can_msg.data.begin());
-        can_rx_echo_pub.publish(can_msg);
-    }
+  std::lock_guard<std::mutex> lck(accel_mut);
+  latest_accel_msg = msg;
 }
 
 // Listens for incoming requests to change the position of the steering wheel with a speed limit
 void callback_steering_set_cmd(const pacmod_msgs::PositionWithSpeed::ConstPtr& msg)
 {
-    lock_guard<mutex> lck(writerMut);
-    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
-
-    if (ret != ok)
-    {
-        ROS_WARN("CAN handle error: %d\n", ret);
-        return;
-    }
-
-    SteerCmdMsg obj;
-    obj.encode(msg->angular_position, msg->angular_velocity_limit);
-
-    ret = can_writer.send(STEERING_CMD_CAN_ID, obj.data, 8, true);
-
-    if (ret != ok)
-    {
-        ROS_WARN("CAN send error: %d\n", ret);
-    }
-    else
-    {
-        can_msgs::Frame can_msg;
-        can_msg.header.stamp = ros::Time::now();
-        can_msg.id = STEERING_CMD_CAN_ID;
-        can_msg.dlc = 8;
-        copy(obj.data, obj.data + 8, can_msg.data.begin());
-        can_rx_echo_pub.publish(can_msg);
-    }
+  std::lock_guard<std::mutex> lck(steer_mut);
+  latest_steer_msg = msg;
 }
 
 // Listens for incoming requests to change the position of the brake pedal
 void callback_brake_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-    lock_guard<mutex> lck(writerMut);
-    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
+  std::lock_guard<std::mutex> lck(brake_mut);
+  latest_brake_msg = msg;
+}
+
+void send_can_echo(unsigned int id, unsigned char * data)
+{
+  can_msgs::Frame frame;
+  frame.id = id;
+  frame.is_rtr = false;
+  frame.is_extended = false;
+  frame.is_error = false;
+  frame.dlc = 8;
+  std::copy(data, data + 8, frame.data.begin());
+
+  can_rx_echo_pub.publish(frame);
+}
+
+void timerCallback(const ros::TimerEvent& evt)
+{
+  const std::chrono::milliseconds inter_msg_pause = std::chrono::milliseconds(5);
+
+  // Open the channel.
+  return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
+  
+  if (ret != ok)
+  {
+    ROS_WARN("CAN handle error: %d\n", ret);
+    return;
+  }
+
+  //Assemble the Global message.
+  GlobalCmdMsg global_obj;
+
+  enable_mut.lock();
+  global_obj.encode(enable_state, false, false);
+  enable_mut.unlock();
+
+  //Write the Global message.
+  ret = can_writer.send(GLOBAL_CMD_CAN_ID, global_obj.data, 8, true);
+  //Send echo.
+  send_can_echo(GLOBAL_CMD_CAN_ID, global_obj.data);
+
+  if (ret != ok)
+  {
+    ROS_WARN("CAN send error - Global Cmd: %d\n", ret);
+    return;
+  }
+
+  std::this_thread::sleep_for(inter_msg_pause);
+
+  if (latest_turn_msg != nullptr)
+  {
+    //Assemble the Turn message.
+    TurnSignalCmdMsg turn_obj;
+
+    turn_mut.lock();
+    turn_obj.encode(latest_turn_msg->ui16_cmd);
+    turn_mut.unlock();
+
+    //Write the Turn message.
+    ret = can_writer.send(TURN_CMD_CAN_ID, turn_obj.data, 8, true);
+    //Send echo.
+    send_can_echo(TURN_CMD_CAN_ID, turn_obj.data);
 
     if (ret != ok)
     {
-        ROS_WARN("CAN handle error: %d\n", ret);
-        return;
+      ROS_WARN("CAN send error - Turn Cmd: %d\n", ret);
+      return;
     }
 
-    BrakeCmdMsg obj;
-    obj.encode(msg->f64_cmd);
+    std::this_thread::sleep_for(inter_msg_pause);
+  }
 
-    ret = can_writer.send(BRAKE_CMD_CAN_ID, obj.data, 8, true);
+  if (latest_shift_msg != nullptr)
+  {
+    //Assemble the Shift message.
+    ShiftCmdMsg shift_obj;
 
-    if(ret != ok)
+    shift_mut.lock();
+    shift_obj.encode(latest_shift_msg->ui16_cmd);
+    shift_mut.unlock();
+
+    //Write the Shift message.
+    ret = can_writer.send(SHIFT_CMD_CAN_ID, shift_obj.data, 8, true);
+    //Send echo.
+    send_can_echo(SHIFT_CMD_CAN_ID, shift_obj.data);
+
+    if (ret != ok)
     {
-        ROS_WARN("CAN send error: %d\n", ret);
+      ROS_WARN("CAN send error - Shift Cmd: %d\n", ret);
+      return;
     }
-    else
-    {
-        can_msgs::Frame can_msg;
-        can_msg.header.stamp = ros::Time::now();
-        can_msg.id = BRAKE_CMD_CAN_ID;
-        can_msg.dlc = 8;
-        copy(obj.data, obj.data + 8, can_msg.data.begin());
-        can_rx_echo_pub.publish(can_msg);
-    }
-}
 
-// This serves as a heartbeat signal. If the PACMod doesn't receive this signal at the expected frequency,
-// it will disable the vehicle. Note that additional override signals are generated if an enable/disable
-// command is made by the user.
-void timerCallback(const ros::TimerEvent& evt)
-{
-    send_heartbeat();
+    std::this_thread::sleep_for(inter_msg_pause);
+  }
+
+  if (latest_accel_msg != nullptr)
+  {
+    //Assemble the Accel message.
+    AccelCmdMsg accel_obj;
+
+    accel_mut.lock();
+    accel_obj.encode(latest_accel_msg->ui16_cmd);
+    accel_mut.unlock();
+
+    //Write the Accel message.
+    ret = can_writer.send(ACCEL_CMD_CAN_ID, accel_obj.data, 8, true);
+    //Send echo.
+    send_can_echo(ACCEL_CMD_CAN_ID, accel_obj.data);
+
+    if (ret != ok)
+    {
+      ROS_WARN("CAN send error - Accel Cmd: %d\n", ret);
+      return;
+    }
+
+    std::this_thread::sleep_for(inter_msg_pause);
+  }
+
+  if (latest_steer_msg != nullptr)
+  {
+    //Assemble the Steer message.
+    SteerCmdMsg steer_obj;
+
+    steer_mut.lock();
+    steer_obj.encode(latest_steer_msg->angular_position, latest_steer_msg->angular_velocity_limit);
+    steer_mut.unlock();
+
+    //Write the Steer message.
+    ret = can_writer.send(STEERING_CMD_CAN_ID, steer_obj.data, 8, true);
+    //Send echo.
+    send_can_echo(STEERING_CMD_CAN_ID, steer_obj.data);
+
+    if (ret != ok)
+    {
+      ROS_WARN("CAN send error - Steer Cmd: %d\n", ret);
+      return;
+    }
+
+    std::this_thread::sleep_for(inter_msg_pause);
+  }
+
+  if (latest_brake_msg != nullptr)
+  {
+    //Assemble the Brake message.
+    BrakeCmdMsg brake_obj;
+
+    brake_mut.lock();
+    brake_obj.encode(latest_brake_msg->ui16_cmd);
+    brake_mut.unlock();
+
+    //Write the Brake message.
+    ret = can_writer.send(BRAKE_CMD_CAN_ID, brake_obj.data, 8, true);
+    //Send echo.
+    send_can_echo(BRAKE_CMD_CAN_ID, brake_obj.data);
+
+    if (ret != ok)
+    {
+      ROS_WARN("CAN send error - Brake Cmd: %d\n", ret);
+      return;
+    }
+
+    std::this_thread::sleep_for(inter_msg_pause);
+  }
+
+  while (!can_queue.empty())
+  {
+    can_msgs::Frame::ConstPtr new_frame = can_queue.pop();
+
+    //Write the RX message.
+    ret = can_writer.send(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]), new_frame->dlc, new_frame->is_extended);
+    //Send echo->
+    send_can_echo(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]));
+
+    if (ret != ok)
+    {
+      ROS_WARN("CAN send error - CAN_RX Message: %d\n", ret);
+      return;
+    }
+
+    std::this_thread::sleep_for(inter_msg_pause);
+  }
+
+  can_writer.close();
 }
 
 int main(int argc, char *argv[])
@@ -344,7 +370,7 @@ int main(int argc, char *argv[])
         ROS_INFO("Got hardware_id: %d", hardware_id);
         if (hardware_id <= 0)
         {
-            ROS_INFO("\nCAN hardware ID is invalid\n";
+            ROS_INFO("\nCAN hardware ID is invalid\n");
             willExit = true;
         }
     }
@@ -354,7 +380,7 @@ int main(int argc, char *argv[])
         ROS_INFO("Got can_circuit_id: %d", circuit_id);
         if (circuit_id < 0)
         {
-            ROS_INFO("\nCAN circuit ID is invalid\n";
+            ROS_INFO("\nCAN circuit ID is invalid\n");
             willExit = true;
         }
     }
@@ -390,7 +416,7 @@ int main(int argc, char *argv[])
     ros::Subscriber brake_set_cmd = n.subscribe("as_rx/brake_cmd", 20, callback_brake_set_cmd);
     ros::Subscriber enable_sub = n.subscribe("as_rx/enable", 20, callback_pacmod_enable);
       
-    ros::Timer timer = n.createTimer(ros::Duration(0.05), timerCallback);
+    ros::Timer timer = n.createTimer(ros::Duration(0.1), timerCallback);
         
     spinner.start();
     
@@ -420,7 +446,7 @@ int main(int argc, char *argv[])
             can_pub_msg.header.frame_id = "0";
             can_pub_msg.id = id;
             can_pub_msg.dlc = size;
-            copy(msg, msg + 8, can_pub_msg.data.begin());
+            std::copy(msg, msg + 8, can_pub_msg.data.begin());
             can_tx_pub.publish(can_pub_msg);
             
             uint16_t ui16_manual_input, ui16_command, ui16_output;
@@ -444,18 +470,6 @@ int main(int argc, char *argv[])
 
                     bool_pub_msg.data = (obj.enabled);// || obj.overridden);
                     enable_pub.publish(bool_pub_msg);
-
-                    /*if (obj.overridden)
-                    {
-						            if (override_debounce_count > OVERRIDE_DEBOUNCE)
-						            {
-							              overridden = true;
-						            }
-                        else
-                        {
-                            override_debounce_count++;
-                        }
-                    }*/
                 } break;
                 case TURN_RPT_CAN_ID:
                 {
