@@ -184,7 +184,7 @@ void send_can_echo(unsigned int id, unsigned char * data)
 
 void timerCallback(const ros::TimerEvent& evt)
 {
-  const std::chrono::milliseconds inter_msg_pause = std::chrono::milliseconds(5);
+  const std::chrono::milliseconds inter_msg_pause = std::chrono::milliseconds(1);
 
   // Open the channel.
   return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
@@ -267,7 +267,7 @@ void timerCallback(const ros::TimerEvent& evt)
     AccelCmdMsg accel_obj;
 
     accel_mut.lock();
-    accel_obj.encode(latest_accel_msg->ui16_cmd);
+    accel_obj.encode(latest_accel_msg->f64_cmd);
     accel_mut.unlock();
 
     //Write the Accel message.
@@ -313,7 +313,7 @@ void timerCallback(const ros::TimerEvent& evt)
     BrakeCmdMsg brake_obj;
 
     brake_mut.lock();
-    brake_obj.encode(latest_brake_msg->ui16_cmd);
+    brake_obj.encode(latest_brake_msg->f64_cmd);
     brake_mut.unlock();
 
     //Write the Brake message.
@@ -416,7 +416,7 @@ int main(int argc, char *argv[])
     ros::Subscriber brake_set_cmd = n.subscribe("as_rx/brake_cmd", 20, callback_brake_set_cmd);
     ros::Subscriber enable_sub = n.subscribe("as_rx/enable", 20, callback_pacmod_enable);
       
-    ros::Timer timer = n.createTimer(ros::Duration(0.1), timerCallback);
+    ros::Timer timer = n.createTimer(ros::Duration(0.05), timerCallback);
         
     spinner.start();
     
