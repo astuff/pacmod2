@@ -466,6 +466,11 @@ int main(int argc, char *argv[])
                     global_rpt_msg.header.stamp = now;
                     global_rpt_msg.enabled = obj.enabled;
                     global_rpt_msg.overridden = obj.overridden;
+                    global_rpt_msg.user_can_timeout = obj.user_can_timeout;
+                    global_rpt_msg.brake_can_timeout = obj.brake_can_timeout;
+                    global_rpt_msg.steering_can_timeout = obj.steering_can_timeout;
+                    global_rpt_msg.vehicle_can_timeout = obj.vehicle_can_timeout;
+                    global_rpt_msg.user_can_read_errors = obj.user_can_read_errors;
                     global_rpt_pub.publish(global_rpt_msg);
 
                     bool_pub_msg.data = (obj.enabled);// || obj.overridden);
