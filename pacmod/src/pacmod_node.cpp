@@ -47,15 +47,12 @@
 using namespace AS::CAN;
 using namespace AS::Drivers::PACMod;
 
-//const static int OVERRIDE_DEBOUNCE = 8;
 CanInterface can_reader, can_writer;
 std::mutex writerMut;
 ros::Publisher can_rx_echo_pub;
 int hardware_id = 0;
 int circuit_id = -1;
 int bit_rate = 500000;
-//bool overridden = true;
-//int override_debounce_count = 0;
 
 class ThreadSafeCANQueue
 {
@@ -113,6 +110,14 @@ std::mutex steer_mut;
 pacmod_msgs::PacmodCmd::ConstPtr latest_brake_msg;
 std::mutex brake_mut;
 ThreadSafeCANQueue can_queue;
+
+//Message objects.
+GlobalCmdMsg global_obj;
+TurnSignalCmdMsg turn_obj;
+ShiftCmdMsg shift_obj;
+AccelCmdMsg accel_obj;
+SteerCmdMsg steer_obj;
+BrakeCmdMsg brake_obj;
 
 // Listens for incoming raw CAN messages and forwards them to the PACMod
 void callback_can_rx(const can_msgs::Frame::ConstPtr& msg)
@@ -235,464 +240,457 @@ void send_can_echo(unsigned int id, unsigned char * data)
   can_rx_echo_pub.publish(frame);
 }
 
-void timerCallback(const ros::TimerEvent& evt)
+void canSend()
 {
   const std::chrono::milliseconds inter_msg_pause = std::chrono::milliseconds(1);
+  const std::chrono::milliseconds loop_pause = std::chrono::milliseconds(50);
 
-  // Open the channel.
-  return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
-  
-  if (ret != ok)
+  while (true)
   {
-    ROS_WARN("CAN handle error: %d\n", ret);
-    return;
-  }
+    // Open the channel.
+    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
+    
+    if (ret != ok)
+    {
+      ROS_WARN("CAN handle error: %d\n", ret);
+      return;
+    }
 
-  //Assemble the Global message.
-  GlobalCmdMsg global_obj;
+    //Global Command
+    enable_mut.lock();
+    bool temp_enable_state = enable_state;
+    enable_mut.unlock();
 
-  enable_mut.lock();
-  global_obj.encode(enable_state, true, false);
-  enable_mut.unlock();
-
-  //Write the Global message.
-  ret = can_writer.send(GLOBAL_CMD_CAN_ID, global_obj.data, 8, true);
-  //Send echo.
-  send_can_echo(GLOBAL_CMD_CAN_ID, global_obj.data);
-
-  if (ret != ok)
-  {
-    ROS_WARN("CAN send error - Global Cmd: %d\n", ret);
-    return;
-  }
-
-  std::this_thread::sleep_for(inter_msg_pause);
-
-  if (latest_turn_msg != nullptr)
-  {
-    //Assemble the Turn message.
-    TurnSignalCmdMsg turn_obj;
-
-    turn_mut.lock();
-    turn_obj.encode(latest_turn_msg->ui16_cmd);
-    turn_mut.unlock();
-
-    //Write the Turn message.
-    ret = can_writer.send(TURN_CMD_CAN_ID, turn_obj.data, 8, true);
-    //Send echo.
-    send_can_echo(TURN_CMD_CAN_ID, turn_obj.data);
+    global_obj.encode(temp_enable_state, true, false);
+    ret = can_writer.send(GLOBAL_CMD_CAN_ID, global_obj.data, 8, true);
+    send_can_echo(GLOBAL_CMD_CAN_ID, global_obj.data);
 
     if (ret != ok)
     {
-      ROS_WARN("CAN send error - Turn Cmd: %d\n", ret);
+      ROS_WARN("CAN send error - Global Cmd: %d\n", ret);
       return;
     }
 
     std::this_thread::sleep_for(inter_msg_pause);
-  }
 
-  if (latest_shift_msg != nullptr)
-  {
-    //Assemble the Shift message.
-    ShiftCmdMsg shift_obj;
-
-    shift_mut.lock();
-    shift_obj.encode(latest_shift_msg->ui16_cmd);
-    shift_mut.unlock();
-
-    //Write the Shift message.
-    ret = can_writer.send(SHIFT_CMD_CAN_ID, shift_obj.data, 8, true);
-    //Send echo.
-    send_can_echo(SHIFT_CMD_CAN_ID, shift_obj.data);
-
-    if (ret != ok)
+    //Turn Command
+    if (latest_turn_msg != nullptr)
     {
-      ROS_WARN("CAN send error - Shift Cmd: %d\n", ret);
-      return;
+      unsigned short latest_turn_val;
+      turn_mut.lock();
+      latest_turn_val = latest_turn_msg->ui16_cmd;
+      turn_mut.unlock();
+
+      turn_obj.encode(latest_turn_val);
+      ret = can_writer.send(TURN_CMD_CAN_ID, turn_obj.data, 8, true);
+      send_can_echo(TURN_CMD_CAN_ID, turn_obj.data);
+
+      if (ret != ok)
+      {
+        ROS_WARN("CAN send error - Turn Cmd: %d\n", ret);
+        return;
+      }
+
+      std::this_thread::sleep_for(inter_msg_pause);
     }
 
-    std::this_thread::sleep_for(inter_msg_pause);
-  }
-
-  if (latest_accel_msg != nullptr)
-  {
-    //Assemble the Accel message.
-    AccelCmdMsg accel_obj;
-
-    accel_mut.lock();
-    accel_obj.encode(latest_accel_msg->f64_cmd);
-    accel_mut.unlock();
-
-    //Write the Accel message.
-    ret = can_writer.send(ACCEL_CMD_CAN_ID, accel_obj.data, 8, true);
-    //Send echo.
-    send_can_echo(ACCEL_CMD_CAN_ID, accel_obj.data);
-
-    if (ret != ok)
+    //Shift Command
+    if (latest_shift_msg != nullptr)
     {
-      ROS_WARN("CAN send error - Accel Cmd: %d\n", ret);
-      return;
+      unsigned short latest_shift_val;
+      shift_mut.lock();
+      latest_shift_val = latest_shift_msg->ui16_cmd;
+      shift_mut.unlock();
+
+      shift_obj.encode(latest_shift_val);
+      ret = can_writer.send(SHIFT_CMD_CAN_ID, shift_obj.data, 8, true);
+      send_can_echo(SHIFT_CMD_CAN_ID, shift_obj.data);
+
+      if (ret != ok)
+      {
+        ROS_WARN("CAN send error - Shift Cmd: %d\n", ret);
+        return;
+      }
+
+      std::this_thread::sleep_for(inter_msg_pause);
     }
 
-    std::this_thread::sleep_for(inter_msg_pause);
-  }
-
-  if (latest_steer_msg != nullptr)
-  {
-    //Assemble the Steer message.
-    SteerCmdMsg steer_obj;
-
-    steer_mut.lock();
-    steer_obj.encode(latest_steer_msg->angular_position, latest_steer_msg->angular_velocity_limit);
-    steer_mut.unlock();
-
-    //Write the Steer message.
-    ret = can_writer.send(STEERING_CMD_CAN_ID, steer_obj.data, 8, true);
-    //Send echo.
-    send_can_echo(STEERING_CMD_CAN_ID, steer_obj.data);
-
-    if (ret != ok)
+    //Accel Command
+    if (latest_accel_msg != nullptr)
     {
-      ROS_WARN("CAN send error - Steer Cmd: %d\n", ret);
-      return;
+      double latest_accel_val;
+      accel_mut.lock();
+      latest_accel_val = latest_accel_msg->f64_cmd;
+      accel_mut.unlock();
+
+      accel_obj.encode(latest_accel_val);
+      ret = can_writer.send(ACCEL_CMD_CAN_ID, accel_obj.data, 8, true);
+      send_can_echo(ACCEL_CMD_CAN_ID, accel_obj.data);
+
+      if (ret != ok)
+      {
+        ROS_WARN("CAN send error - Accel Cmd: %d\n", ret);
+        return;
+      }
+
+      std::this_thread::sleep_for(inter_msg_pause);
     }
 
-    std::this_thread::sleep_for(inter_msg_pause);
-  }
-
-  if (latest_brake_msg != nullptr)
-  {
-    //Assemble the Brake message.
-    BrakeCmdMsg brake_obj;
-
-    brake_mut.lock();
-    brake_obj.encode(latest_brake_msg->f64_cmd);
-    brake_mut.unlock();
-
-    //Write the Brake message.
-    ret = can_writer.send(BRAKE_CMD_CAN_ID, brake_obj.data, 8, true);
-    //Send echo.
-    send_can_echo(BRAKE_CMD_CAN_ID, brake_obj.data);
-
-    if (ret != ok)
+    if (latest_steer_msg != nullptr)
     {
-      ROS_WARN("CAN send error - Brake Cmd: %d\n", ret);
-      return;
+      double latest_steer_angle;
+      double latest_steer_vel;
+
+      steer_mut.lock();
+      latest_steer_angle = latest_steer_msg->angular_position;
+      latest_steer_vel = latest_steer_msg->angular_velocity_limit;
+      steer_mut.unlock();
+
+      steer_obj.encode(latest_steer_angle, latest_steer_vel);
+      ret = can_writer.send(STEERING_CMD_CAN_ID, steer_obj.data, 8, true);
+      send_can_echo(STEERING_CMD_CAN_ID, steer_obj.data);
+
+      if (ret != ok)
+      {
+        ROS_WARN("CAN send error - Steer Cmd: %d\n", ret);
+        return;
+      }
+
+      std::this_thread::sleep_for(inter_msg_pause);
     }
 
-    std::this_thread::sleep_for(inter_msg_pause);
-  }
-
-  while (!can_queue.empty())
-  {
-    can_msgs::Frame::ConstPtr new_frame = can_queue.pop();
-
-    //Write the RX message.
-    ret = can_writer.send(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]), new_frame->dlc, new_frame->is_extended);
-    //Send echo->
-    send_can_echo(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]));
-
-    if (ret != ok)
+    if (latest_brake_msg != nullptr)
     {
-      ROS_WARN("CAN send error - CAN_RX Message: %d\n", ret);
-      return;
+      double latest_brake_val;
+
+      brake_mut.lock();
+      latest_brake_val = latest_brake_msg->f64_cmd;
+      brake_mut.unlock();
+
+      brake_obj.encode(latest_brake_val);
+      ret = can_writer.send(BRAKE_CMD_CAN_ID, brake_obj.data, 8, true);
+      send_can_echo(BRAKE_CMD_CAN_ID, brake_obj.data);
+
+      if (ret != ok)
+      {
+        ROS_WARN("CAN send error - Brake Cmd: %d\n", ret);
+        return;
+      }
+
+      std::this_thread::sleep_for(inter_msg_pause);
     }
 
-    std::this_thread::sleep_for(inter_msg_pause);
-  }
+    while (!can_queue.empty())
+    {
+      can_msgs::Frame::ConstPtr new_frame = can_queue.pop();
 
-  can_writer.close();
+      //Write the RX message.
+      ret = can_writer.send(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]), new_frame->dlc, new_frame->is_extended);
+      //Send echo->
+      send_can_echo(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]));
+
+      if (ret != ok)
+      {
+        ROS_WARN("CAN send error - CAN_RX Message: %d\n", ret);
+        return;
+      }
+
+      std::this_thread::sleep_for(inter_msg_pause);
+    }
+
+    can_writer.close();
+
+    std::this_thread::sleep_for(loop_pause);
+  }
 }
 
 int main(int argc, char *argv[])
 { 
-    bool willExit = false;
-        
-    ros::init(argc, argv, "pacmod");
-    ros::AsyncSpinner spinner(2);
-    ros::NodeHandle n;
-    ros::NodeHandle priv("~");
-    ros::Rate loop_rate(25.0);
-  
-    // Wait for time to be valid
-    while (ros::Time::now().nsec == 0);
-
-    // Get and validate parameters    
-    if (priv.getParam("can_hardware_id", hardware_id))
-    {
-        ROS_INFO("Got hardware_id: %d", hardware_id);
-        if (hardware_id <= 0)
-        {
-            ROS_INFO("\nCAN hardware ID is invalid\n");
-            willExit = true;
-        }
-    }
-
-    if (priv.getParam("can_circuit_id", circuit_id))
-    {
-        ROS_INFO("Got can_circuit_id: %d", circuit_id);
-        if (circuit_id < 0)
-        {
-            ROS_INFO("\nCAN circuit ID is invalid\n");
-            willExit = true;
-        }
-    }
-
-    if (willExit)
-        return 0;
-            
-    // Advertise published messages
-    ros::Publisher can_tx_pub = n.advertise<can_msgs::Frame>("can_tx", 20);
-    ros::Publisher global_rpt_pub = n.advertise<pacmod_msgs::GlobalRpt>("parsed_tx/global_rpt", 20);
-    ros::Publisher turn_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/turn_rpt", 20);
-    ros::Publisher shift_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/shift_rpt", 20);
-    ros::Publisher accel_rpt_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/accel_rpt", 20);
-    ros::Publisher steer_rpt_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/steer_rpt", 20);
-    ros::Publisher brake_rpt_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/brake_rpt", 20);
-    ros::Publisher steering_rpt_detail_1_pub = n.advertise<pacmod_msgs::MotorRpt1>("parsed_tx/steer_rpt_detail_1", 20);
-    ros::Publisher steering_rpt_detail_2_pub = n.advertise<pacmod_msgs::MotorRpt2>("parsed_tx/steer_rpt_detail_2", 20);
-    ros::Publisher steering_rpt_detail_3_pub = n.advertise<pacmod_msgs::MotorRpt3>("parsed_tx/steer_rpt_detail_3", 20);
-    ros::Publisher brake_rpt_detail_1_pub = n.advertise<pacmod_msgs::MotorRpt1>("parsed_tx/brake_rpt_detail_1", 20);
-    ros::Publisher brake_rpt_detail_2_pub = n.advertise<pacmod_msgs::MotorRpt2>("parsed_tx/brake_rpt_detail_2", 20);
-    ros::Publisher brake_rpt_detail_3_pub = n.advertise<pacmod_msgs::MotorRpt3>("parsed_tx/brake_rpt_detail_3", 20);
-    ros::Publisher vehicle_speed_pub = n.advertise<pacmod_msgs::VehicleSpeedRpt>("parsed_tx/vehicle_speed_rpt", 20);
-    ros::Publisher vehicle_speed_ms_pub = n.advertise<std_msgs::Float64>("as_tx/vehicle_speed", 20);
-    ros::Publisher enable_pub = n.advertise<std_msgs::Bool>("as_tx/enable", 20, true);
-    can_rx_echo_pub = n.advertise<can_msgs::Frame>("can_rx_echo", 20);
-        
-    // Subscribe to messages
-    ros::Subscriber can_rx_sub = n.subscribe("can_rx", 20, callback_can_rx);
-    ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);  
-    ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);  
-    ros::Subscriber accelerator_set_cmd = n.subscribe("as_rx/accel_cmd", 20, callback_accelerator_set_cmd);
-    ros::Subscriber steering_set_cmd = n.subscribe("as_rx/steer_cmd", 20, callback_steering_set_cmd);
-    ros::Subscriber brake_set_cmd = n.subscribe("as_rx/brake_cmd", 20, callback_brake_set_cmd);
-    ros::Subscriber enable_sub = n.subscribe("as_rx/enable", 20, callback_pacmod_enable);
+  bool willExit = false;
       
-    ros::Timer timer = n.createTimer(ros::Duration(0.05), timerCallback);
-        
-    spinner.start();
-    
-    // CAN setup
-    can_reader.open(hardware_id, circuit_id, bit_rate);
-    
-    // Set initial state
-    set_enable(false);
-  
-    return_statuses ret;
+  ros::init(argc, argv, "pacmod");
+  ros::AsyncSpinner spinner(2);
+  ros::NodeHandle n;
+  ros::NodeHandle priv("~");
+  ros::Rate loop_rate(40.0); //PACMod is sending at ~30Hz.
 
-    // Main loop: wait for the report messages via CAN, then publish to ROS topics
-    while (ros::ok())
+  // Wait for time to be valid
+  while (ros::Time::now().nsec == 0);
+
+  // Get and validate parameters    
+  if (priv.getParam("can_hardware_id", hardware_id))
+  {
+    ROS_INFO("Got hardware_id: %d", hardware_id);
+    if (hardware_id <= 0)
     {
-        long id;
-        uint8_t msg[8];
-        unsigned int size;
-        bool extended;
-        unsigned long t;
-        
-        while (can_reader.read(&id, msg, &size, &extended, &t) == ok)
-        {
-            ros::Time now = ros::Time::now();
+      ROS_INFO("\nCAN hardware ID is invalid\n");
+      willExit = true;
+    }
+  }
 
-            can_msgs::Frame can_pub_msg;
-            can_pub_msg.header.stamp = now;
-            can_pub_msg.header.frame_id = "0";
-            can_pub_msg.id = id;
-            can_pub_msg.dlc = size;
-            std::copy(msg, msg + 8, can_pub_msg.data.begin());
-            can_tx_pub.publish(can_pub_msg);
-            
-            uint16_t ui16_manual_input, ui16_command, ui16_output;
-            double d_manual_input, d_command, d_output;
-            std_msgs::Int16 int16_pub_msg;  
-            std_msgs::Bool bool_pub_msg;
-            std_msgs::Float64 float64_pub_msg;                  
+  if (priv.getParam("can_circuit_id", circuit_id))
+  {
+    ROS_INFO("Got can_circuit_id: %d", circuit_id);
+    if (circuit_id < 0)
+    {
+      ROS_INFO("\nCAN circuit ID is invalid\n");
+      willExit = true;
+    }
+  }
 
-            switch(id)
-            {
-                case GLOBAL_RPT_CAN_ID:
-                {
-                    GlobalRptMsg obj;
-                    obj.parse(msg);
-
-                    pacmod_msgs::GlobalRpt global_rpt_msg;
-                    global_rpt_msg.header.stamp = now;
-                    global_rpt_msg.enabled = obj.enabled;
-                    global_rpt_msg.overridden = obj.overridden;
-                    global_rpt_msg.user_can_timeout = obj.user_can_timeout;
-                    global_rpt_msg.brake_can_timeout = obj.brake_can_timeout;
-                    global_rpt_msg.steering_can_timeout = obj.steering_can_timeout;
-                    global_rpt_msg.vehicle_can_timeout = obj.vehicle_can_timeout;
-                    global_rpt_msg.user_can_read_errors = obj.user_can_read_errors;
-                    global_rpt_pub.publish(global_rpt_msg);
-
-                    bool_pub_msg.data = (obj.enabled);// || obj.overridden);
-                    enable_pub.publish(bool_pub_msg);
-
-                    if (global_rpt_msg.overridden)
-                    {
-                      set_enable(false);
-                    }
-                } break;
-                case TURN_RPT_CAN_ID:
-                {
-                    SystemRptIntMsg obj;
-                    obj.parse(msg);
-
-                    pacmod_msgs::SystemRptInt turn_rpt_msg;
-                    turn_rpt_msg.header.stamp = now;
-                    turn_rpt_msg.manual_input = obj.manual_input;
-                    turn_rpt_msg.command = obj.command;
-                    turn_rpt_msg.output = obj.output;
-                    turn_rpt_pub.publish(turn_rpt_msg);
-                } break;
-                case SHIFT_RPT_CAN_ID:
-                {
-                    SystemRptIntMsg obj;
-                    obj.parse(msg);
-
-                    pacmod_msgs::SystemRptInt shift_rpt_msg;
-                    shift_rpt_msg.header.stamp = now;
-                    shift_rpt_msg.manual_input = obj.manual_input;
-                    shift_rpt_msg.command = obj.command;
-                    shift_rpt_msg.output = obj.output;
-                    shift_rpt_pub.publish(shift_rpt_msg);
-                } break;
-                case ACCEL_RPT_CAN_ID:
-                {
-                    SystemRptFloatMsg obj;
-                    obj.parse(msg);
-
-                    pacmod_msgs::SystemRptFloat accel_rpt_msg;
-                    accel_rpt_msg.header.stamp = now;
-                    accel_rpt_msg.manual_input = obj.manual_input;
-                    accel_rpt_msg.command = obj.command;
-                    accel_rpt_msg.output = obj.output;
-                    accel_rpt_pub.publish(accel_rpt_msg);
-                } break;
-                case STEERING_RPT_CAN_ID:
-                {
-                    SystemRptFloatMsg obj;
-                    obj.parse(msg);
-
-                    pacmod_msgs::SystemRptFloat steer_rpt_msg;
-                    steer_rpt_msg.header.stamp = now;
-                    steer_rpt_msg.manual_input = obj.manual_input;
-                    steer_rpt_msg.command = obj.command;
-                    steer_rpt_msg.output = obj.output;
-                    steer_rpt_pub.publish(steer_rpt_msg);
-                } break;                      
-                case BRAKE_RPT_CAN_ID:
-                {
-                    SystemRptFloatMsg obj;
-                    obj.parse(msg);
-
-                    pacmod_msgs::SystemRptFloat brake_rpt_msg;
-                    brake_rpt_msg.header.stamp = now;
-                    brake_rpt_msg.manual_input = obj.manual_input;
-                    brake_rpt_msg.command = obj.command;
-                    brake_rpt_msg.output = obj.output;
-                    brake_rpt_pub.publish(brake_rpt_msg);
-                } break;   
-                case VEHICLE_SPEED_RPT_CAN_ID:
-                {
-                    VehicleSpeedRptMsg obj;
-                    obj.parse(msg);
-					
-					          pacmod_msgs::VehicleSpeedRpt veh_spd_rpt_msg;
-                    veh_spd_rpt_msg.vehicle_speed = obj.vehicle_speed;
-                    veh_spd_rpt_msg.vehicle_speed_valid = obj.vehicle_speed_valid;
-                    veh_spd_rpt_msg.vehicle_speed_raw[0] = obj.vehicle_speed_raw[0];
-					          veh_spd_rpt_msg.vehicle_speed_raw[1] = obj.vehicle_speed_raw[1];
-                    vehicle_speed_pub.publish(veh_spd_rpt_msg);  
-
-                    // Now publish in m/s
-                    std_msgs::Float64 veh_spd_ms_msg;
-                    veh_spd_ms_msg.data = (obj.vehicle_speed)*0.44704;
-                    vehicle_speed_ms_pub.publish(veh_spd_ms_msg);
-                } break;
-                case BRAKE_MOTOR_RPT_1_CAN_ID:
-                {
-                    MotorRpt1Msg obj;
-                    obj.parse(msg);
-
-                    pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
-                    motor_rpt_1_msg.header.stamp = now;
-                    motor_rpt_1_msg.current = obj.current;
-                    motor_rpt_1_msg.position = obj.position;
-                    brake_rpt_detail_1_pub.publish(motor_rpt_1_msg);
-                } break;
-                case BRAKE_MOTOR_RPT_2_CAN_ID:
-                {
-                    MotorRpt2Msg obj;
-                    obj.parse(msg);
-
-                    pacmod_msgs::MotorRpt2 motor_rpt_2_msg;
-                    motor_rpt_2_msg.header.stamp = now;
-                    motor_rpt_2_msg.encoder_temp = obj.encoder_temp;
-                    motor_rpt_2_msg.motor_temp = obj.motor_temp;
-                    motor_rpt_2_msg.angular_velocity = obj.velocity;
-                    brake_rpt_detail_2_pub.publish(motor_rpt_2_msg);
-                } break;
-                case BRAKE_MOTOR_RPT_3_CAN_ID:
-                {
-                    MotorRpt3Msg obj;
-                    obj.parse(msg);
-
-                    pacmod_msgs::MotorRpt3 motor_rpt_3_msg;
-                    motor_rpt_3_msg.header.stamp = now;
-                    motor_rpt_3_msg.torque_output = obj.torque_output;
-                    motor_rpt_3_msg.torque_input = obj.torque_input;
-                    brake_rpt_detail_3_pub.publish(motor_rpt_3_msg);
-                } break;
-                case STEERING_MOTOR_RPT_1_CAN_ID:
-                {
-                    MotorRpt1Msg obj;
-                    obj.parse(msg);
-
-                    pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
-                    motor_rpt_1_msg.header.stamp = now;
-                    motor_rpt_1_msg.current = obj.current;
-                    motor_rpt_1_msg.position = obj.position;
-                    steering_rpt_detail_1_pub.publish(motor_rpt_1_msg);
-                } break;
-                case STEERING_MOTOR_RPT_2_CAN_ID:
-                {
-                    MotorRpt2Msg obj;
-                    obj.parse(msg);
-
-                    pacmod_msgs::MotorRpt2 motor_rpt_2_msg;
-                    motor_rpt_2_msg.header.stamp = now;
-                    motor_rpt_2_msg.encoder_temp = obj.encoder_temp;
-                    motor_rpt_2_msg.motor_temp = obj.motor_temp;
-                    motor_rpt_2_msg.angular_velocity = obj.velocity;
-                    steering_rpt_detail_2_pub.publish(motor_rpt_2_msg);
-                } break;
-                case STEERING_MOTOR_RPT_3_CAN_ID:
-                {
-                    MotorRpt3Msg obj;
-                    obj.parse(msg);
-
-                    pacmod_msgs::MotorRpt3 motor_rpt_3_msg;
-                    motor_rpt_3_msg.header.stamp = now;
-                    motor_rpt_3_msg.torque_output = obj.torque_output;
-                    motor_rpt_3_msg.torque_input = obj.torque_input;
-                    steering_rpt_detail_3_pub.publish(motor_rpt_3_msg);
-                } break;
-            }
-        }
+  if (willExit)
+      return 0;
+          
+  // Advertise published messages
+  ros::Publisher can_tx_pub = n.advertise<can_msgs::Frame>("can_tx", 20);
+  ros::Publisher global_rpt_pub = n.advertise<pacmod_msgs::GlobalRpt>("parsed_tx/global_rpt", 20);
+  ros::Publisher turn_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/turn_rpt", 20);
+  ros::Publisher shift_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/shift_rpt", 20);
+  ros::Publisher accel_rpt_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/accel_rpt", 20);
+  ros::Publisher steer_rpt_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/steer_rpt", 20);
+  ros::Publisher brake_rpt_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/brake_rpt", 20);
+  ros::Publisher steering_rpt_detail_1_pub = n.advertise<pacmod_msgs::MotorRpt1>("parsed_tx/steer_rpt_detail_1", 20);
+  ros::Publisher steering_rpt_detail_2_pub = n.advertise<pacmod_msgs::MotorRpt2>("parsed_tx/steer_rpt_detail_2", 20);
+  ros::Publisher steering_rpt_detail_3_pub = n.advertise<pacmod_msgs::MotorRpt3>("parsed_tx/steer_rpt_detail_3", 20);
+  ros::Publisher brake_rpt_detail_1_pub = n.advertise<pacmod_msgs::MotorRpt1>("parsed_tx/brake_rpt_detail_1", 20);
+  ros::Publisher brake_rpt_detail_2_pub = n.advertise<pacmod_msgs::MotorRpt2>("parsed_tx/brake_rpt_detail_2", 20);
+  ros::Publisher brake_rpt_detail_3_pub = n.advertise<pacmod_msgs::MotorRpt3>("parsed_tx/brake_rpt_detail_3", 20);
+  ros::Publisher vehicle_speed_pub = n.advertise<pacmod_msgs::VehicleSpeedRpt>("parsed_tx/vehicle_speed_rpt", 20);
+  ros::Publisher vehicle_speed_ms_pub = n.advertise<std_msgs::Float64>("as_tx/vehicle_speed", 20);
+  ros::Publisher enable_pub = n.advertise<std_msgs::Bool>("as_tx/enable", 20, true);
+  can_rx_echo_pub = n.advertise<can_msgs::Frame>("can_rx_echo", 20);
+      
+  // Subscribe to messages
+  ros::Subscriber can_rx_sub = n.subscribe("can_rx", 20, callback_can_rx);
+  ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);  
+  ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);  
+  ros::Subscriber accelerator_set_cmd = n.subscribe("as_rx/accel_cmd", 20, callback_accelerator_set_cmd);
+  ros::Subscriber steering_set_cmd = n.subscribe("as_rx/steer_cmd", 20, callback_steering_set_cmd);
+  ros::Subscriber brake_set_cmd = n.subscribe("as_rx/brake_cmd", 20, callback_brake_set_cmd);
+  ros::Subscriber enable_sub = n.subscribe("as_rx/enable", 20, callback_pacmod_enable);
     
-        // Wait for next loop
-        loop_rate.sleep();
+  //Start CAN sending thread.
+  std::thread can_send_thread(canSend);
+  //Start callback spinner.
+  spinner.start();
+  
+  // CAN setup
+  can_reader.open(hardware_id, circuit_id, bit_rate);
+  
+  // Set initial state
+  set_enable(false);
+
+  return_statuses ret;
+
+  // Main loop: wait for the report messages via CAN, then publish to ROS topics
+  while (ros::ok())
+  {
+    long id;
+    uint8_t msg[8];
+    unsigned int size;
+    bool extended;
+    unsigned long t;
+    uint16_t ui16_manual_input, ui16_command, ui16_output;
+    double d_manual_input, d_command, d_output;
+    std_msgs::Int16 int16_pub_msg;  
+    std_msgs::Bool bool_pub_msg;
+    std_msgs::Float64 float64_pub_msg;
+    GlobalRptMsg global_obj;
+    SystemRptIntMsg turn_obj;
+    SystemRptIntMsg shift_obj;
+    SystemRptFloatMsg accel_obj;
+    SystemRptFloatMsg steer_obj;
+    SystemRptFloatMsg brake_obj;
+    VehicleSpeedRptMsg speed_obj;
+    MotorRpt1Msg detail1_obj;
+    MotorRpt2Msg detail2_obj;
+    MotorRpt3Msg detail3_obj;
+    
+    while (can_reader.read(&id, msg, &size, &extended, &t) == ok)
+    {
+      ros::Time now = ros::Time::now();
+
+      can_msgs::Frame can_pub_msg;
+      can_pub_msg.header.stamp = now;
+      can_pub_msg.header.frame_id = "0";
+      can_pub_msg.id = id;
+      can_pub_msg.dlc = size;
+      std::copy(msg, msg + 8, can_pub_msg.data.begin());
+      can_tx_pub.publish(can_pub_msg);
+      
+      switch(id)
+      {
+        case GLOBAL_RPT_CAN_ID:
+        {
+          global_obj.parse(msg);
+
+          pacmod_msgs::GlobalRpt global_rpt_msg;
+          global_rpt_msg.header.stamp = now;
+          global_rpt_msg.enabled = global_obj.enabled;
+          global_rpt_msg.overridden = global_obj.overridden;
+          global_rpt_msg.user_can_timeout = global_obj.user_can_timeout;
+          global_rpt_msg.brake_can_timeout = global_obj.brake_can_timeout;
+          global_rpt_msg.steering_can_timeout = global_obj.steering_can_timeout;
+          global_rpt_msg.vehicle_can_timeout = global_obj.vehicle_can_timeout;
+          global_rpt_msg.user_can_read_errors = global_obj.user_can_read_errors;
+          global_rpt_pub.publish(global_rpt_msg);
+
+          bool_pub_msg.data = (global_obj.enabled);
+          enable_pub.publish(bool_pub_msg);
+
+          if (global_obj.overridden)
+          {
+            set_enable(false);
+          }
+        } break;
+        case TURN_RPT_CAN_ID:
+        {
+          turn_obj.parse(msg);
+
+          pacmod_msgs::SystemRptInt turn_rpt_msg;
+          turn_rpt_msg.header.stamp = now;
+          turn_rpt_msg.manual_input = turn_obj.manual_input;
+          turn_rpt_msg.command = turn_obj.command;
+          turn_rpt_msg.output = turn_obj.output;
+          turn_rpt_pub.publish(turn_rpt_msg);
+        } break;
+        case SHIFT_RPT_CAN_ID:
+        {
+          shift_obj.parse(msg);
+
+          pacmod_msgs::SystemRptInt shift_rpt_msg;
+          shift_rpt_msg.header.stamp = now;
+          shift_rpt_msg.manual_input = shift_obj.manual_input;
+          shift_rpt_msg.command = shift_obj.command;
+          shift_rpt_msg.output = shift_obj.output;
+          shift_rpt_pub.publish(shift_rpt_msg);
+        } break;
+        case ACCEL_RPT_CAN_ID:
+        {
+          accel_obj.parse(msg);
+
+          pacmod_msgs::SystemRptFloat accel_rpt_msg;
+          accel_rpt_msg.header.stamp = now;
+          accel_rpt_msg.manual_input = accel_obj.manual_input;
+          accel_rpt_msg.command = accel_obj.command;
+          accel_rpt_msg.output = accel_obj.output;
+          accel_rpt_pub.publish(accel_rpt_msg);
+        } break;
+        case STEERING_RPT_CAN_ID:
+        {
+          steer_obj.parse(msg);
+
+          pacmod_msgs::SystemRptFloat steer_rpt_msg;
+          steer_rpt_msg.header.stamp = now;
+          steer_rpt_msg.manual_input = steer_obj.manual_input;
+          steer_rpt_msg.command = steer_obj.command;
+          steer_rpt_msg.output = steer_obj.output;
+          steer_rpt_pub.publish(steer_rpt_msg);
+        } break;                      
+        case BRAKE_RPT_CAN_ID:
+        {
+          brake_obj.parse(msg);
+
+          pacmod_msgs::SystemRptFloat brake_rpt_msg;
+          brake_rpt_msg.header.stamp = now;
+          brake_rpt_msg.manual_input = brake_obj.manual_input;
+          brake_rpt_msg.command = brake_obj.command;
+          brake_rpt_msg.output = brake_obj.output;
+          brake_rpt_pub.publish(brake_rpt_msg);
+        } break;   
+        case VEHICLE_SPEED_RPT_CAN_ID:
+        {
+          speed_obj.parse(msg);
+
+          pacmod_msgs::VehicleSpeedRpt veh_spd_rpt_msg;
+          veh_spd_rpt_msg.vehicle_speed = speed_obj.vehicle_speed;
+          veh_spd_rpt_msg.vehicle_speed_valid = speed_obj.vehicle_speed_valid;
+          veh_spd_rpt_msg.vehicle_speed_raw[0] = speed_obj.vehicle_speed_raw[0];
+          veh_spd_rpt_msg.vehicle_speed_raw[1] = speed_obj.vehicle_speed_raw[1];
+          vehicle_speed_pub.publish(veh_spd_rpt_msg);  
+
+          // Now publish in m/s
+          std_msgs::Float64 veh_spd_ms_msg;
+          veh_spd_ms_msg.data = (speed_obj.vehicle_speed)*0.44704;
+          vehicle_speed_ms_pub.publish(veh_spd_ms_msg);
+        } break;
+        case BRAKE_MOTOR_RPT_1_CAN_ID:
+        {
+          detail1_obj.parse(msg);
+
+          pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
+          motor_rpt_1_msg.header.stamp = now;
+          motor_rpt_1_msg.current = detail1_obj.current;
+          motor_rpt_1_msg.position = detail1_obj.position;
+          brake_rpt_detail_1_pub.publish(motor_rpt_1_msg);
+        } break;
+        case BRAKE_MOTOR_RPT_2_CAN_ID:
+        {
+          detail2_obj.parse(msg);
+
+          pacmod_msgs::MotorRpt2 motor_rpt_2_msg;
+          motor_rpt_2_msg.header.stamp = now;
+          motor_rpt_2_msg.encoder_temp = detail2_obj.encoder_temp;
+          motor_rpt_2_msg.motor_temp = detail2_obj.motor_temp;
+          motor_rpt_2_msg.angular_velocity = detail2_obj.velocity;
+          brake_rpt_detail_2_pub.publish(motor_rpt_2_msg);
+        } break;
+        case BRAKE_MOTOR_RPT_3_CAN_ID:
+        {
+          detail3_obj.parse(msg);
+
+          pacmod_msgs::MotorRpt3 motor_rpt_3_msg;
+          motor_rpt_3_msg.header.stamp = now;
+          motor_rpt_3_msg.torque_output = detail3_obj.torque_output;
+          motor_rpt_3_msg.torque_input = detail3_obj.torque_input;
+          brake_rpt_detail_3_pub.publish(motor_rpt_3_msg);
+        } break;
+        case STEERING_MOTOR_RPT_1_CAN_ID:
+        {
+          detail1_obj.parse(msg);
+
+          pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
+          motor_rpt_1_msg.header.stamp = now;
+          motor_rpt_1_msg.current = detail1_obj.current;
+          motor_rpt_1_msg.position = detail1_obj.position;
+          steering_rpt_detail_1_pub.publish(motor_rpt_1_msg);
+        } break;
+        case STEERING_MOTOR_RPT_2_CAN_ID:
+        {
+          detail2_obj.parse(msg);
+
+          pacmod_msgs::MotorRpt2 motor_rpt_2_msg;
+          motor_rpt_2_msg.header.stamp = now;
+          motor_rpt_2_msg.encoder_temp = detail2_obj.encoder_temp;
+          motor_rpt_2_msg.motor_temp = detail2_obj.motor_temp;
+          motor_rpt_2_msg.angular_velocity = detail2_obj.velocity;
+          steering_rpt_detail_2_pub.publish(motor_rpt_2_msg);
+        } break;
+        case STEERING_MOTOR_RPT_3_CAN_ID:
+        {
+          detail3_obj.parse(msg);
+
+          pacmod_msgs::MotorRpt3 motor_rpt_3_msg;
+          motor_rpt_3_msg.header.stamp = now;
+          motor_rpt_3_msg.torque_output = detail3_obj.torque_output;
+          motor_rpt_3_msg.torque_input = detail3_obj.torque_input;
+          steering_rpt_detail_3_pub.publish(motor_rpt_3_msg);
+        } break;
+      }
     }
 
-    // Make sure it's disabled when node shuts down
-    set_enable(false);
+    // Wait for next loop
+    loop_rate.sleep();
+  }
 
-    can_reader.close();
-    spinner.stop();
-    ros::shutdown();
-   
-    return 0;
+  // Make sure it's disabled when node shuts down
+  set_enable(false);
+
+  can_reader.close();
+  can_send_thread.join();
+  spinner.stop();
+  ros::shutdown();
+ 
+  return 0;
 }
 
