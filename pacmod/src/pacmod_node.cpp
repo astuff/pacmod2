@@ -125,6 +125,59 @@ void set_enable(bool val)
 {
   std::lock_guard<std::mutex> lck(enable_mut);
   enable_state = val;
+
+  if (!val)
+  {
+    //Reset all values to default when PACMod is disabled.
+    pacmod_msgs::PacmodCmd turn_msg;
+    pacmod_msgs::PacmodCmd shift_msg;
+    pacmod_msgs::PacmodCmd accel_msg;
+    pacmod_msgs::PositionWithSpeed steering_msg;
+    pacmod_msgs::PacmodCmd brake_msg;
+
+    turn_msg.ui16_cmd = pacmod_msgs::PacmodCmd::TURN_NONE;
+    turn_msg.enable = false;
+    turn_msg.clear = false;
+    turn_msg.ignore = false;
+
+    turn_mut.lock();
+    pacmod_msgs::PacmodCmd::ConstPtr turn_const_ptr(&turn_msg);
+    latest_turn_msg = turn_const_ptr;
+    turn_mut.unlock();
+
+    shift_msg.ui16_cmd = pacmod_msgs::PacmodCmd::SHIFT_PARK;
+    shift_msg.enable = false;
+    shift_msg.clear = false;
+    shift_msg.ignore = false;
+
+    shift_mut.lock();
+    pacmod_msgs::PacmodCmd::ConstPtr shift_const_ptr(&shift_msg);
+    latest_shift_msg = shift_const_ptr;
+    shift_mut.unlock();
+
+    accel_msg.f64_cmd = 0.0;
+    accel_msg.enable = false;
+    accel_msg.clear = false;
+    accel_msg.ignore = false;
+
+    steering_msg.angular_position = 0.0;
+    steering_msg.angular_velocity_limit = 0.0;
+
+    steer_mut.lock();
+    pacmod_msgs::PositionWithSpeed::ConstPtr steer_const_ptr(&steering_msg);
+    latest_steer_msg = steer_const_ptr;
+    steer_mut.unlock();
+
+    brake_msg.f64_cmd = 0.0;
+    brake_msg.enable = false;
+    brake_msg.clear = false;
+    brake_msg.ignore = false;
+
+    brake_mut.lock();
+    pacmod_msgs::PacmodCmd::ConstPtr brake_const_ptr(&brake_msg);
+    latest_brake_msg = brake_const_ptr;
+    brake_mut.unlock();
+  }
 }
 
 // Listens for incoming requests to enable the PACMod
