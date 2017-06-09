@@ -110,6 +110,8 @@ std::mutex steer_mut;
 pacmod_msgs::PacmodCmd::ConstPtr latest_brake_msg;
 std::mutex brake_mut;
 ThreadSafeCANQueue can_queue;
+bool global_keep_going = true;
+std::mutex keep_going_mut;
 
 //Message objects.
 GlobalCmdMsg global_obj;
@@ -243,8 +245,9 @@ void canSend()
 {
   const std::chrono::milliseconds inter_msg_pause = std::chrono::milliseconds(1);
   const std::chrono::milliseconds loop_pause = std::chrono::milliseconds(50);
+  bool keep_going = true;
 
-  while (true)
+  while (keep_going)
   {
     // Open the channel.
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
@@ -398,6 +401,10 @@ void canSend()
     }
 
     can_writer.close();
+
+    keep_going_mut.lock();
+    keep_going = global_keep_going;
+    keep_going_mut.unlock();
 
     std::this_thread::sleep_for(loop_pause);
   }
@@ -686,6 +693,11 @@ int main(int argc, char *argv[])
   set_enable(false);
 
   can_reader.close();
+  
+  keep_going_mut.lock();
+  global_keep_going = false;
+  keep_going_mut.unlock();
+
   can_send_thread.join();
   spinner.stop();
   ros::shutdown();
