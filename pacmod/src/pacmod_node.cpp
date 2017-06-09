@@ -131,7 +131,7 @@ void set_enable(bool val)
   std::lock_guard<std::mutex> lck(enable_mut);
   enable_state = val;
 
-  if (!val)
+  /*if (!val)
   {
     //Reset all values to default when PACMod is disabled.
     pacmod_msgs::PacmodCmd turn_msg;
@@ -182,14 +182,13 @@ void set_enable(bool val)
     pacmod_msgs::PacmodCmd::ConstPtr brake_const_ptr(&brake_msg);
     latest_brake_msg = brake_const_ptr;
     brake_mut.unlock();
-  }
+  }*/
 }
 
 // Listens for incoming requests to enable the PACMod
 void callback_pacmod_enable(const std_msgs::Bool::ConstPtr& msg)
 {
   set_enable(msg->data);  
-  ROS_INFO("Setting enable to %d\n\r", msg->data);
 }
 
 // Listens for incoming requests to change the state of the turn signals
