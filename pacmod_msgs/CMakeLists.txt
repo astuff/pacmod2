@@ -12,15 +12,22 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  PacmodCmd.msg
+  DateTimeRpt.msg
   GlobalRpt.msg
-  SystemRptInt.msg
-  SystemRptFloat.msg
+  LatLonHeadingRpt.msg
   MotorRpt1.msg
   MotorRpt2.msg
   MotorRpt3.msg
+  PacmodCmd.msg
   PositionWithSpeed.msg
+  SteeringPIDRpt1.msg
+  SteeringPIDRpt2.msg
+  SteeringPIDRpt3.msg
+  SteeringPIDRpt4.msg
+  SystemRptFloat.msg
+  SystemRptInt.msg
   VehicleSpeedRpt.msg
+  WheelSpeedRpt.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
