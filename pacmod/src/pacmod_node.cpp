@@ -101,6 +101,8 @@ bool enable_state;
 std::mutex enable_mut;
 pacmod_msgs::PacmodCmd::ConstPtr latest_turn_msg;
 std::mutex turn_mut;
+pacmod_msgs::PacmodCmd::ConstPtr latest_wiper_msg;
+std::mutex wiper_mut;
 pacmod_msgs::PacmodCmd::ConstPtr latest_shift_msg;
 std::mutex shift_mut;
 pacmod_msgs::PacmodCmd::ConstPtr latest_accel_msg;
@@ -200,6 +202,13 @@ void callback_turn_signal_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
   latest_turn_msg = msg;
 }
 
+// Listens for incoming requests to change the state of the windshield wipers
+void callback_wiper_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
+{
+  std::lock_guard<std::mutex> lck(wiper_mut);
+  latest_wiper_msg = msg;
+}
+
 // Listens for incoming requests to change the gear shifter state
 void callback_shift_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
@@ -295,6 +304,30 @@ void canSend()
 
       std::this_thread::sleep_for(inter_msg_pause);
     }
+    
+    // Windshield wipers
+    if (latest_wiper_msg != nullptr)
+    {
+        //Assemble the wiper message.
+        WiperCmdMsg wiper_obj;
+
+        wiper_mut.lock();
+        wiper_obj.encode(latest_wiper_msg->ui16_cmd);
+        wiper_mut.unlock();
+
+        //Write the wiper message.
+        ret = can_writer.send(WIPER_CMD_CAN_ID, wiper_obj.data, 8, true);
+        //Send echo.
+        send_can_echo(WIPER_CMD_CAN_ID, wiper_obj.data);
+
+        if (ret != ok)
+        {
+          ROS_WARN("CAN send error - wiper Cmd: %d\n", ret);
+          return;
+        }
+
+        std::this_thread::sleep_for(inter_msg_pause);
+    }    
 
     //Shift Command
     if (latest_shift_msg != nullptr)
@@ -451,6 +484,7 @@ int main(int argc, char *argv[])
   ros::Publisher can_tx_pub = n.advertise<can_msgs::Frame>("can_tx", 20);
   ros::Publisher global_rpt_pub = n.advertise<pacmod_msgs::GlobalRpt>("parsed_tx/global_rpt", 20);
   ros::Publisher turn_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/turn_rpt", 20);
+  ros::Publisher wiper_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/wiper_rpt", 20);
   ros::Publisher shift_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/shift_rpt", 20);
   ros::Publisher accel_rpt_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/accel_rpt", 20);
   ros::Publisher steer_rpt_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/steer_rpt", 20);
@@ -469,6 +503,7 @@ int main(int argc, char *argv[])
   // Subscribe to messages
   ros::Subscriber can_rx_sub = n.subscribe("can_rx", 20, callback_can_rx);
   ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);  
+  ros::Subscriber wiper_set_cmd_sub = n.subscribe("as_rx/wiper_cmd", 20, callback_wiper_set_cmd); 
   ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);  
   ros::Subscriber accelerator_set_cmd = n.subscribe("as_rx/accel_cmd", 20, callback_accelerator_set_cmd);
   ros::Subscriber steering_set_cmd = n.subscribe("as_rx/steer_cmd", 20, callback_steering_set_cmd);
@@ -560,6 +595,18 @@ int main(int argc, char *argv[])
           turn_rpt_msg.output = turn_obj.output;
           turn_rpt_pub.publish(turn_rpt_msg);
         } break;
+        case WIPER_RPT_CAN_ID:
+        {
+            SystemRptIntMsg obj;
+            obj.parse(msg);
+
+            pacmod_msgs::SystemRptInt wiper_rpt_msg;
+            wiper_rpt_msg.header.stamp = now;
+            wiper_rpt_msg.manual_input = obj.manual_input;
+            wiper_rpt_msg.command = obj.command;
+            wiper_rpt_msg.output = obj.output;
+            wiper_rpt_pub.publish(wiper_rpt_msg);
+        } break;        
         case SHIFT_RPT_CAN_ID:
         {
           shift_obj.parse(msg);
