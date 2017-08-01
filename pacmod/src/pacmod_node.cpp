@@ -16,7 +16,6 @@
 */
 
 #include <can_interface/can_interface.h>
-//#include <stdio.h>
 #include <signal.h>
 #include <mutex>
 #include <queue>
@@ -33,15 +32,22 @@
 #include <std_msgs/Float64.h>
 #include <can_msgs/Frame.h>
 
-#include <pacmod_msgs/PacmodCmd.h>
+#include <pacmod_msgs/DateTimeRpt.h>
 #include <pacmod_msgs/GlobalRpt.h>
-#include <pacmod_msgs/SystemRptInt.h>
-#include <pacmod_msgs/SystemRptFloat.h>
+#include <pacmod_msgs/LatLonHeadingRpt.h>
 #include <pacmod_msgs/MotorRpt1.h>
 #include <pacmod_msgs/MotorRpt2.h>
 #include <pacmod_msgs/MotorRpt3.h>
+#include <pacmod_msgs/PacmodCmd.h>
 #include <pacmod_msgs/PositionWithSpeed.h>
+#include <pacmod_msgs/SteeringPIDRpt1.h>
+#include <pacmod_msgs/SteeringPIDRpt2.h>
+#include <pacmod_msgs/SteeringPIDRpt3.h>
+#include <pacmod_msgs/SteeringPIDRpt4.h>
+#include <pacmod_msgs/SystemRptFloat.h>
+#include <pacmod_msgs/SystemRptInt.h>
 #include <pacmod_msgs/VehicleSpeedRpt.h>
+#include <pacmod_msgs/WheelSpeedRpt.h>
 #include <pacmod_core.h>
 
 using namespace AS::CAN;
@@ -53,6 +59,8 @@ ros::Publisher can_rx_echo_pub;
 int hardware_id = 0;
 int circuit_id = -1;
 int bit_rate = 500000;
+double last_global_rpt_msg_received = 0.0;
+const double watchdog_timeout = 0.3;
 
 class ThreadSafeCANQueue
 {
@@ -97,10 +105,16 @@ class ThreadSafeCANQueue
     std::condition_variable c;
 };
 
-bool enable_state;
+bool enable_state = false;
 std::mutex enable_mut;
+bool override_state = false;
+std::mutex override_mut;
 pacmod_msgs::PacmodCmd::ConstPtr latest_turn_msg;
 std::mutex turn_mut;
+pacmod_msgs::PacmodCmd::ConstPtr latest_headlight_msg;
+std::mutex headlight_mut;
+pacmod_msgs::PacmodCmd::ConstPtr latest_horn_msg;
+std::mutex horn_mut;
 pacmod_msgs::PacmodCmd::ConstPtr latest_wiper_msg;
 std::mutex wiper_mut;
 pacmod_msgs::PacmodCmd::ConstPtr latest_shift_msg;
