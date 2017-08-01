@@ -19,6 +19,7 @@ add_message_files(
   MotorRpt2.msg
   MotorRpt3.msg
   PacmodCmd.msg
+  ParkingBrakeStatusRpt.msg
   PositionWithSpeed.msg
   SteeringPIDRpt1.msg
   SteeringPIDRpt2.msg
@@ -28,6 +29,7 @@ add_message_files(
   SystemRptInt.msg
   VehicleSpeedRpt.msg
   WheelSpeedRpt.msg
+  YawRateRpt.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
