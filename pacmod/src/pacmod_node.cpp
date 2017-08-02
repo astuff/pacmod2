@@ -365,7 +365,7 @@ void canSend()
     }
 
     //Horn
-    if (latest_horn_msg != nullptr)
+    if (latest_horn_msg != nullptr && veh_type == VehicleType::LEXUS_RX_450H)
     {
       unsigned short latest_horn_val;
 
@@ -387,7 +387,7 @@ void canSend()
     }
 
     //Windshield wipers
-    if (latest_wiper_msg != nullptr)
+    if (latest_wiper_msg != nullptr && veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
     {
       unsigned short latest_wiper_val;
 
