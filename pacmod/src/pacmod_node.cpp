@@ -296,7 +296,7 @@ void canSend()
     // Open the channel.
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
     
-    if (ret != ok)
+    if (ret != OK)
     {
       ROS_WARN("CAN handle error: %d\n", ret);
       return;
@@ -312,7 +312,7 @@ void canSend()
     ret = can_writer.send(GLOBAL_CMD_CAN_ID, global_obj.data, 8, true);
     send_can_echo(GLOBAL_CMD_CAN_ID, global_obj.data);
 
-    if (ret != ok)
+    if (ret != OK)
     {
       ROS_WARN("CAN send error - Global Cmd: %d\n", ret);
       return;
@@ -333,7 +333,7 @@ void canSend()
       ret = can_writer.send(TURN_CMD_CAN_ID, turn_obj.data, 8, true);
       send_can_echo(TURN_CMD_CAN_ID, turn_obj.data);
 
-      if (ret != ok)
+      if (ret != OK)
       {
         ROS_WARN("CAN send error - Turn Cmd: %d\n", ret);
         return;
@@ -355,7 +355,7 @@ void canSend()
       ret = can_writer.send(HEADLIGHT_CMD_CAN_ID, headlight_obj.data, 8, true);
       send_can_echo(HEADLIGHT_CMD_CAN_ID, headlight_obj.data);
 
-      if (ret != ok)
+      if (ret != OK)
       {
         ROS_WARN("CAN send error - Wiper Cmd: %d\n", ret);
         return;
@@ -377,7 +377,7 @@ void canSend()
       ret = can_writer.send(HORN_CMD_CAN_ID, horn_obj.data, 8, true);
       send_can_echo(HORN_CMD_CAN_ID, horn_obj.data);
 
-      if (ret != ok)
+      if (ret != OK)
       {
         ROS_WARN("CAN send error - Horn Cmd: %d\n", ret);
         return;
@@ -399,7 +399,7 @@ void canSend()
       ret = can_writer.send(WIPER_CMD_CAN_ID, wiper_obj.data, 8, true);
       send_can_echo(WIPER_CMD_CAN_ID, wiper_obj.data);
 
-      if (ret != ok)
+      if (ret != OK)
       {
         ROS_WARN("CAN send error - wiper Cmd: %d\n", ret);
         return;
@@ -421,7 +421,7 @@ void canSend()
       ret = can_writer.send(SHIFT_CMD_CAN_ID, shift_obj.data, 8, true);
       send_can_echo(SHIFT_CMD_CAN_ID, shift_obj.data);
 
-      if (ret != ok)
+      if (ret != OK)
       {
         ROS_WARN("CAN send error - Shift Cmd: %d\n", ret);
         return;
@@ -442,7 +442,7 @@ void canSend()
       ret = can_writer.send(ACCEL_CMD_CAN_ID, accel_obj.data, 8, true);
       send_can_echo(ACCEL_CMD_CAN_ID, accel_obj.data);
 
-      if (ret != ok)
+      if (ret != OK)
       {
         ROS_WARN("CAN send error - Accel Cmd: %d\n", ret);
         return;
@@ -466,7 +466,7 @@ void canSend()
       ret = can_writer.send(STEERING_CMD_CAN_ID, steer_obj.data, 8, true);
       send_can_echo(STEERING_CMD_CAN_ID, steer_obj.data);
 
-      if (ret != ok)
+      if (ret != OK)
       {
         ROS_WARN("CAN send error - Steer Cmd: %d\n", ret);
         return;
@@ -488,7 +488,7 @@ void canSend()
       ret = can_writer.send(BRAKE_CMD_CAN_ID, brake_obj.data, 8, true);
       send_can_echo(BRAKE_CMD_CAN_ID, brake_obj.data);
 
-      if (ret != ok)
+      if (ret != OK)
       {
         ROS_WARN("CAN send error - Brake Cmd: %d\n", ret);
         return;
@@ -507,7 +507,7 @@ void canSend()
       //Send echo->
       send_can_echo(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]));
 
-      if (ret != ok)
+      if (ret != OK)
       {
         ROS_WARN("CAN send error - CAN_RX Message: %d\n", ret);
         return;
@@ -692,7 +692,7 @@ int main(int argc, char *argv[])
     SteeringPIDRpt2Msg steering_pid_2_obj;
     SteeringPIDRpt3Msg steering_pid_3_obj;
     
-    while (can_reader.read(&id, msg, &size, &extended, &t) == ok)
+    while (can_reader.read(&id, msg, &size, &extended, &t) == OK)
     {
       ros::Time now = ros::Time::now();
 
