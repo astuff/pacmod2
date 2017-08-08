@@ -2,12 +2,19 @@
 
     <arg name="pacmod_can_hardware_id" default="36847"/>
     <arg name="pacmod_can_circuit_id" default="0"/>
+    <arg name="pacmod_vehicle_type" default="POLARIS_GEM"/>
+
+    <!-- The vehicle types available for the vehicle_type parameter are:
+         POLARIS_GEM: The Polaris GEM e2, e4, e6, and eLXD.
+         POLARIS_RANGER: The Polaris Ranger series of off-road vehicles.
+         INTERNATIONAL_PROSTAR_122: The International PROSTAR+ 122 semi-tractor trailer. -->
 
     <group ns="pacmod">
   
         <node pkg="pacmod" type="pacmod" name="pacmod">
             <param name="can_hardware_id" value="$(arg pacmod_can_hardware_id)"/>
             <param name="can_circuit_id" value="$(arg pacmod_can_circuit_id)"/>
+            <param name="vehicle_type" value="$(arg pacmod_vehicle_type)"/>
         </node>  
     
     </group>
