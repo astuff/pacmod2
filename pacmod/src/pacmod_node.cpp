@@ -343,7 +343,7 @@ void canSend()
     }
     
     //Headlights
-    if (latest_headlight_msg != nullptr)
+    if (latest_headlight_msg != nullptr && veh_type == VehicleType::LEXUS_RX_450H)
     {
       unsigned short latest_headlight_val;
 
