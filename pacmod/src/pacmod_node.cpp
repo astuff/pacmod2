@@ -343,7 +343,7 @@ void canSend()
     }
     
     //Headlights
-    if (latest_headlight_msg != nullptr && veh_type == VehicleType::LEXUS_RX_450H)
+    if (latest_headlight_msg != nullptr)
     {
       unsigned short latest_headlight_val;
 
@@ -365,7 +365,7 @@ void canSend()
     }
 
     //Horn
-    if (latest_horn_msg != nullptr && veh_type == VehicleType::LEXUS_RX_450H)
+    if (latest_horn_msg != nullptr)
     {
       unsigned short latest_horn_val;
 
@@ -387,7 +387,7 @@ void canSend()
     }
 
     //Windshield wipers
-    if (latest_wiper_msg != nullptr && veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
+    if (latest_wiper_msg != nullptr)
     {
       unsigned short latest_wiper_val;
 
@@ -451,7 +451,7 @@ void canSend()
       std::this_thread::sleep_for(inter_msg_pause);
     }
 
-    //Steer Commadn
+    //Steer Command
     if (latest_steer_msg != nullptr)
     {
       double latest_steer_angle;
@@ -593,7 +593,9 @@ int main(int argc, char *argv[])
   //Vehicle-Specific Publishers
   ros::Publisher wiper_rpt_pub, headlight_rpt_pub, horn_rpt_pub, steer_rpt_2_pub, steer_rpt_3_pub,
                  wheel_speed_rpt_pub, steering_pid_rpt_1_pub, steering_pid_rpt_2_pub, steering_pid_rpt_3_pub,
-                 lat_lon_heading_rpt_pub, parking_brake_status_rpt_pub, yaw_rate_rpt_pub;
+                 lat_lon_heading_rpt_pub, parking_brake_status_rpt_pub, yaw_rate_rpt_pub, steering_rpt_detail_1_pub,
+                 steering_rpt_detail_2_pub, steering_rpt_detail_3_pub, brake_rpt_detail_1_pub, brake_rpt_detail_2_pub,
+                 brake_rpt_detail_3_pub;
 
   // Advertise published messages
   ros::Publisher can_tx_pub = n.advertise<can_msgs::Frame>("can_tx", 20);
@@ -603,16 +605,22 @@ int main(int argc, char *argv[])
   ros::Publisher accel_rpt_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/accel_rpt", 20);
   ros::Publisher steer_rpt_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/steer_rpt", 20);
   ros::Publisher brake_rpt_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/brake_rpt", 20);
-  ros::Publisher steering_rpt_detail_1_pub = n.advertise<pacmod_msgs::MotorRpt1>("parsed_tx/steer_rpt_detail_1", 20);
-  ros::Publisher steering_rpt_detail_2_pub = n.advertise<pacmod_msgs::MotorRpt2>("parsed_tx/steer_rpt_detail_2", 20);
-  ros::Publisher steering_rpt_detail_3_pub = n.advertise<pacmod_msgs::MotorRpt3>("parsed_tx/steer_rpt_detail_3", 20);
-  ros::Publisher brake_rpt_detail_1_pub = n.advertise<pacmod_msgs::MotorRpt1>("parsed_tx/brake_rpt_detail_1", 20);
-  ros::Publisher brake_rpt_detail_2_pub = n.advertise<pacmod_msgs::MotorRpt2>("parsed_tx/brake_rpt_detail_2", 20);
-  ros::Publisher brake_rpt_detail_3_pub = n.advertise<pacmod_msgs::MotorRpt3>("parsed_tx/brake_rpt_detail_3", 20);
   ros::Publisher vehicle_speed_pub = n.advertise<pacmod_msgs::VehicleSpeedRpt>("parsed_tx/vehicle_speed_rpt", 20);
   ros::Publisher vehicle_speed_ms_pub = n.advertise<std_msgs::Float64>("as_tx/vehicle_speed", 20);
   ros::Publisher enable_pub = n.advertise<std_msgs::Bool>("as_tx/enable", 20, true);
   can_rx_echo_pub = n.advertise<can_msgs::Frame>("can_rx_echo", 20);
+
+  if (veh_type == VehicleType::POLARIS_GEM ||
+      veh_type == VehicleType::POLARIS_RANGER ||
+      veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
+  {
+    steering_rpt_detail_1_pub = n.advertise<pacmod_msgs::MotorRpt1>("parsed_tx/steer_rpt_detail_1", 20);
+    steering_rpt_detail_2_pub = n.advertise<pacmod_msgs::MotorRpt2>("parsed_tx/steer_rpt_detail_2", 20);
+    steering_rpt_detail_3_pub = n.advertise<pacmod_msgs::MotorRpt3>("parsed_tx/steer_rpt_detail_3", 20);
+    brake_rpt_detail_1_pub = n.advertise<pacmod_msgs::MotorRpt1>("parsed_tx/brake_rpt_detail_1", 20);
+    brake_rpt_detail_2_pub = n.advertise<pacmod_msgs::MotorRpt2>("parsed_tx/brake_rpt_detail_2", 20);
+    brake_rpt_detail_3_pub = n.advertise<pacmod_msgs::MotorRpt3>("parsed_tx/brake_rpt_detail_3", 20);
+  }
 
   if (veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
   {
@@ -632,12 +640,13 @@ int main(int argc, char *argv[])
     yaw_rate_rpt_pub = n.advertise<pacmod_msgs::YawRateRpt>("parsed_tx/yaw_rate_rpt", 20);
     lat_lon_heading_rpt_pub = n.advertise<pacmod_msgs::LatLonHeadingRpt>("parsed_tx/lat_lon_heading_rpt", 20);
     parking_brake_status_rpt_pub = n.advertise<pacmod_msgs::ParkingBrakeStatusRpt>("parsed_tx/parking_brake_status_rpt", 20);
+
+    ros::Subscriber wiper_set_cmd_sub = n.subscribe("as_rx/wiper_cmd", 20, callback_wiper_set_cmd); 
   }
       
   // Subscribe to messages
   ros::Subscriber can_rx_sub = n.subscribe("can_rx", 20, callback_can_rx);
   ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);  
-  ros::Subscriber wiper_set_cmd_sub = n.subscribe("as_rx/wiper_cmd", 20, callback_wiper_set_cmd); 
   ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);  
   ros::Subscriber accelerator_set_cmd = n.subscribe("as_rx/accel_cmd", 20, callback_accelerator_set_cmd);
   ros::Subscriber steering_set_cmd = n.subscribe("as_rx/steer_cmd", 20, callback_steering_set_cmd);
@@ -914,65 +923,95 @@ int main(int argc, char *argv[])
         } break;
         case BRAKE_MOTOR_RPT_1_CAN_ID:
         {
-          detail1_obj.parse(msg);
+          if (veh_type == VehicleType::POLARIS_GEM ||
+              veh_type == VehicleType::POLARIS_RANGER ||
+              veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
+          {
+            detail1_obj.parse(msg);
 
-          pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
-          motor_rpt_1_msg.header.stamp = now;
-          motor_rpt_1_msg.current = detail1_obj.current;
-          motor_rpt_1_msg.position = detail1_obj.position;
-          brake_rpt_detail_1_pub.publish(motor_rpt_1_msg);
+            pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
+            motor_rpt_1_msg.header.stamp = now;
+            motor_rpt_1_msg.current = detail1_obj.current;
+            motor_rpt_1_msg.position = detail1_obj.position;
+            brake_rpt_detail_1_pub.publish(motor_rpt_1_msg);
+          }
         } break;
         case BRAKE_MOTOR_RPT_2_CAN_ID:
         {
-          detail2_obj.parse(msg);
+          if (veh_type == VehicleType::POLARIS_GEM ||
+              veh_type == VehicleType::POLARIS_RANGER ||
+              veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
+          {
+            detail2_obj.parse(msg);
 
-          pacmod_msgs::MotorRpt2 motor_rpt_2_msg;
-          motor_rpt_2_msg.header.stamp = now;
-          motor_rpt_2_msg.encoder_temp = detail2_obj.encoder_temp;
-          motor_rpt_2_msg.motor_temp = detail2_obj.motor_temp;
-          motor_rpt_2_msg.angular_velocity = detail2_obj.velocity;
-          brake_rpt_detail_2_pub.publish(motor_rpt_2_msg);
+            pacmod_msgs::MotorRpt2 motor_rpt_2_msg;
+            motor_rpt_2_msg.header.stamp = now;
+            motor_rpt_2_msg.encoder_temp = detail2_obj.encoder_temp;
+            motor_rpt_2_msg.motor_temp = detail2_obj.motor_temp;
+            motor_rpt_2_msg.angular_velocity = detail2_obj.velocity;
+            brake_rpt_detail_2_pub.publish(motor_rpt_2_msg);
+          }
         } break;
         case BRAKE_MOTOR_RPT_3_CAN_ID:
         {
-          detail3_obj.parse(msg);
+          if (veh_type == VehicleType::POLARIS_GEM ||
+              veh_type == VehicleType::POLARIS_RANGER ||
+              veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
+          {
+            detail3_obj.parse(msg);
 
-          pacmod_msgs::MotorRpt3 motor_rpt_3_msg;
-          motor_rpt_3_msg.header.stamp = now;
-          motor_rpt_3_msg.torque_output = detail3_obj.torque_output;
-          motor_rpt_3_msg.torque_input = detail3_obj.torque_input;
-          brake_rpt_detail_3_pub.publish(motor_rpt_3_msg);
+            pacmod_msgs::MotorRpt3 motor_rpt_3_msg;
+            motor_rpt_3_msg.header.stamp = now;
+            motor_rpt_3_msg.torque_output = detail3_obj.torque_output;
+            motor_rpt_3_msg.torque_input = detail3_obj.torque_input;
+            brake_rpt_detail_3_pub.publish(motor_rpt_3_msg);
+          }
         } break;
         case STEERING_MOTOR_RPT_1_CAN_ID:
         {
-          detail1_obj.parse(msg);
+          if (veh_type == VehicleType::POLARIS_GEM ||
+              veh_type == VehicleType::POLARIS_RANGER ||
+              veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
+          {
+            detail1_obj.parse(msg);
 
-          pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
-          motor_rpt_1_msg.header.stamp = now;
-          motor_rpt_1_msg.current = detail1_obj.current;
-          motor_rpt_1_msg.position = detail1_obj.position;
-          steering_rpt_detail_1_pub.publish(motor_rpt_1_msg);
+            pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
+            motor_rpt_1_msg.header.stamp = now;
+            motor_rpt_1_msg.current = detail1_obj.current;
+            motor_rpt_1_msg.position = detail1_obj.position;
+            steering_rpt_detail_1_pub.publish(motor_rpt_1_msg);
+          }
         } break;
         case STEERING_MOTOR_RPT_2_CAN_ID:
         {
-          detail2_obj.parse(msg);
+          if (veh_type == VehicleType::POLARIS_GEM ||
+              veh_type == VehicleType::POLARIS_RANGER ||
+              veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
+          {
+            detail2_obj.parse(msg);
 
-          pacmod_msgs::MotorRpt2 motor_rpt_2_msg;
-          motor_rpt_2_msg.header.stamp = now;
-          motor_rpt_2_msg.encoder_temp = detail2_obj.encoder_temp;
-          motor_rpt_2_msg.motor_temp = detail2_obj.motor_temp;
-          motor_rpt_2_msg.angular_velocity = detail2_obj.velocity;
-          steering_rpt_detail_2_pub.publish(motor_rpt_2_msg);
+            pacmod_msgs::MotorRpt2 motor_rpt_2_msg;
+            motor_rpt_2_msg.header.stamp = now;
+            motor_rpt_2_msg.encoder_temp = detail2_obj.encoder_temp;
+            motor_rpt_2_msg.motor_temp = detail2_obj.motor_temp;
+            motor_rpt_2_msg.angular_velocity = detail2_obj.velocity;
+            steering_rpt_detail_2_pub.publish(motor_rpt_2_msg);
+          }
         } break;
         case STEERING_MOTOR_RPT_3_CAN_ID:
         {
-          detail3_obj.parse(msg);
+          if (veh_type == VehicleType::POLARIS_GEM ||
+              veh_type == VehicleType::POLARIS_RANGER ||
+              veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
+          {
+            detail3_obj.parse(msg);
 
-          pacmod_msgs::MotorRpt3 motor_rpt_3_msg;
-          motor_rpt_3_msg.header.stamp = now;
-          motor_rpt_3_msg.torque_output = detail3_obj.torque_output;
-          motor_rpt_3_msg.torque_input = detail3_obj.torque_input;
-          steering_rpt_detail_3_pub.publish(motor_rpt_3_msg);
+            pacmod_msgs::MotorRpt3 motor_rpt_3_msg;
+            motor_rpt_3_msg.header.stamp = now;
+            motor_rpt_3_msg.torque_output = detail3_obj.torque_output;
+            motor_rpt_3_msg.torque_input = detail3_obj.torque_input;
+            steering_rpt_detail_3_pub.publish(motor_rpt_3_msg);
+          }
         } break;
         case STEERING_PID_RPT_1_CAN_ID:
         {
