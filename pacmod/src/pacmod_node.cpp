@@ -597,6 +597,9 @@ int main(int argc, char *argv[])
                  steering_rpt_detail_2_pub, steering_rpt_detail_3_pub, brake_rpt_detail_1_pub, brake_rpt_detail_2_pub,
                  brake_rpt_detail_3_pub;
 
+  //Vehicle-Specific Subscribers
+  ros::Subscriber *wiper_set_cmd_sub, *headlight_set_cmd_sub, *horn_set_cmd_sub;
+
   // Advertise published messages
   ros::Publisher can_tx_pub = n.advertise<can_msgs::Frame>("can_tx", 20);
   ros::Publisher global_rpt_pub = n.advertise<pacmod_msgs::GlobalRpt>("parsed_tx/global_rpt", 20);
@@ -625,6 +628,8 @@ int main(int argc, char *argv[])
   if (veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
   {
     wiper_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/wiper_rpt", 20);
+
+    wiper_set_cmd_sub = new ros::Subscriber(n.subscribe("as_rx/wiper_cmd", 20, callback_wiper_set_cmd));
   }
 
   if (veh_type == VehicleType::LEXUS_RX_450H)
@@ -641,7 +646,8 @@ int main(int argc, char *argv[])
     lat_lon_heading_rpt_pub = n.advertise<pacmod_msgs::LatLonHeadingRpt>("parsed_tx/lat_lon_heading_rpt", 20);
     parking_brake_status_rpt_pub = n.advertise<pacmod_msgs::ParkingBrakeStatusRpt>("parsed_tx/parking_brake_status_rpt", 20);
 
-    ros::Subscriber wiper_set_cmd_sub = n.subscribe("as_rx/wiper_cmd", 20, callback_wiper_set_cmd); 
+    headlight_set_cmd_sub = new ros::Subscriber(n.subscribe("as_rx/headlight_cmd", 20, callback_headlight_set_cmd));
+    horn_set_cmd_sub = new ros::Subscriber(n.subscribe("as_rx/horn_cmd", 20, callback_horn_set_cmd));
   }
       
   // Subscribe to messages
