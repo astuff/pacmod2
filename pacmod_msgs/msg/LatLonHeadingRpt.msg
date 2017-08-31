@@ -1,10 +1,9 @@
 Header header
 
-float64 latitude_degrees
-float64 latitude_minutes
-float64 latitude_seconds
-float64 longitude_degrees
-float64 longitude_minutes
-float64 longitude_seconds
+int8 latitude_degrees
+uint8 latitude_minutes
+uint8 latitude_seconds
+int8 longitude_degrees
+uint8 longitude_minutes
+uint8 longitude_seconds
 float64 heading
-
