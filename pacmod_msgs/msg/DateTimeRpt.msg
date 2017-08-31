@@ -1,9 +1,9 @@
 Header header
 
-float64 year
-float64 month
-float64 day
-float64 hour
-float64 minute
-float64 second
+int32 year
+uint8 month
+uint8 day
+uint8 hour
+uint8 minute
+uint8 second
 
