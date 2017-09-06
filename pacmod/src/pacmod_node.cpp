@@ -309,7 +309,7 @@ void canSend()
     enable_mut.unlock();
 
     global_obj.encode(temp_enable_state, true, false);
-    ret = can_writer.send(GLOBAL_CMD_CAN_ID, global_obj.data, 8, true);
+    ret = can_writer.write(GLOBAL_CMD_CAN_ID, global_obj.data, 8, true);
     send_can_echo(GLOBAL_CMD_CAN_ID, global_obj.data);
 
     if (ret != OK)
@@ -330,7 +330,7 @@ void canSend()
       turn_mut.unlock();
 
       turn_obj.encode(latest_turn_val);
-      ret = can_writer.send(TURN_CMD_CAN_ID, turn_obj.data, 8, true);
+      ret = can_writer.write(TURN_CMD_CAN_ID, turn_obj.data, 8, true);
       send_can_echo(TURN_CMD_CAN_ID, turn_obj.data);
 
       if (ret != OK)
@@ -352,7 +352,7 @@ void canSend()
       headlight_mut.unlock();
 
       headlight_obj.encode(latest_headlight_val);
-      ret = can_writer.send(HEADLIGHT_CMD_CAN_ID, headlight_obj.data, 8, true);
+      ret = can_writer.write(HEADLIGHT_CMD_CAN_ID, headlight_obj.data, 8, true);
       send_can_echo(HEADLIGHT_CMD_CAN_ID, headlight_obj.data);
 
       if (ret != OK)
@@ -374,7 +374,7 @@ void canSend()
       horn_mut.unlock();
 
       horn_obj.encode(latest_horn_val);
-      ret = can_writer.send(HORN_CMD_CAN_ID, horn_obj.data, 8, true);
+      ret = can_writer.write(HORN_CMD_CAN_ID, horn_obj.data, 8, true);
       send_can_echo(HORN_CMD_CAN_ID, horn_obj.data);
 
       if (ret != OK)
@@ -396,7 +396,7 @@ void canSend()
       wiper_mut.unlock();
 
       wiper_obj.encode(latest_wiper_val);
-      ret = can_writer.send(WIPER_CMD_CAN_ID, wiper_obj.data, 8, true);
+      ret = can_writer.write(WIPER_CMD_CAN_ID, wiper_obj.data, 8, true);
       send_can_echo(WIPER_CMD_CAN_ID, wiper_obj.data);
 
       if (ret != OK)
@@ -418,7 +418,7 @@ void canSend()
       shift_mut.unlock();
 
       shift_obj.encode(latest_shift_val);
-      ret = can_writer.send(SHIFT_CMD_CAN_ID, shift_obj.data, 8, true);
+      ret = can_writer.write(SHIFT_CMD_CAN_ID, shift_obj.data, 8, true);
       send_can_echo(SHIFT_CMD_CAN_ID, shift_obj.data);
 
       if (ret != OK)
@@ -439,7 +439,7 @@ void canSend()
       accel_mut.unlock();
 
       accel_obj.encode(latest_accel_val);
-      ret = can_writer.send(ACCEL_CMD_CAN_ID, accel_obj.data, 8, true);
+      ret = can_writer.write(ACCEL_CMD_CAN_ID, accel_obj.data, 8, true);
       send_can_echo(ACCEL_CMD_CAN_ID, accel_obj.data);
 
       if (ret != OK)
@@ -463,7 +463,7 @@ void canSend()
       steer_mut.unlock();
 
       steer_obj.encode(latest_steer_angle, latest_steer_vel);
-      ret = can_writer.send(STEERING_CMD_CAN_ID, steer_obj.data, 8, true);
+      ret = can_writer.write(STEERING_CMD_CAN_ID, steer_obj.data, 8, true);
       send_can_echo(STEERING_CMD_CAN_ID, steer_obj.data);
 
       if (ret != OK)
@@ -485,7 +485,7 @@ void canSend()
       brake_mut.unlock();
 
       brake_obj.encode(latest_brake_val);
-      ret = can_writer.send(BRAKE_CMD_CAN_ID, brake_obj.data, 8, true);
+      ret = can_writer.write(BRAKE_CMD_CAN_ID, brake_obj.data, 8, true);
       send_can_echo(BRAKE_CMD_CAN_ID, brake_obj.data);
 
       if (ret != OK)
@@ -503,7 +503,7 @@ void canSend()
       can_msgs::Frame::ConstPtr new_frame = can_queue.pop();
 
       //Write the RX message.
-      ret = can_writer.send(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]), new_frame->dlc, new_frame->is_extended);
+      ret = can_writer.write(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]), new_frame->dlc, new_frame->is_extended);
       //Send echo->
       send_can_echo(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]));
 
