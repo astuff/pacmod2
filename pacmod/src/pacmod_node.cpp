@@ -724,6 +724,10 @@ int main(int argc, char *argv[])
   while((ret = can_reader.open(hardware_id, circuit_id, bit_rate)) != OK)
   {
     ROS_ERROR("Error opening PACMod CAN reader: %d - %s", ret, return_status_desc(ret).c_str());
+    
+    if (!ros::ok())
+      break;
+
     std::this_thread::sleep_for(can_error_pause);
   }
     
