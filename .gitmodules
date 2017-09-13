@@ -1,3 +1,3 @@
 [submodule "core_pacmod"]
 	path = pacmod/core_pacmod
-	url = git@bitbucket.org:autonomoustuff/core_pacmod.git
+	url = git@github.com:astuff/core_pacmod.git
