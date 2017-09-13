@@ -1,6 +1,6 @@
 # PACMod (Platform Actuation and Control MODule) Vehicle Interface #
 
-This ROS node is designed to allow the user to control a vehicle (see SUPPORTED VEHICLES below) with the PACMod drive-by-wire system. For more information about the topics, parameters, and details on the implementation, see [https://autonomoustuff.atlassian.net/wiki/spaces/RW/pages/17749288/PACMod+System](the wiki page).
+This ROS node is designed to allow the user to control a vehicle (see SUPPORTED VEHICLES below) with the PACMod drive-by-wire system. For more information about the topics, parameters, and details on the implementation, see [the wiki page](https://autonomoustuff.atlassian.net/wiki/spaces/RW/pages/17749288/PACMod+System).
 
 ## Supported Vehicles ##
 
