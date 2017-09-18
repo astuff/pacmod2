@@ -301,8 +301,11 @@ void canSend()
   BrakeCmdMsg brake_obj;
 
   const std::chrono::milliseconds inter_msg_pause = std::chrono::milliseconds(1);
-  const std::chrono::milliseconds loop_pause = std::chrono::milliseconds(50);
+  const std::chrono::milliseconds loop_pause = std::chrono::milliseconds(33);
   bool keep_going = true;
+
+  std::chrono::system_clock::time_point next_time = std::chrono::system_clock::now();
+  next_time += loop_pause;
 
   //Set local to global value before looping.
   keep_going_mut.lock();
@@ -567,7 +570,8 @@ void canSend()
         return;
       }
 
-      std::this_thread::sleep_for(loop_pause);
+      std::this_thread::sleep_until(next_time);
+      next_time = std::chrono::system_clock::now() + loop_pause;
     }
     else
     {
