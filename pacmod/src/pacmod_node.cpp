@@ -133,6 +133,8 @@ ThreadSafeCANQueue can_queue;
 bool global_keep_going = true;
 std::mutex keep_going_mut;
 
+std::chrono::milliseconds can_error_pause = std::chrono::milliseconds(1000);
+
 // Listens for incoming raw CAN messages and forwards them to the PACMod
 void callback_can_rx(const can_msgs::Frame::ConstPtr& msg)
 {
@@ -274,6 +276,17 @@ void send_can_echo(unsigned int id, unsigned char * data)
   can_rx_echo_pub.publish(frame);
 }
 
+void shutdown_driver()
+{
+  set_enable(false);
+
+  can_reader.close();
+  
+  keep_going_mut.lock();
+  global_keep_going = false;
+  keep_going_mut.unlock();
+}
+
 void canSend()
 {
   //Message objects.
@@ -288,241 +301,288 @@ void canSend()
   BrakeCmdMsg brake_obj;
 
   const std::chrono::milliseconds inter_msg_pause = std::chrono::milliseconds(1);
-  const std::chrono::milliseconds loop_pause = std::chrono::milliseconds(50);
+  const std::chrono::milliseconds loop_pause = std::chrono::milliseconds(33);
   bool keep_going = true;
+
+  std::chrono::system_clock::time_point next_time = std::chrono::system_clock::now();
+  next_time += loop_pause;
+
+  //Set local to global value before looping.
+  keep_going_mut.lock();
+  keep_going = global_keep_going;
+  keep_going_mut.unlock();
 
   while (keep_going)
   {
     // Open the channel.
     return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
     
-    if (ret != OK)
+    if (ret == OK)
     {
-      ROS_WARN("CAN handle error: %d\n", ret);
-      return;
-    }
+      //Global Command
+      bool temp_enable_state;
+      enable_mut.lock();
+      temp_enable_state = enable_state;
+      enable_mut.unlock();
 
-    //Global Command
-    bool temp_enable_state;
-    enable_mut.lock();
-    temp_enable_state = enable_state;
-    enable_mut.unlock();
-
-    global_obj.encode(temp_enable_state, true, false);
-    ret = can_writer.send(GLOBAL_CMD_CAN_ID, global_obj.data, 8, true);
-    send_can_echo(GLOBAL_CMD_CAN_ID, global_obj.data);
-
-    if (ret != OK)
-    {
-      ROS_WARN("CAN send error - Global Cmd: %d\n", ret);
-      return;
-    }
-
-    std::this_thread::sleep_for(inter_msg_pause);
-
-    //Turn Command
-    if (latest_turn_msg != nullptr)
-    {
-      unsigned short latest_turn_val;
-
-      turn_mut.lock();
-      latest_turn_val = latest_turn_msg->ui16_cmd;
-      turn_mut.unlock();
-
-      turn_obj.encode(latest_turn_val);
-      ret = can_writer.send(TURN_CMD_CAN_ID, turn_obj.data, 8, true);
-      send_can_echo(TURN_CMD_CAN_ID, turn_obj.data);
+      global_obj.encode(temp_enable_state, true, false);
+      ret = can_writer.write(GLOBAL_CMD_CAN_ID, global_obj.data, 8, true);
 
       if (ret != OK)
       {
-        ROS_WARN("CAN send error - Turn Cmd: %d\n", ret);
+        ROS_WARN("CAN send error - Global Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
         return;
+      }
+      else
+      {
+        send_can_echo(GLOBAL_CMD_CAN_ID, global_obj.data);
       }
 
       std::this_thread::sleep_for(inter_msg_pause);
-    }
-    
-    //Headlights
-    if (latest_headlight_msg != nullptr)
-    {
-      unsigned short latest_headlight_val;
 
-      headlight_mut.lock();
-      latest_headlight_val = latest_headlight_msg->ui16_cmd;
-      headlight_mut.unlock();
+      //Turn Command
+      if (latest_turn_msg != nullptr)
+      {
+        unsigned short latest_turn_val;
 
-      headlight_obj.encode(latest_headlight_val);
-      ret = can_writer.send(HEADLIGHT_CMD_CAN_ID, headlight_obj.data, 8, true);
-      send_can_echo(HEADLIGHT_CMD_CAN_ID, headlight_obj.data);
+        turn_mut.lock();
+        latest_turn_val = latest_turn_msg->ui16_cmd;
+        turn_mut.unlock();
+
+        turn_obj.encode(latest_turn_val);
+        ret = can_writer.write(TURN_CMD_CAN_ID, turn_obj.data, 8, true);
+
+        if (ret != OK)
+        {
+          ROS_WARN("CAN send error - Turn Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          return;
+        }
+        else
+        {
+          send_can_echo(TURN_CMD_CAN_ID, turn_obj.data);
+        }
+
+        std::this_thread::sleep_for(inter_msg_pause);
+      }
+      
+      //Headlights
+      if (latest_headlight_msg != nullptr)
+      {
+        unsigned short latest_headlight_val;
+
+        headlight_mut.lock();
+        latest_headlight_val = latest_headlight_msg->ui16_cmd;
+        headlight_mut.unlock();
+
+        headlight_obj.encode(latest_headlight_val);
+        ret = can_writer.write(HEADLIGHT_CMD_CAN_ID, headlight_obj.data, 8, true);
+
+        if (ret != OK)
+        {
+          ROS_WARN("CAN send error - Wiper Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          return;
+        }
+        else
+        {
+          send_can_echo(HEADLIGHT_CMD_CAN_ID, headlight_obj.data);
+        }
+
+        std::this_thread::sleep_for(inter_msg_pause);
+      }
+
+      //Horn
+      if (latest_horn_msg != nullptr)
+      {
+        unsigned short latest_horn_val;
+
+        horn_mut.lock();
+        latest_horn_val = latest_horn_msg->ui16_cmd;
+        horn_mut.unlock();
+
+        horn_obj.encode(latest_horn_val);
+        ret = can_writer.write(HORN_CMD_CAN_ID, horn_obj.data, 8, true);
+
+        if (ret != OK)
+        {
+          ROS_WARN("CAN send error - Horn Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          return;
+        }
+        else
+        {
+          send_can_echo(HORN_CMD_CAN_ID, horn_obj.data);
+        }
+
+        std::this_thread::sleep_for(inter_msg_pause);
+      }
+
+      //Windshield wipers
+      if (latest_wiper_msg != nullptr)
+      {
+        unsigned short latest_wiper_val;
+
+        wiper_mut.lock();
+        latest_wiper_val = latest_wiper_msg->ui16_cmd;
+        wiper_mut.unlock();
+
+        wiper_obj.encode(latest_wiper_val);
+        ret = can_writer.write(WIPER_CMD_CAN_ID, wiper_obj.data, 8, true);
+
+        if (ret != OK)
+        {
+          ROS_WARN("CAN send error - wiper Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          return;
+        }
+        else
+        {
+          send_can_echo(WIPER_CMD_CAN_ID, wiper_obj.data);
+        }
+
+        std::this_thread::sleep_for(inter_msg_pause);
+      }    
+
+      //Shift Command
+      if (latest_shift_msg != nullptr)
+      {
+        unsigned short latest_shift_val;
+
+        shift_mut.lock();
+        latest_shift_val = latest_shift_msg->ui16_cmd;
+        shift_mut.unlock();
+
+        shift_obj.encode(latest_shift_val);
+        ret = can_writer.write(SHIFT_CMD_CAN_ID, shift_obj.data, 8, true);
+
+        if (ret != OK)
+        {
+          ROS_WARN("CAN send error - Shift Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          return;
+        }
+        else
+        {
+          send_can_echo(SHIFT_CMD_CAN_ID, shift_obj.data);
+        }
+
+        std::this_thread::sleep_for(inter_msg_pause);
+      }
+
+      //Accel Command
+      if (latest_accel_msg != nullptr)
+      {
+        double latest_accel_val;
+        accel_mut.lock();
+        latest_accel_val = latest_accel_msg->f64_cmd;
+        accel_mut.unlock();
+
+        accel_obj.encode(latest_accel_val);
+        ret = can_writer.write(ACCEL_CMD_CAN_ID, accel_obj.data, 8, true);
+
+        if (ret != OK)
+        {
+          ROS_WARN("CAN send error - Accel Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          return;
+        }
+        else
+        {
+          send_can_echo(ACCEL_CMD_CAN_ID, accel_obj.data);
+        }
+
+        std::this_thread::sleep_for(inter_msg_pause);
+      }
+
+      //Steer Command
+      if (latest_steer_msg != nullptr)
+      {
+        double latest_steer_angle;
+        double latest_steer_vel;
+
+        steer_mut.lock();
+        latest_steer_angle = latest_steer_msg->angular_position;
+        latest_steer_vel = latest_steer_msg->angular_velocity_limit;
+        steer_mut.unlock();
+
+        steer_obj.encode(latest_steer_angle, latest_steer_vel);
+        ret = can_writer.write(STEERING_CMD_CAN_ID, steer_obj.data, 8, true);
+
+        if (ret != OK)
+        {
+          ROS_WARN("CAN send error - Steer Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          return;
+        }
+        else
+        {
+          send_can_echo(STEERING_CMD_CAN_ID, steer_obj.data);
+        }
+
+        std::this_thread::sleep_for(inter_msg_pause);
+      }
+
+      //Brake Command
+      if (latest_brake_msg != nullptr)
+      {
+        double latest_brake_val;
+
+        brake_mut.lock();
+        latest_brake_val = latest_brake_msg->f64_cmd;
+        brake_mut.unlock();
+
+        brake_obj.encode(latest_brake_val);
+        ret = can_writer.write(BRAKE_CMD_CAN_ID, brake_obj.data, 8, true);
+
+        if (ret != OK)
+        {
+          ROS_WARN("CAN send error - Brake Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          return;
+        }
+        else
+        {
+          send_can_echo(BRAKE_CMD_CAN_ID, brake_obj.data);
+        }
+
+        std::this_thread::sleep_for(inter_msg_pause);
+      }
+
+      //Send the CAN queue.
+      while (!can_queue.empty())
+      {
+        can_msgs::Frame::ConstPtr new_frame = can_queue.pop();
+
+        //Write the RX message.
+        ret = can_writer.write(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]), new_frame->dlc, new_frame->is_extended);
+
+        if (ret != OK)
+        {
+          ROS_WARN("CAN send error - CAN_RX Message: %d - %s\n", ret, return_status_desc(ret).c_str());
+          return;
+        }
+        else
+        {
+          send_can_echo(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]));
+        }
+
+        std::this_thread::sleep_for(inter_msg_pause);
+      }
+
+      ret = can_writer.close();
 
       if (ret != OK)
       {
-        ROS_WARN("CAN send error - Wiper Cmd: %d\n", ret);
+        ROS_ERROR("%s", return_status_desc(ret).c_str());
         return;
       }
 
-      std::this_thread::sleep_for(inter_msg_pause);
+      std::this_thread::sleep_until(next_time);
+      next_time = std::chrono::system_clock::now() + loop_pause;
+    }
+    else
+    {
+      ROS_ERROR("Error opening PACMod CAN writer: %d - %s", ret, return_status_desc(ret).c_str());
+      std::this_thread::sleep_for(can_error_pause);
     }
 
-    //Horn
-    if (latest_horn_msg != nullptr)
-    {
-      unsigned short latest_horn_val;
-
-      horn_mut.lock();
-      latest_horn_val = latest_horn_msg->ui16_cmd;
-      horn_mut.unlock();
-
-      horn_obj.encode(latest_horn_val);
-      ret = can_writer.send(HORN_CMD_CAN_ID, horn_obj.data, 8, true);
-      send_can_echo(HORN_CMD_CAN_ID, horn_obj.data);
-
-      if (ret != OK)
-      {
-        ROS_WARN("CAN send error - Horn Cmd: %d\n", ret);
-        return;
-      }
-
-      std::this_thread::sleep_for(inter_msg_pause);
-    }
-
-    //Windshield wipers
-    if (latest_wiper_msg != nullptr)
-    {
-      unsigned short latest_wiper_val;
-
-      wiper_mut.lock();
-      latest_wiper_val = latest_wiper_msg->ui16_cmd;
-      wiper_mut.unlock();
-
-      wiper_obj.encode(latest_wiper_val);
-      ret = can_writer.send(WIPER_CMD_CAN_ID, wiper_obj.data, 8, true);
-      send_can_echo(WIPER_CMD_CAN_ID, wiper_obj.data);
-
-      if (ret != OK)
-      {
-        ROS_WARN("CAN send error - wiper Cmd: %d\n", ret);
-        return;
-      }
-
-      std::this_thread::sleep_for(inter_msg_pause);
-    }    
-
-    //Shift Command
-    if (latest_shift_msg != nullptr)
-    {
-      unsigned short latest_shift_val;
-
-      shift_mut.lock();
-      latest_shift_val = latest_shift_msg->ui16_cmd;
-      shift_mut.unlock();
-
-      shift_obj.encode(latest_shift_val);
-      ret = can_writer.send(SHIFT_CMD_CAN_ID, shift_obj.data, 8, true);
-      send_can_echo(SHIFT_CMD_CAN_ID, shift_obj.data);
-
-      if (ret != OK)
-      {
-        ROS_WARN("CAN send error - Shift Cmd: %d\n", ret);
-        return;
-      }
-
-      std::this_thread::sleep_for(inter_msg_pause);
-    }
-
-    //Accel Command
-    if (latest_accel_msg != nullptr)
-    {
-      double latest_accel_val;
-      accel_mut.lock();
-      latest_accel_val = latest_accel_msg->f64_cmd;
-      accel_mut.unlock();
-
-      accel_obj.encode(latest_accel_val);
-      ret = can_writer.send(ACCEL_CMD_CAN_ID, accel_obj.data, 8, true);
-      send_can_echo(ACCEL_CMD_CAN_ID, accel_obj.data);
-
-      if (ret != OK)
-      {
-        ROS_WARN("CAN send error - Accel Cmd: %d\n", ret);
-        return;
-      }
-
-      std::this_thread::sleep_for(inter_msg_pause);
-    }
-
-    //Steer Command
-    if (latest_steer_msg != nullptr)
-    {
-      double latest_steer_angle;
-      double latest_steer_vel;
-
-      steer_mut.lock();
-      latest_steer_angle = latest_steer_msg->angular_position;
-      latest_steer_vel = latest_steer_msg->angular_velocity_limit;
-      steer_mut.unlock();
-
-      steer_obj.encode(latest_steer_angle, latest_steer_vel);
-      ret = can_writer.send(STEERING_CMD_CAN_ID, steer_obj.data, 8, true);
-      send_can_echo(STEERING_CMD_CAN_ID, steer_obj.data);
-
-      if (ret != OK)
-      {
-        ROS_WARN("CAN send error - Steer Cmd: %d\n", ret);
-        return;
-      }
-
-      std::this_thread::sleep_for(inter_msg_pause);
-    }
-
-    //Brake Command
-    if (latest_brake_msg != nullptr)
-    {
-      double latest_brake_val;
-
-      brake_mut.lock();
-      latest_brake_val = latest_brake_msg->f64_cmd;
-      brake_mut.unlock();
-
-      brake_obj.encode(latest_brake_val);
-      ret = can_writer.send(BRAKE_CMD_CAN_ID, brake_obj.data, 8, true);
-      send_can_echo(BRAKE_CMD_CAN_ID, brake_obj.data);
-
-      if (ret != OK)
-      {
-        ROS_WARN("CAN send error - Brake Cmd: %d\n", ret);
-        return;
-      }
-
-      std::this_thread::sleep_for(inter_msg_pause);
-    }
-
-    //Send the CAN queue.
-    while (!can_queue.empty())
-    {
-      can_msgs::Frame::ConstPtr new_frame = can_queue.pop();
-
-      //Write the RX message.
-      ret = can_writer.send(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]), new_frame->dlc, new_frame->is_extended);
-      //Send echo->
-      send_can_echo(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]));
-
-      if (ret != OK)
-      {
-        ROS_WARN("CAN send error - CAN_RX Message: %d\n", ret);
-        return;
-      }
-
-      std::this_thread::sleep_for(inter_msg_pause);
-    }
-
-    can_writer.close();
-
+    //Set local to global immediately before next loop.
     keep_going_mut.lock();
     keep_going = global_keep_going;
     keep_going_mut.unlock();
-
-    std::this_thread::sleep_for(loop_pause);
   }
 }
 
@@ -588,7 +648,7 @@ int main(int argc, char *argv[])
   }
 
   if (willExit)
-      return 0;
+    return 0;
   
   //Vehicle-Specific Publishers
   ros::Publisher wiper_rpt_pub, headlight_rpt_pub, horn_rpt_pub, steer_rpt_2_pub, steer_rpt_3_pub,
@@ -658,19 +718,23 @@ int main(int argc, char *argv[])
   ros::Subscriber steering_set_cmd = n.subscribe("as_rx/steer_cmd", 20, callback_steering_set_cmd);
   ros::Subscriber brake_set_cmd = n.subscribe("as_rx/brake_cmd", 20, callback_brake_set_cmd);
   ros::Subscriber enable_sub = n.subscribe("as_rx/enable", 20, callback_pacmod_enable);
+
+  // Set initial state
+  set_enable(false);
+  
+  // CAN setup
+  return_statuses ret;
+
+  while((ret = can_reader.open(hardware_id, circuit_id, bit_rate)) != OK)
+  {
+    ROS_ERROR("Error opening PACMod CAN reader: %d - %s", ret, return_status_desc(ret).c_str());
+    std::this_thread::sleep_for(can_error_pause);
+  }
     
   //Start CAN sending thread.
   std::thread can_send_thread(canSend);
   //Start callback spinner.
   spinner.start();
-  
-  // CAN setup
-  can_reader.open(hardware_id, circuit_id, bit_rate);
-  
-  // Set initial state
-  set_enable(false);
-
-  return_statuses ret;
 
   // Main loop: wait for the report messages via CAN, then publish to ROS topics
   while (ros::ok())
@@ -1072,18 +1136,11 @@ int main(int argc, char *argv[])
   }
 
   // Make sure it's disabled when node shuts down
-  set_enable(false);
-
-  can_reader.close();
-  
-  keep_going_mut.lock();
-  global_keep_going = false;
-  keep_going_mut.unlock();
-
+  shutdown_driver();
   can_send_thread.join();
   spinner.stop();
   ros::shutdown();
- 
+
   return 0;
 }
 
