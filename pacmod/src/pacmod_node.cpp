@@ -800,6 +800,7 @@ int main(int argc, char *argv[])
       can_pub_msg.id = id;
       can_pub_msg.dlc = size;
       std::copy(msg, msg + 8, can_pub_msg.data.begin());
+      can_pub_msg.header.stamp = ros::Time::now();
       can_tx_pub.publish(can_pub_msg);
       
       switch(id)
@@ -817,6 +818,7 @@ int main(int argc, char *argv[])
           global_rpt_msg.steering_can_timeout = global_obj.steering_can_timeout;
           global_rpt_msg.vehicle_can_timeout = global_obj.vehicle_can_timeout;
           global_rpt_msg.user_can_read_errors = global_obj.user_can_read_errors;
+          global_rpt_msg.header.stamp = ros::Time::now();
           global_rpt_pub.publish(global_rpt_msg);
 
           bool_pub_msg.data = (global_obj.enabled);
@@ -836,6 +838,7 @@ int main(int argc, char *argv[])
           turn_rpt_msg.manual_input = turn_obj.manual_input;
           turn_rpt_msg.command = turn_obj.command;
           turn_rpt_msg.output = turn_obj.output;
+          turn_rpt_msg.header.stamp = ros::Time::now();
           turn_rpt_pub.publish(turn_rpt_msg);
         } break;
         case HEADLIGHT_RPT_CAN_ID:
@@ -849,6 +852,7 @@ int main(int argc, char *argv[])
             headlight_rpt_msg.manual_input = headlight_obj.manual_input;
             headlight_rpt_msg.command = headlight_obj.command;
             headlight_rpt_msg.output = headlight_obj.output;
+            headlight_rpt_msg.header.stamp = ros::Time::now();
             headlight_rpt_pub.publish(headlight_rpt_msg);
           }
         } break;
@@ -863,6 +867,7 @@ int main(int argc, char *argv[])
             horn_rpt_msg.manual_input = horn_obj.manual_input;
             horn_rpt_msg.command = horn_obj.command;
             horn_rpt_msg.output = horn_obj.output;
+            horn_rpt_msg.header.stamp = ros::Time::now();
             horn_rpt_pub.publish(horn_rpt_msg);
           }
         } break;
@@ -877,6 +882,7 @@ int main(int argc, char *argv[])
             wiper_rpt_msg.manual_input = wiper_obj.manual_input;
             wiper_rpt_msg.command = wiper_obj.command;
             wiper_rpt_msg.output = wiper_obj.output;
+            wiper_rpt_msg.header.stamp = ros::Time::now();
             wiper_rpt_pub.publish(wiper_rpt_msg);
           }
         } break;        
@@ -889,6 +895,7 @@ int main(int argc, char *argv[])
           shift_rpt_msg.manual_input = shift_obj.manual_input;
           shift_rpt_msg.command = shift_obj.command;
           shift_rpt_msg.output = shift_obj.output;
+          shift_rpt_msg.header.stamp = ros::Time::now();
           shift_rpt_pub.publish(shift_rpt_msg);
         } break;
         case ACCEL_RPT_CAN_ID:
@@ -900,6 +907,7 @@ int main(int argc, char *argv[])
           accel_rpt_msg.manual_input = accel_obj.manual_input;
           accel_rpt_msg.command = accel_obj.command;
           accel_rpt_msg.output = accel_obj.output;
+          accel_rpt_msg.header.stamp = ros::Time::now();
           accel_rpt_pub.publish(accel_rpt_msg);
         } break;
         case STEERING_RPT_CAN_ID:
@@ -911,6 +919,7 @@ int main(int argc, char *argv[])
           steer_rpt_msg.manual_input = steer_obj.manual_input;
           steer_rpt_msg.command = steer_obj.command;
           steer_rpt_msg.output = steer_obj.output;
+          steer_rpt_msg.header.stamp = ros::Time::now();
           steer_rpt_pub.publish(steer_rpt_msg);
         } break;                      
         case STEERING_RPT_2_CAN_ID:
@@ -924,6 +933,7 @@ int main(int argc, char *argv[])
             steer_rpt_2_msg.manual_input = steer_2_obj.manual_input;
             steer_rpt_2_msg.command = steer_2_obj.command;
             steer_rpt_2_msg.output = steer_2_obj.output;
+            steer_rpt_2_msg.header.stamp = ros::Time::now();
             steer_rpt_2_pub.publish(steer_rpt_2_msg);
           }
         } break;
@@ -938,6 +948,7 @@ int main(int argc, char *argv[])
             steer_rpt_3_msg.manual_input = steer_3_obj.manual_input;
             steer_rpt_3_msg.command = steer_3_obj.command;
             steer_rpt_3_msg.output = steer_3_obj.output;
+            steer_rpt_3_msg.header.stamp = ros::Time::now();
             steer_rpt_3_pub.publish(steer_rpt_3_msg);
           }
         } break;
@@ -950,6 +961,7 @@ int main(int argc, char *argv[])
           brake_rpt_msg.manual_input = brake_obj.manual_input;
           brake_rpt_msg.command = brake_obj.command;
           brake_rpt_msg.output = brake_obj.output;
+          brake_rpt_msg.header.stamp = ros::Time::now();
           brake_rpt_pub.publish(brake_rpt_msg);
         } break;   
         case VEHICLE_SPEED_RPT_CAN_ID:
@@ -961,6 +973,7 @@ int main(int argc, char *argv[])
           veh_spd_rpt_msg.vehicle_speed_valid = speed_obj.vehicle_speed_valid;
           veh_spd_rpt_msg.vehicle_speed_raw[0] = speed_obj.vehicle_speed_raw[0];
           veh_spd_rpt_msg.vehicle_speed_raw[1] = speed_obj.vehicle_speed_raw[1];
+          veh_spd_rpt_msg.header.stamp = ros::Time::now();
           vehicle_speed_pub.publish(veh_spd_rpt_msg);  
 
           // Now publish in m/s
@@ -977,6 +990,7 @@ int main(int argc, char *argv[])
           wheel_spd_rpt_msg.front_right_wheel_speed = wheel_speed_obj.front_right_wheel_speed;
           wheel_spd_rpt_msg.rear_left_wheel_speed = wheel_speed_obj.rear_left_wheel_speed;
           wheel_spd_rpt_msg.rear_right_wheel_speed = wheel_speed_obj.rear_right_wheel_speed;
+          wheel_spd_rpt_msg.header.stamp = ros::Time::now();
           wheel_speed_rpt_pub.publish(wheel_spd_rpt_msg);
         } break;
         case YAW_RATE_RPT_CAN_ID:
@@ -988,6 +1002,7 @@ int main(int argc, char *argv[])
             pacmod_msgs::YawRateRpt yaw_rate_rpt_msg;
             yaw_rate_rpt_msg.header.stamp = now;
             yaw_rate_rpt_msg.yaw_rate = yaw_rate_obj.yaw_rate;
+            yaw_rate_rpt_msg.header.stamp = ros::Time::now();
             yaw_rate_rpt_pub.publish(yaw_rate_rpt_msg);
           }
         } break;
@@ -1006,6 +1021,7 @@ int main(int argc, char *argv[])
             lat_lon_head_msg.longitude_minutes = lat_lon_head_obj.longitude_minutes;
             lat_lon_head_msg.longitude_seconds = lat_lon_head_obj.longitude_seconds;
             lat_lon_head_msg.heading = lat_lon_head_obj.heading;
+            lat_lon_head_msg.header.stamp = ros::Time::now();
             lat_lon_heading_rpt_pub.publish(lat_lon_head_msg);
           }
         } break;
@@ -1018,6 +1034,7 @@ int main(int argc, char *argv[])
             pacmod_msgs::ParkingBrakeStatusRpt parking_brake_status_msg;
             parking_brake_status_msg.header.stamp = now;
             parking_brake_status_msg.parking_brake_engaged = parking_brake_obj.parking_brake_engaged;
+            parking_brake_status_msg.header.stamp = ros::Time::now();
             parking_brake_status_rpt_pub.publish(parking_brake_status_msg);
           }
         } break;
@@ -1033,6 +1050,7 @@ int main(int argc, char *argv[])
             motor_rpt_1_msg.header.stamp = now;
             motor_rpt_1_msg.current = detail1_obj.current;
             motor_rpt_1_msg.position = detail1_obj.position;
+            motor_rpt_1_msg.header.stamp = ros::Time::now();
             brake_rpt_detail_1_pub.publish(motor_rpt_1_msg);
           }
         } break;
@@ -1049,6 +1067,7 @@ int main(int argc, char *argv[])
             motor_rpt_2_msg.encoder_temp = detail2_obj.encoder_temp;
             motor_rpt_2_msg.motor_temp = detail2_obj.motor_temp;
             motor_rpt_2_msg.angular_velocity = detail2_obj.velocity;
+            motor_rpt_2_msg.header.stamp = ros::Time::now();
             brake_rpt_detail_2_pub.publish(motor_rpt_2_msg);
           }
         } break;
@@ -1064,6 +1083,7 @@ int main(int argc, char *argv[])
             motor_rpt_3_msg.header.stamp = now;
             motor_rpt_3_msg.torque_output = detail3_obj.torque_output;
             motor_rpt_3_msg.torque_input = detail3_obj.torque_input;
+            motor_rpt_3_msg.header.stamp = ros::Time::now();
             brake_rpt_detail_3_pub.publish(motor_rpt_3_msg);
           }
         } break;
@@ -1079,6 +1099,7 @@ int main(int argc, char *argv[])
             motor_rpt_1_msg.header.stamp = now;
             motor_rpt_1_msg.current = detail1_obj.current;
             motor_rpt_1_msg.position = detail1_obj.position;
+            motor_rpt_1_msg.header.stamp = ros::Time::now();
             steering_rpt_detail_1_pub.publish(motor_rpt_1_msg);
           }
         } break;
@@ -1095,6 +1116,7 @@ int main(int argc, char *argv[])
             motor_rpt_2_msg.encoder_temp = detail2_obj.encoder_temp;
             motor_rpt_2_msg.motor_temp = detail2_obj.motor_temp;
             motor_rpt_2_msg.angular_velocity = detail2_obj.velocity;
+            motor_rpt_2_msg.header.stamp = ros::Time::now();
             steering_rpt_detail_2_pub.publish(motor_rpt_2_msg);
           }
         } break;
@@ -1110,6 +1132,7 @@ int main(int argc, char *argv[])
             motor_rpt_3_msg.header.stamp = now;
             motor_rpt_3_msg.torque_output = detail3_obj.torque_output;
             motor_rpt_3_msg.torque_input = detail3_obj.torque_input;
+            motor_rpt_3_msg.header.stamp = ros::Time::now();
             steering_rpt_detail_3_pub.publish(motor_rpt_3_msg);
           }
         } break;
@@ -1125,6 +1148,7 @@ int main(int argc, char *argv[])
             steering_pid_1_msg.Kp = steering_pid_1_obj.Kp;
             steering_pid_1_msg.Ki = steering_pid_1_obj.Ki;
             steering_pid_1_msg.Kd = steering_pid_1_obj.Kd;
+            steering_pid_1_msg.header.stamp = ros::Time::now();
             steering_pid_rpt_1_pub.publish(steering_pid_1_msg);
           }
         } break;
@@ -1140,6 +1164,7 @@ int main(int argc, char *argv[])
             steering_pid_2_msg.I_term = steering_pid_2_obj.I_term;
             steering_pid_2_msg.D_term = steering_pid_2_obj.D_term;
             steering_pid_2_msg.all_terms = steering_pid_2_obj.all_terms;
+            steering_pid_2_msg.header.stamp = ros::Time::now();
             steering_pid_rpt_2_pub.publish(steering_pid_2_msg);
           }
         } break;
@@ -1155,6 +1180,7 @@ int main(int argc, char *argv[])
             steering_pid_3_msg.str_angle_desired = steering_pid_3_obj.str_angle_desired;
             steering_pid_3_msg.str_angle_actual = steering_pid_3_obj.str_angle_actual;
             steering_pid_3_msg.error = steering_pid_3_obj.error;
+            steering_pid_3_msg.header.stamp = ros::Time::now();
             steering_pid_rpt_3_pub.publish(steering_pid_3_msg);
           }
         } break;
@@ -1168,6 +1194,7 @@ int main(int argc, char *argv[])
             steering_pid_4_msg.header.stamp = now;
             steering_pid_4_msg.angular_velocity = steering_pid_4_obj.angular_velocity;
             steering_pid_4_msg.angular_acceleration = steering_pid_4_obj.angular_acceleration;
+            steering_pid_4_msg.header.stamp = ros::Time::now();
             steering_pid_rpt_4_pub.publish(steering_pid_4_msg);
           }
         } break;
