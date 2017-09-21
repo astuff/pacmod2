@@ -273,6 +273,8 @@ void send_can_echo(unsigned int id, unsigned char * data)
   frame.dlc = 8;
   std::copy(data, data + 8, frame.data.begin());
 
+  frame.header.stamp = ros::Time::now();
+
   can_rx_echo_pub.publish(frame);
 }
 
@@ -651,11 +653,25 @@ int main(int argc, char *argv[])
     return 0;
   
   //Vehicle-Specific Publishers
-  ros::Publisher wiper_rpt_pub, headlight_rpt_pub, horn_rpt_pub, steer_rpt_2_pub, steer_rpt_3_pub,
-                 wheel_speed_rpt_pub, steering_pid_rpt_1_pub, steering_pid_rpt_2_pub, steering_pid_rpt_3_pub,
-                 lat_lon_heading_rpt_pub, parking_brake_status_rpt_pub, yaw_rate_rpt_pub, steering_rpt_detail_1_pub,
-                 steering_rpt_detail_2_pub, steering_rpt_detail_3_pub, brake_rpt_detail_1_pub, brake_rpt_detail_2_pub,
-                 brake_rpt_detail_3_pub;
+  ros::Publisher wiper_rpt_pub;
+  ros::Publisher headlight_rpt_pub;
+  ros::Publisher horn_rpt_pub;
+  ros::Publisher steer_rpt_2_pub;
+  ros::Publisher steer_rpt_3_pub;
+  ros::Publisher wheel_speed_rpt_pub;
+  ros::Publisher steering_pid_rpt_1_pub;
+  ros::Publisher steering_pid_rpt_2_pub;
+  ros::Publisher steering_pid_rpt_3_pub;
+  ros::Publisher steering_pid_rpt_4_pub;
+  ros::Publisher lat_lon_heading_rpt_pub;
+  ros::Publisher parking_brake_status_rpt_pub;
+  ros::Publisher yaw_rate_rpt_pub;
+  ros::Publisher steering_rpt_detail_1_pub;
+  ros::Publisher steering_rpt_detail_2_pub;
+  ros::Publisher steering_rpt_detail_3_pub;
+  ros::Publisher brake_rpt_detail_1_pub;
+  ros::Publisher brake_rpt_detail_2_pub;
+  ros::Publisher brake_rpt_detail_3_pub;
 
   //Vehicle-Specific Subscribers
   ros::Subscriber *wiper_set_cmd_sub, *headlight_set_cmd_sub, *horn_set_cmd_sub;
@@ -702,6 +718,7 @@ int main(int argc, char *argv[])
     steering_pid_rpt_1_pub = n.advertise<pacmod_msgs::SteeringPIDRpt1>("parsed_tx/steer_pid_rpt_1", 20);
     steering_pid_rpt_2_pub = n.advertise<pacmod_msgs::SteeringPIDRpt2>("parsed_tx/steer_pid_rpt_2", 20);
     steering_pid_rpt_3_pub = n.advertise<pacmod_msgs::SteeringPIDRpt3>("parsed_tx/steer_pid_rpt_3", 20);
+    steering_pid_rpt_4_pub = n.advertise<pacmod_msgs::SteeringPIDRpt4>("parsed_tx/steer_pid_rpt_4", 20);
     yaw_rate_rpt_pub = n.advertise<pacmod_msgs::YawRateRpt>("parsed_tx/yaw_rate_rpt", 20);
     lat_lon_heading_rpt_pub = n.advertise<pacmod_msgs::LatLonHeadingRpt>("parsed_tx/lat_lon_heading_rpt", 20);
     parking_brake_status_rpt_pub = n.advertise<pacmod_msgs::ParkingBrakeStatusRpt>("parsed_tx/parking_brake_status_rpt", 20);
@@ -725,7 +742,7 @@ int main(int argc, char *argv[])
   // CAN setup
   return_statuses ret;
 
-  while((ret = can_reader.open(hardware_id, circuit_id, bit_rate)) != OK)
+  while((ret = can_reader.open(hardware_id, circuit_id, bit_rate, false)) != OK)
   {
     ROS_ERROR("Error opening PACMod CAN reader: %d - %s", ret, return_status_desc(ret).c_str());
     std::this_thread::sleep_for(can_error_pause);
@@ -760,6 +777,7 @@ int main(int argc, char *argv[])
     SystemRptFloatMsg steer_3_obj;
     SystemRptFloatMsg brake_obj;
     VehicleSpeedRptMsg speed_obj;
+    WheelSpeedRptMsg wheel_speed_obj;
     YawRateRptMsg yaw_rate_obj;
     LatLonHeadingRptMsg lat_lon_head_obj;
     DateTimeRptMsg date_time_obj;
@@ -770,7 +788,8 @@ int main(int argc, char *argv[])
     SteeringPIDRpt1Msg steering_pid_1_obj;
     SteeringPIDRpt2Msg steering_pid_2_obj;
     SteeringPIDRpt3Msg steering_pid_3_obj;
-    
+    SteeringPIDRpt4Msg steering_pid_4_obj;
+
     while (can_reader.read(&id, msg, &size, &extended, &t) == OK)
     {
       ros::Time now = ros::Time::now();
@@ -949,6 +968,17 @@ int main(int argc, char *argv[])
           veh_spd_ms_msg.data = (speed_obj.vehicle_speed)*0.44704;
           vehicle_speed_ms_pub.publish(veh_spd_ms_msg);
         } break;
+        case WHEEL_SPEED_RPT_CAN_ID:
+        {
+          wheel_speed_obj.parse(msg);
+
+          pacmod_msgs::WheelSpeedRpt wheel_spd_rpt_msg;
+          wheel_spd_rpt_msg.front_left_wheel_speed = wheel_speed_obj.front_left_wheel_speed;
+          wheel_spd_rpt_msg.front_right_wheel_speed = wheel_speed_obj.front_right_wheel_speed;
+          wheel_spd_rpt_msg.rear_left_wheel_speed = wheel_speed_obj.rear_left_wheel_speed;
+          wheel_spd_rpt_msg.rear_right_wheel_speed = wheel_speed_obj.rear_right_wheel_speed;
+          wheel_speed_rpt_pub.publish(wheel_spd_rpt_msg);
+        } break;
         case YAW_RATE_RPT_CAN_ID:
         {
           if (veh_type == VehicleType::LEXUS_RX_450H)
@@ -1122,10 +1152,23 @@ int main(int argc, char *argv[])
             pacmod_msgs::SteeringPIDRpt3 steering_pid_3_msg;
             steering_pid_3_msg.header.stamp = now;
             steering_pid_3_msg.new_torque = steering_pid_3_obj.new_torque;
-            steering_pid_3_msg.torque_A = steering_pid_3_obj.torque_A;
+            steering_pid_3_msg.str_angle_desired = steering_pid_3_obj.str_angle_desired;
             steering_pid_3_msg.str_angle_actual = steering_pid_3_obj.str_angle_actual;
             steering_pid_3_msg.error = steering_pid_3_obj.error;
             steering_pid_rpt_3_pub.publish(steering_pid_3_msg);
+          }
+        } break;
+        case STEERING_PID_RPT_4_CAN_ID:
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
+          {
+            steering_pid_4_obj.parse(msg);
+
+            pacmod_msgs::SteeringPIDRpt4 steering_pid_4_msg;
+            steering_pid_4_msg.header.stamp = now;
+            steering_pid_4_msg.angular_velocity = steering_pid_4_obj.angular_velocity;
+            steering_pid_4_msg.angular_acceleration = steering_pid_4_obj.angular_acceleration;
+            steering_pid_rpt_4_pub.publish(steering_pid_4_msg);
           }
         } break;
       }
