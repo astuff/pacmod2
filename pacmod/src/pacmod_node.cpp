@@ -610,10 +610,10 @@ void can_read()
 
   while (keep_going)
   {
-    if (!can_writer.is_open())
+    if (!can_reader.is_open())
     {
       // Open the channel.
-      return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
+      return_statuses ret = can_reader.open(hardware_id, circuit_id, bit_rate);
 
       if (ret != OK)
       {
