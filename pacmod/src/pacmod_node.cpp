@@ -610,10 +610,18 @@ void can_read()
 
   while (keep_going)
   {
-    // Open the channel.
-    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
+    if (!can_writer.is_open())
+    {
+      // Open the channel.
+      return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
-    if (ret == OK)
+      if (ret != OK)
+      {
+        ROS_ERROR("Error opening PACMod CAN reader: %d - %s", ret, return_status_desc(ret).c_str()); 
+        std::this_thread::sleep_for(can_error_pause);
+      }
+    }
+    else
     {
       while (can_reader.read(&id, msg, &size, &extended, &t) == OK)
       {
@@ -1026,21 +1034,8 @@ void can_read()
         }
       }
 
-      ret = can_reader.close();
-
-      if (ret != OK)
-      {
-        ROS_ERROR("Error closing PACMod CAN reader: %d - %s", ret, return_status_desc(ret).c_str());
-        return;
-      }
-
       std::this_thread::sleep_until(next_time);
       next_time = std::chrono::system_clock::now() + loop_pause;
-    }
-    else
-    {
-      ROS_ERROR("Error opening PACMod CAN reader: %d - %s", ret, return_status_desc(ret).c_str()); 
-      std::this_thread::sleep_for(can_error_pause);
     }
 
     //Set local to global immediately before next loop.
@@ -1048,6 +1043,8 @@ void can_read()
     keep_going = global_keep_going;
     keep_going_mut.unlock();
   }
+
+  can_reader.close();
 }
 
 int main(int argc, char *argv[])
