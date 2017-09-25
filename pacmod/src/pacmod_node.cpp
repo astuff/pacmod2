@@ -57,7 +57,6 @@ using namespace AS::Drivers::PACMod;
 
 CanInterface can_reader, can_writer;
 std::mutex writerMut;
-ros::Publisher can_rx_echo_pub;
 int hardware_id = 0;
 int circuit_id = -1;
 int bit_rate = 500000;
@@ -101,6 +100,7 @@ ros::Publisher brake_rpt_pub;
 ros::Publisher vehicle_speed_pub;
 ros::Publisher vehicle_speed_ms_pub;
 ros::Publisher enable_pub;
+ros::Publisher can_rx_echo_pub;
 
 class ThreadSafeCANQueue
 {
@@ -816,15 +816,18 @@ void can_read()
           } break;
           case WHEEL_SPEED_RPT_CAN_ID:
           {
-            wheel_speed_obj.parse(msg);
+            if (veh_type == VehicleType::LEXUS_RX_450H)
+            {
+              wheel_speed_obj.parse(msg);
 
-            pacmod_msgs::WheelSpeedRpt wheel_spd_rpt_msg;
-            wheel_spd_rpt_msg.front_left_wheel_speed = wheel_speed_obj.front_left_wheel_speed;
-            wheel_spd_rpt_msg.front_right_wheel_speed = wheel_speed_obj.front_right_wheel_speed;
-            wheel_spd_rpt_msg.rear_left_wheel_speed = wheel_speed_obj.rear_left_wheel_speed;
-            wheel_spd_rpt_msg.rear_right_wheel_speed = wheel_speed_obj.rear_right_wheel_speed;
-            wheel_spd_rpt_msg.header.stamp = ros::Time::now();
-            wheel_speed_rpt_pub.publish(wheel_spd_rpt_msg);
+              pacmod_msgs::WheelSpeedRpt wheel_spd_rpt_msg;
+              wheel_spd_rpt_msg.front_left_wheel_speed = wheel_speed_obj.front_left_wheel_speed;
+              wheel_spd_rpt_msg.front_right_wheel_speed = wheel_speed_obj.front_right_wheel_speed;
+              wheel_spd_rpt_msg.rear_left_wheel_speed = wheel_speed_obj.rear_left_wheel_speed;
+              wheel_spd_rpt_msg.rear_right_wheel_speed = wheel_speed_obj.rear_right_wheel_speed;
+              wheel_spd_rpt_msg.header.stamp = ros::Time::now();
+              wheel_speed_rpt_pub.publish(wheel_spd_rpt_msg);
+            }
           } break;
           case YAW_RATE_RPT_CAN_ID:
           {
@@ -1110,30 +1113,6 @@ int main(int argc, char *argv[])
 
   if (willExit)
     return 0;
-  
-  //Vehicle-Specific Publishers
-  ros::Publisher wiper_rpt_pub;
-  ros::Publisher headlight_rpt_pub;
-  ros::Publisher horn_rpt_pub;
-  ros::Publisher steer_rpt_2_pub;
-  ros::Publisher steer_rpt_3_pub;
-  ros::Publisher wheel_speed_rpt_pub;
-  ros::Publisher steering_pid_rpt_1_pub;
-  ros::Publisher steering_pid_rpt_2_pub;
-  ros::Publisher steering_pid_rpt_3_pub;
-  ros::Publisher steering_pid_rpt_4_pub;
-  ros::Publisher lat_lon_heading_rpt_pub;
-  ros::Publisher parking_brake_status_rpt_pub;
-  ros::Publisher yaw_rate_rpt_pub;
-  ros::Publisher steering_rpt_detail_1_pub;
-  ros::Publisher steering_rpt_detail_2_pub;
-  ros::Publisher steering_rpt_detail_3_pub;
-  ros::Publisher brake_rpt_detail_1_pub;
-  ros::Publisher brake_rpt_detail_2_pub;
-  ros::Publisher brake_rpt_detail_3_pub;
-
-  //Vehicle-Specific Subscribers
-  ros::Subscriber *wiper_set_cmd_sub, *headlight_set_cmd_sub, *horn_set_cmd_sub;
 
   // Advertise published messages
   can_tx_pub = n.advertise<can_msgs::Frame>("can_tx", 20);
