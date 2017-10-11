@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <package>
   <name>pacmod</name>
-  <version>1.0.0</version>
-  <description>The pacmod package</description>
-  <maintainer email="software@autonomoustuff.com">AutonomouStuff Software Team</maintainer>
+  <version>2.0.0</version>
+  <description>AutonomouStuff PACMod driver package</description>
   <license>Closed Source</license>
+
+  <maintainer email="software@autonomoustuff.com">AutonomouStuff Software Team</maintainer>
   <author email="jdriscoll@autonomoustuff.com">Joe Driscoll</author>
   <author email="jwhitley@autonomoustuff.com">Josh Whitley</author>
 
