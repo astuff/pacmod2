@@ -304,7 +304,7 @@ void can_write()
 
       if (ret != OK)
       {
-        ROS_WARN("CAN send error - Global Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+        ROS_WARN("PACMod - CAN send error - Global Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
         return;
       }
       else
@@ -328,7 +328,7 @@ void can_write()
 
         if (ret != OK)
         {
-          ROS_WARN("CAN send error - Turn Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          ROS_WARN("PACMod - CAN send error - Turn Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
           return;
         }
         else
@@ -353,7 +353,7 @@ void can_write()
 
         if (ret != OK)
         {
-          ROS_WARN("CAN send error - Wiper Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          ROS_WARN("PACMod - CAN send error - Wiper Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
           return;
         }
         else
@@ -378,7 +378,7 @@ void can_write()
 
         if (ret != OK)
         {
-          ROS_WARN("CAN send error - Horn Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          ROS_WARN("PACMod - CAN send error - Horn Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
           return;
         }
         else
@@ -403,7 +403,7 @@ void can_write()
 
         if (ret != OK)
         {
-          ROS_WARN("CAN send error - wiper Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          ROS_WARN("PACMod - CAN send error - wiper Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
           return;
         }
         else
@@ -428,7 +428,7 @@ void can_write()
 
         if (ret != OK)
         {
-          ROS_WARN("CAN send error - Shift Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          ROS_WARN("PACMod - CAN send error - Shift Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
           return;
         }
         else
@@ -452,7 +452,7 @@ void can_write()
 
         if (ret != OK)
         {
-          ROS_WARN("CAN send error - Accel Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          ROS_WARN("PACMod - CAN send error - Accel Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
           return;
         }
         else
@@ -479,7 +479,7 @@ void can_write()
 
         if (ret != OK)
         {
-          ROS_WARN("CAN send error - Steer Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          ROS_WARN("PACMod - CAN send error - Steer Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
           return;
         }
         else
@@ -504,7 +504,7 @@ void can_write()
 
         if (ret != OK)
         {
-          ROS_WARN("CAN send error - Brake Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
+          ROS_WARN("PACMod - CAN send error - Brake Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
           return;
         }
         else
@@ -525,7 +525,7 @@ void can_write()
 
         if (ret != OK)
         {
-          ROS_WARN("CAN send error - CAN_RX Message: %d - %s\n", ret, return_status_desc(ret).c_str());
+          ROS_WARN("PACMod - CAN send error - CAN_RX Message: %d - %s\n", ret, return_status_desc(ret).c_str());
           return;
         }
         else
@@ -540,7 +540,7 @@ void can_write()
 
       if (ret != OK)
       {
-        ROS_ERROR("Error closing PACMod CAN writer: %d - %s", ret, return_status_desc(ret).c_str());
+        ROS_ERROR("PACMod - Error closing CAN writer: %d - %s", ret, return_status_desc(ret).c_str());
         return;
       }
 
@@ -549,7 +549,7 @@ void can_write()
     }
     else
     {
-      ROS_ERROR("Error opening PACMod CAN writer: %d - %s", ret, return_status_desc(ret).c_str());
+      ROS_ERROR("PACMod - Error opening CAN writer: %d - %s", ret, return_status_desc(ret).c_str());
       std::this_thread::sleep_for(can_error_pause);
     }
 
@@ -608,22 +608,24 @@ void can_read()
   keep_going = global_keep_going;
   keep_going_mut.unlock();
 
+  return_statuses ret;
+
   while (keep_going)
   {
     if (!can_reader.is_open())
     {
       // Open the channel.
-      return_statuses ret = can_reader.open(hardware_id, circuit_id, bit_rate);
+      ret = can_reader.open(hardware_id, circuit_id, bit_rate);
 
       if (ret != OK)
       {
-        ROS_ERROR("Error opening PACMod CAN reader: %d - %s", ret, return_status_desc(ret).c_str()); 
+        ROS_ERROR("PACMod - Error opening PACMod CAN reader: %d - %s", ret, return_status_desc(ret).c_str()); 
         std::this_thread::sleep_for(can_error_pause);
       }
     }
     else
     {
-      while (can_reader.read(&id, msg, &size, &extended, &t) == OK)
+      while ((ret = can_reader.read(&id, msg, &size, &extended, &t)) == OK)
       {
         ros::Time now = ros::Time::now();
 
@@ -1035,6 +1037,11 @@ void can_read()
             }
           } break;
         }
+      } //Read loop.
+
+      if (ret != OK && ret != NO_MESSAGES_RECEIVED)
+      {
+        ROS_WARN("PACMod - Error reading CAN message: %d - %s", ret, return_status_desc(ret));
       }
 
       std::this_thread::sleep_until(next_time);
@@ -1066,27 +1073,29 @@ int main(int argc, char *argv[])
   // Get and validate parameters    
   if (priv.getParam("can_hardware_id", hardware_id))
   {
-    ROS_INFO("Got hardware_id: %d", hardware_id);
+    ROS_INFO("PACMod - Got hardware_id: %d", hardware_id);
+
     if (hardware_id <= 0)
     {
-      ROS_INFO("\nCAN hardware ID is invalid\n");
+      ROS_INFO("PACMod - CAN hardware ID is invalid.");
       willExit = true;
     }
   }
 
   if (priv.getParam("can_circuit_id", circuit_id))
   {
-    ROS_INFO("Got can_circuit_id: %d", circuit_id);
+    ROS_INFO("PACMod - Got can_circuit_id: %d", circuit_id);
+
     if (circuit_id < 0)
     {
-      ROS_INFO("\nCAN circuit ID is invalid\n");
+      ROS_INFO("PACMod - CAN circuit ID is invalid.");
       willExit = true;
     }
   }
 
   if (priv.getParam("vehicle_type", veh_type_string))
   {
-    ROS_INFO("Got vehicle type of: %s", veh_type_string.c_str());
+    ROS_INFO("PACMod - Got vehicle type of: %s", veh_type_string.c_str());
 
     if (veh_type_string == "POLARIS_GEM")
     {
@@ -1107,7 +1116,7 @@ int main(int argc, char *argv[])
     else
     {
       veh_type = VehicleType::POLARIS_GEM;
-      ROS_WARN("An invalid vehicle type was entered. Assuming POLARIS_GEM.");
+      ROS_WARN("PACMod - An invalid vehicle type was entered. Assuming POLARIS_GEM.");
     }
   }
 
