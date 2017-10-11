@@ -294,8 +294,6 @@ void can_write()
     
     if (ret == OK)
     {
-      long can_id;
-
       //Global Command
       bool temp_enable_state;
       enable_mut.lock();
@@ -303,8 +301,7 @@ void can_write()
       enable_mut.unlock();
 
       global_obj.encode(temp_enable_state, true, false);
-      can_id = GlobalCmdMsg::CAN_ID;
-      ret = can_writer.write(can_id, global_obj.data, 8, true);
+      ret = can_writer.write(GlobalCmdMsg::CAN_ID, global_obj.data, 8, true);
 
       if (ret != OK)
       {
@@ -313,7 +310,7 @@ void can_write()
       }
       else
       {
-        send_can_echo(can_id, global_obj.data);
+        send_can_echo(GlobalCmdMsg::CAN_ID, global_obj.data);
       }
 
       std::this_thread::sleep_for(inter_msg_pause);
@@ -328,8 +325,7 @@ void can_write()
         turn_mut.unlock();
 
         turn_obj.encode(latest_turn_val);
-        can_id = TurnSignalCmdMsg::CAN_ID;
-        ret = can_writer.write(can_id, turn_obj.data, 8, true);
+        ret = can_writer.write(TurnSignalCmdMsg::CAN_ID, turn_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -338,7 +334,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(can_id, turn_obj.data);
+          send_can_echo(TurnSignalCmdMsg::CAN_ID, turn_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -354,8 +350,7 @@ void can_write()
         headlight_mut.unlock();
 
         headlight_obj.encode(latest_headlight_val);
-        can_id = HeadlightCmdMsg::CAN_ID;
-        ret = can_writer.write(can_id, headlight_obj.data, 8, true);
+        ret = can_writer.write(HeadlightCmdMsg::CAN_ID, headlight_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -364,7 +359,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(can_id, headlight_obj.data);
+          send_can_echo(HeadlightCmdMsg::CAN_ID, headlight_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -380,8 +375,7 @@ void can_write()
         horn_mut.unlock();
 
         horn_obj.encode(latest_horn_val);
-        can_id = HornCmdMsg::CAN_ID;
-        ret = can_writer.write(can_id, horn_obj.data, 8, true);
+        ret = can_writer.write(HornCmdMsg::CAN_ID, horn_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -390,7 +384,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(can_id, horn_obj.data);
+          send_can_echo(HornCmdMsg::CAN_ID, horn_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -406,8 +400,7 @@ void can_write()
         wiper_mut.unlock();
 
         wiper_obj.encode(latest_wiper_val);
-        can_id = WiperCmdMsg::CAN_ID;
-        ret = can_writer.write(can_id, wiper_obj.data, 8, true);
+        ret = can_writer.write(WiperCmdMsg::CAN_ID, wiper_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -416,7 +409,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(can_id, wiper_obj.data);
+          send_can_echo(WiperCmdMsg::CAN_ID, wiper_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -432,8 +425,7 @@ void can_write()
         shift_mut.unlock();
 
         shift_obj.encode(latest_shift_val);
-        can_id = ShiftCmdMsg::CAN_ID;
-        ret = can_writer.write(can_id, shift_obj.data, 8, true);
+        ret = can_writer.write(ShiftCmdMsg::CAN_ID, shift_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -442,7 +434,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(can_id, shift_obj.data);
+          send_can_echo(ShiftCmdMsg::CAN_ID, shift_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -457,8 +449,7 @@ void can_write()
         accel_mut.unlock();
 
         accel_obj.encode(latest_accel_val);
-        can_id = AccelCmdMsg::CAN_ID;
-        ret = can_writer.write(can_id, accel_obj.data, 8, true);
+        ret = can_writer.write(AccelCmdMsg::CAN_ID, accel_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -467,7 +458,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(can_id, accel_obj.data);
+          send_can_echo(AccelCmdMsg::CAN_ID, accel_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -485,8 +476,7 @@ void can_write()
         steer_mut.unlock();
 
         steer_obj.encode(latest_steer_angle, latest_steer_vel);
-        can_id = SteerCmdMsg::CAN_ID;
-        ret = can_writer.write(can_id, steer_obj.data, 8, true);
+        ret = can_writer.write(SteerCmdMsg::CAN_ID, steer_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -495,7 +485,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(can_id, steer_obj.data);
+          send_can_echo(SteerCmdMsg::CAN_ID, steer_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -511,8 +501,7 @@ void can_write()
         brake_mut.unlock();
 
         brake_obj.encode(latest_brake_val);
-        can_id = BrakeCmdMsg::CAN_ID;
-        ret = can_writer.write(can_id, brake_obj.data, 8, true);
+        ret = can_writer.write(BrakeCmdMsg::CAN_ID, brake_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -650,421 +639,418 @@ void can_read()
         can_pub_msg.header.stamp = ros::Time::now();
         can_tx_pub.publish(can_pub_msg);
         
-        switch(id)
+        if (id == GlobalRptMsg::CAN_ID)
         {
-          case GlobalRptMsg::CAN_ID:
+          global_obj.parse(msg);
+
+          pacmod_msgs::GlobalRpt global_rpt_msg;
+          global_rpt_msg.header.stamp = now;
+          global_rpt_msg.enabled = global_obj.enabled;
+          global_rpt_msg.overridden = global_obj.overridden;
+          global_rpt_msg.user_can_timeout = global_obj.user_can_timeout;
+          global_rpt_msg.brake_can_timeout = global_obj.brake_can_timeout;
+          global_rpt_msg.steering_can_timeout = global_obj.steering_can_timeout;
+          global_rpt_msg.vehicle_can_timeout = global_obj.vehicle_can_timeout;
+          global_rpt_msg.user_can_read_errors = global_obj.user_can_read_errors;
+          global_rpt_msg.header.stamp = ros::Time::now();
+          global_rpt_pub.publish(global_rpt_msg);
+
+          bool_pub_msg.data = (global_obj.enabled);
+          enable_pub.publish(bool_pub_msg);
+
+          if (global_obj.overridden)
           {
-            global_obj.parse(msg);
+            set_enable(false);
+          }
+        }
+        else if (id == TurnSignalRptMsg::CAN_ID)
+        {
+          turn_obj.parse(msg);
 
-            pacmod_msgs::GlobalRpt global_rpt_msg;
-            global_rpt_msg.header.stamp = now;
-            global_rpt_msg.enabled = global_obj.enabled;
-            global_rpt_msg.overridden = global_obj.overridden;
-            global_rpt_msg.user_can_timeout = global_obj.user_can_timeout;
-            global_rpt_msg.brake_can_timeout = global_obj.brake_can_timeout;
-            global_rpt_msg.steering_can_timeout = global_obj.steering_can_timeout;
-            global_rpt_msg.vehicle_can_timeout = global_obj.vehicle_can_timeout;
-            global_rpt_msg.user_can_read_errors = global_obj.user_can_read_errors;
-            global_rpt_msg.header.stamp = ros::Time::now();
-            global_rpt_pub.publish(global_rpt_msg);
-
-            bool_pub_msg.data = (global_obj.enabled);
-            enable_pub.publish(bool_pub_msg);
-
-            if (global_obj.overridden)
-            {
-              set_enable(false);
-            }
-          } break;
-          case TurnSignalRptMsg::CAN_ID:
+          pacmod_msgs::SystemRptInt turn_rpt_msg;
+          turn_rpt_msg.header.stamp = now;
+          turn_rpt_msg.manual_input = turn_obj.manual_input;
+          turn_rpt_msg.command = turn_obj.command;
+          turn_rpt_msg.output = turn_obj.output;
+          turn_rpt_msg.header.stamp = ros::Time::now();
+          turn_rpt_pub.publish(turn_rpt_msg);
+        }
+        else if (id == HeadlightRptMsg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            turn_obj.parse(msg);
+            headlight_obj.parse(msg);
 
-            pacmod_msgs::SystemRptInt turn_rpt_msg;
-            turn_rpt_msg.header.stamp = now;
-            turn_rpt_msg.manual_input = turn_obj.manual_input;
-            turn_rpt_msg.command = turn_obj.command;
-            turn_rpt_msg.output = turn_obj.output;
-            turn_rpt_msg.header.stamp = ros::Time::now();
-            turn_rpt_pub.publish(turn_rpt_msg);
-          } break;
-          case HeadlightRptMsg::CAN_ID:
+            pacmod_msgs::SystemRptInt headlight_rpt_msg;
+            headlight_rpt_msg.header.stamp = now;
+            headlight_rpt_msg.manual_input = headlight_obj.manual_input;
+            headlight_rpt_msg.command = headlight_obj.command;
+            headlight_rpt_msg.output = headlight_obj.output;
+            headlight_rpt_msg.header.stamp = ros::Time::now();
+            headlight_rpt_pub.publish(headlight_rpt_msg);
+          }
+        }
+        else if (id == HornRptMsg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              headlight_obj.parse(msg);
+            horn_obj.parse(msg);
 
-              pacmod_msgs::SystemRptInt headlight_rpt_msg;
-              headlight_rpt_msg.header.stamp = now;
-              headlight_rpt_msg.manual_input = headlight_obj.manual_input;
-              headlight_rpt_msg.command = headlight_obj.command;
-              headlight_rpt_msg.output = headlight_obj.output;
-              headlight_rpt_msg.header.stamp = ros::Time::now();
-              headlight_rpt_pub.publish(headlight_rpt_msg);
-            }
-          } break;
-          case HornRptMsg::CAN_ID:
+            pacmod_msgs::SystemRptInt horn_rpt_msg;
+            horn_rpt_msg.header.stamp = now;
+            horn_rpt_msg.manual_input = horn_obj.manual_input;
+            horn_rpt_msg.command = horn_obj.command;
+            horn_rpt_msg.output = horn_obj.output;
+            horn_rpt_msg.header.stamp = ros::Time::now();
+            horn_rpt_pub.publish(horn_rpt_msg);
+          }
+        }
+        else if (id == WiperRptMsg::CAN_ID)
+        {
+          if (veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
           {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              horn_obj.parse(msg);
+            wiper_obj.parse(msg);
 
-              pacmod_msgs::SystemRptInt horn_rpt_msg;
-              horn_rpt_msg.header.stamp = now;
-              horn_rpt_msg.manual_input = horn_obj.manual_input;
-              horn_rpt_msg.command = horn_obj.command;
-              horn_rpt_msg.output = horn_obj.output;
-              horn_rpt_msg.header.stamp = ros::Time::now();
-              horn_rpt_pub.publish(horn_rpt_msg);
-            }
-          } break;
-          case WiperRptMsg::CAN_ID:
+            pacmod_msgs::SystemRptInt wiper_rpt_msg;
+            wiper_rpt_msg.header.stamp = now;
+            wiper_rpt_msg.manual_input = wiper_obj.manual_input;
+            wiper_rpt_msg.command = wiper_obj.command;
+            wiper_rpt_msg.output = wiper_obj.output;
+            wiper_rpt_msg.header.stamp = ros::Time::now();
+            wiper_rpt_pub.publish(wiper_rpt_msg);
+          }
+        }
+        else if (id == ShiftRptMsg::CAN_ID)
+        {
+          shift_obj.parse(msg);
+
+          pacmod_msgs::SystemRptInt shift_rpt_msg;
+          shift_rpt_msg.header.stamp = now;
+          shift_rpt_msg.manual_input = shift_obj.manual_input;
+          shift_rpt_msg.command = shift_obj.command;
+          shift_rpt_msg.output = shift_obj.output;
+          shift_rpt_msg.header.stamp = ros::Time::now();
+          shift_rpt_pub.publish(shift_rpt_msg);
+        }
+        else if (id == AccelRptMsg::CAN_ID)
+        {
+          accel_obj.parse(msg);
+
+          pacmod_msgs::SystemRptFloat accel_rpt_msg;
+          accel_rpt_msg.header.stamp = now;
+          accel_rpt_msg.manual_input = accel_obj.manual_input;
+          accel_rpt_msg.command = accel_obj.command;
+          accel_rpt_msg.output = accel_obj.output;
+          accel_rpt_msg.header.stamp = ros::Time::now();
+          accel_rpt_pub.publish(accel_rpt_msg);
+        }
+        else if (id == SteerRptMsg::CAN_ID)
+        {
+          steer_obj.parse(msg);
+
+          pacmod_msgs::SystemRptFloat steer_rpt_msg;
+          steer_rpt_msg.header.stamp = now;
+          steer_rpt_msg.manual_input = steer_obj.manual_input;
+          steer_rpt_msg.command = steer_obj.command;
+          steer_rpt_msg.output = steer_obj.output;
+          steer_rpt_msg.header.stamp = ros::Time::now();
+          steer_rpt_pub.publish(steer_rpt_msg);
+        }
+        else if (id == SteerRpt2Msg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            if (veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
-            {
-              wiper_obj.parse(msg);
+            steer_2_obj.parse(msg);
 
-              pacmod_msgs::SystemRptInt wiper_rpt_msg;
-              wiper_rpt_msg.header.stamp = now;
-              wiper_rpt_msg.manual_input = wiper_obj.manual_input;
-              wiper_rpt_msg.command = wiper_obj.command;
-              wiper_rpt_msg.output = wiper_obj.output;
-              wiper_rpt_msg.header.stamp = ros::Time::now();
-              wiper_rpt_pub.publish(wiper_rpt_msg);
-            }
-          } break;        
-          case ShiftRptMsg::CAN_ID:
+            pacmod_msgs::SystemRptFloat steer_rpt_2_msg;
+            steer_rpt_2_msg.header.stamp = now;
+            steer_rpt_2_msg.manual_input = steer_2_obj.manual_input;
+            steer_rpt_2_msg.command = steer_2_obj.command;
+            steer_rpt_2_msg.output = steer_2_obj.output;
+            steer_rpt_2_msg.header.stamp = ros::Time::now();
+            steer_rpt_2_pub.publish(steer_rpt_2_msg);
+          }
+        }
+        else if (id == SteerRpt3Msg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            shift_obj.parse(msg);
+            steer_3_obj.parse(msg);
 
-            pacmod_msgs::SystemRptInt shift_rpt_msg;
-            shift_rpt_msg.header.stamp = now;
-            shift_rpt_msg.manual_input = shift_obj.manual_input;
-            shift_rpt_msg.command = shift_obj.command;
-            shift_rpt_msg.output = shift_obj.output;
-            shift_rpt_msg.header.stamp = ros::Time::now();
-            shift_rpt_pub.publish(shift_rpt_msg);
-          } break;
-          case AccelRptMsg::CAN_ID:
+            pacmod_msgs::SystemRptFloat steer_rpt_3_msg;
+            steer_rpt_3_msg.header.stamp = now;
+            steer_rpt_3_msg.manual_input = steer_3_obj.manual_input;
+            steer_rpt_3_msg.command = steer_3_obj.command;
+            steer_rpt_3_msg.output = steer_3_obj.output;
+            steer_rpt_3_msg.header.stamp = ros::Time::now();
+            steer_rpt_3_pub.publish(steer_rpt_3_msg);
+          }
+        }
+        else if (id == BrakeRptMsg::CAN_ID)
+        {
+          brake_obj.parse(msg);
+
+          pacmod_msgs::SystemRptFloat brake_rpt_msg;
+          brake_rpt_msg.header.stamp = now;
+          brake_rpt_msg.manual_input = brake_obj.manual_input;
+          brake_rpt_msg.command = brake_obj.command;
+          brake_rpt_msg.output = brake_obj.output;
+          brake_rpt_msg.header.stamp = ros::Time::now();
+          brake_rpt_pub.publish(brake_rpt_msg);
+        }
+        else if (id == VehicleSpeedRptMsg::CAN_ID)
+        {
+          speed_obj.parse(msg);
+
+          pacmod_msgs::VehicleSpeedRpt veh_spd_rpt_msg;
+          veh_spd_rpt_msg.vehicle_speed = speed_obj.vehicle_speed;
+          veh_spd_rpt_msg.vehicle_speed_valid = speed_obj.vehicle_speed_valid;
+          veh_spd_rpt_msg.vehicle_speed_raw[0] = speed_obj.vehicle_speed_raw[0];
+          veh_spd_rpt_msg.vehicle_speed_raw[1] = speed_obj.vehicle_speed_raw[1];
+          veh_spd_rpt_msg.header.stamp = ros::Time::now();
+          vehicle_speed_pub.publish(veh_spd_rpt_msg);  
+
+          // Now publish in m/s
+          std_msgs::Float64 veh_spd_ms_msg;
+          veh_spd_ms_msg.data = (speed_obj.vehicle_speed)*0.44704;
+          vehicle_speed_ms_pub.publish(veh_spd_ms_msg);
+        }
+        else if (id == WheelSpeedRptMsg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            accel_obj.parse(msg);
+            wheel_speed_obj.parse(msg);
 
-            pacmod_msgs::SystemRptFloat accel_rpt_msg;
-            accel_rpt_msg.header.stamp = now;
-            accel_rpt_msg.manual_input = accel_obj.manual_input;
-            accel_rpt_msg.command = accel_obj.command;
-            accel_rpt_msg.output = accel_obj.output;
-            accel_rpt_msg.header.stamp = ros::Time::now();
-            accel_rpt_pub.publish(accel_rpt_msg);
-          } break;
-          case SteerRptMsg::CAN_ID:
+            pacmod_msgs::WheelSpeedRpt wheel_spd_rpt_msg;
+            wheel_spd_rpt_msg.front_left_wheel_speed = wheel_speed_obj.front_left_wheel_speed;
+            wheel_spd_rpt_msg.front_right_wheel_speed = wheel_speed_obj.front_right_wheel_speed;
+            wheel_spd_rpt_msg.rear_left_wheel_speed = wheel_speed_obj.rear_left_wheel_speed;
+            wheel_spd_rpt_msg.rear_right_wheel_speed = wheel_speed_obj.rear_right_wheel_speed;
+            wheel_spd_rpt_msg.header.stamp = ros::Time::now();
+            wheel_speed_rpt_pub.publish(wheel_spd_rpt_msg);
+          }
+        } 
+        else if (id == YawRateRptMsg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            steer_obj.parse(msg);
+            yaw_rate_obj.parse(msg);
 
-            pacmod_msgs::SystemRptFloat steer_rpt_msg;
-            steer_rpt_msg.header.stamp = now;
-            steer_rpt_msg.manual_input = steer_obj.manual_input;
-            steer_rpt_msg.command = steer_obj.command;
-            steer_rpt_msg.output = steer_obj.output;
-            steer_rpt_msg.header.stamp = ros::Time::now();
-            steer_rpt_pub.publish(steer_rpt_msg);
-          } break;                      
-          case SteerRpt2Msg::CAN_ID:
+            pacmod_msgs::YawRateRpt yaw_rate_rpt_msg;
+            yaw_rate_rpt_msg.header.stamp = now;
+            yaw_rate_rpt_msg.yaw_rate = yaw_rate_obj.yaw_rate;
+            yaw_rate_rpt_msg.header.stamp = ros::Time::now();
+            yaw_rate_rpt_pub.publish(yaw_rate_rpt_msg);
+          }
+        }
+        else if (id == LatLonHeadingRptMsg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              steer_2_obj.parse(msg);
+            lat_lon_head_obj.parse(msg);
 
-              pacmod_msgs::SystemRptFloat steer_rpt_2_msg;
-              steer_rpt_2_msg.header.stamp = now;
-              steer_rpt_2_msg.manual_input = steer_2_obj.manual_input;
-              steer_rpt_2_msg.command = steer_2_obj.command;
-              steer_rpt_2_msg.output = steer_2_obj.output;
-              steer_rpt_2_msg.header.stamp = ros::Time::now();
-              steer_rpt_2_pub.publish(steer_rpt_2_msg);
-            }
-          } break;
-          case SteerRpt3Msg::CAN_ID:
+            pacmod_msgs::LatLonHeadingRpt lat_lon_head_msg;
+            lat_lon_head_msg.header.stamp = now;
+            lat_lon_head_msg.latitude_degrees = lat_lon_head_obj.latitude_degrees;
+            lat_lon_head_msg.latitude_minutes = lat_lon_head_obj.latitude_minutes;
+            lat_lon_head_msg.latitude_seconds = lat_lon_head_obj.latitude_seconds;
+            lat_lon_head_msg.longitude_degrees = lat_lon_head_obj.longitude_degrees;
+            lat_lon_head_msg.longitude_minutes = lat_lon_head_obj.longitude_minutes;
+            lat_lon_head_msg.longitude_seconds = lat_lon_head_obj.longitude_seconds;
+            lat_lon_head_msg.heading = lat_lon_head_obj.heading;
+            lat_lon_head_msg.header.stamp = ros::Time::now();
+            lat_lon_heading_rpt_pub.publish(lat_lon_head_msg);
+          }
+        }
+        else if (id == ParkingBrakeStatusRptMsg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              steer_3_obj.parse(msg);
+            parking_brake_obj.parse(msg);
 
-              pacmod_msgs::SystemRptFloat steer_rpt_3_msg;
-              steer_rpt_3_msg.header.stamp = now;
-              steer_rpt_3_msg.manual_input = steer_3_obj.manual_input;
-              steer_rpt_3_msg.command = steer_3_obj.command;
-              steer_rpt_3_msg.output = steer_3_obj.output;
-              steer_rpt_3_msg.header.stamp = ros::Time::now();
-              steer_rpt_3_pub.publish(steer_rpt_3_msg);
-            }
-          } break;
-          case BrakeRptMsg::CAN_ID:
+            pacmod_msgs::ParkingBrakeStatusRpt parking_brake_status_msg;
+            parking_brake_status_msg.header.stamp = now;
+            parking_brake_status_msg.parking_brake_engaged = parking_brake_obj.parking_brake_engaged;
+            parking_brake_status_msg.header.stamp = ros::Time::now();
+            parking_brake_status_rpt_pub.publish(parking_brake_status_msg);
+          }
+        }
+        else if (id == BrakeMotorRpt1Msg::CAN_ID)
+        {
+          if (veh_type == VehicleType::POLARIS_GEM ||
+              veh_type == VehicleType::POLARIS_RANGER ||
+              veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
           {
-            brake_obj.parse(msg);
+            detail1_obj.parse(msg);
 
-            pacmod_msgs::SystemRptFloat brake_rpt_msg;
-            brake_rpt_msg.header.stamp = now;
-            brake_rpt_msg.manual_input = brake_obj.manual_input;
-            brake_rpt_msg.command = brake_obj.command;
-            brake_rpt_msg.output = brake_obj.output;
-            brake_rpt_msg.header.stamp = ros::Time::now();
-            brake_rpt_pub.publish(brake_rpt_msg);
-          } break;   
-          case VehicleSpeedRptMsg::CAN_ID:
+            pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
+            motor_rpt_1_msg.header.stamp = now;
+            motor_rpt_1_msg.current = detail1_obj.current;
+            motor_rpt_1_msg.position = detail1_obj.position;
+            motor_rpt_1_msg.header.stamp = ros::Time::now();
+            brake_rpt_detail_1_pub.publish(motor_rpt_1_msg);
+          }
+        }
+        else if (id == BrakeMotorRpt2Msg::CAN_ID)
+        {
+          if (veh_type == VehicleType::POLARIS_GEM ||
+              veh_type == VehicleType::POLARIS_RANGER ||
+              veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
           {
-            speed_obj.parse(msg);
+            detail2_obj.parse(msg);
 
-            pacmod_msgs::VehicleSpeedRpt veh_spd_rpt_msg;
-            veh_spd_rpt_msg.vehicle_speed = speed_obj.vehicle_speed;
-            veh_spd_rpt_msg.vehicle_speed_valid = speed_obj.vehicle_speed_valid;
-            veh_spd_rpt_msg.vehicle_speed_raw[0] = speed_obj.vehicle_speed_raw[0];
-            veh_spd_rpt_msg.vehicle_speed_raw[1] = speed_obj.vehicle_speed_raw[1];
-            veh_spd_rpt_msg.header.stamp = ros::Time::now();
-            vehicle_speed_pub.publish(veh_spd_rpt_msg);  
-
-            // Now publish in m/s
-            std_msgs::Float64 veh_spd_ms_msg;
-            veh_spd_ms_msg.data = (speed_obj.vehicle_speed)*0.44704;
-            vehicle_speed_ms_pub.publish(veh_spd_ms_msg);
-          } break;
-          case WheelSpeedRptMsg::CAN_ID:
+            pacmod_msgs::MotorRpt2 motor_rpt_2_msg;
+            motor_rpt_2_msg.header.stamp = now;
+            motor_rpt_2_msg.encoder_temp = detail2_obj.encoder_temp;
+            motor_rpt_2_msg.motor_temp = detail2_obj.motor_temp;
+            motor_rpt_2_msg.angular_velocity = detail2_obj.velocity;
+            motor_rpt_2_msg.header.stamp = ros::Time::now();
+            brake_rpt_detail_2_pub.publish(motor_rpt_2_msg);
+          }
+        }
+        else if (id == BrakeMotorRpt3Msg::CAN_ID)
+        {
+          if (veh_type == VehicleType::POLARIS_GEM ||
+              veh_type == VehicleType::POLARIS_RANGER ||
+              veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
           {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              wheel_speed_obj.parse(msg);
+            detail3_obj.parse(msg);
 
-              pacmod_msgs::WheelSpeedRpt wheel_spd_rpt_msg;
-              wheel_spd_rpt_msg.front_left_wheel_speed = wheel_speed_obj.front_left_wheel_speed;
-              wheel_spd_rpt_msg.front_right_wheel_speed = wheel_speed_obj.front_right_wheel_speed;
-              wheel_spd_rpt_msg.rear_left_wheel_speed = wheel_speed_obj.rear_left_wheel_speed;
-              wheel_spd_rpt_msg.rear_right_wheel_speed = wheel_speed_obj.rear_right_wheel_speed;
-              wheel_spd_rpt_msg.header.stamp = ros::Time::now();
-              wheel_speed_rpt_pub.publish(wheel_spd_rpt_msg);
-            }
-          } break;
-          case YawRateRptMsg::CAN_ID:
+            pacmod_msgs::MotorRpt3 motor_rpt_3_msg;
+            motor_rpt_3_msg.header.stamp = now;
+            motor_rpt_3_msg.torque_output = detail3_obj.torque_output;
+            motor_rpt_3_msg.torque_input = detail3_obj.torque_input;
+            motor_rpt_3_msg.header.stamp = ros::Time::now();
+            brake_rpt_detail_3_pub.publish(motor_rpt_3_msg);
+          }
+        }
+        else if (id == SteerMotorRpt1Msg::CAN_ID)
+        {
+          if (veh_type == VehicleType::POLARIS_GEM ||
+              veh_type == VehicleType::POLARIS_RANGER ||
+              veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
           {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              yaw_rate_obj.parse(msg);
+            detail1_obj.parse(msg);
 
-              pacmod_msgs::YawRateRpt yaw_rate_rpt_msg;
-              yaw_rate_rpt_msg.header.stamp = now;
-              yaw_rate_rpt_msg.yaw_rate = yaw_rate_obj.yaw_rate;
-              yaw_rate_rpt_msg.header.stamp = ros::Time::now();
-              yaw_rate_rpt_pub.publish(yaw_rate_rpt_msg);
-            }
-          } break;
-          case LatLonHeadingRptMsg::CAN_ID:
+            pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
+            motor_rpt_1_msg.header.stamp = now;
+            motor_rpt_1_msg.current = detail1_obj.current;
+            motor_rpt_1_msg.position = detail1_obj.position;
+            motor_rpt_1_msg.header.stamp = ros::Time::now();
+            steering_rpt_detail_1_pub.publish(motor_rpt_1_msg);
+          }
+        }
+        else if (id == SteerMotorRpt2Msg::CAN_ID)
+        {
+          if (veh_type == VehicleType::POLARIS_GEM ||
+              veh_type == VehicleType::POLARIS_RANGER ||
+              veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
           {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              lat_lon_head_obj.parse(msg);
+            detail2_obj.parse(msg);
 
-              pacmod_msgs::LatLonHeadingRpt lat_lon_head_msg;
-              lat_lon_head_msg.header.stamp = now;
-              lat_lon_head_msg.latitude_degrees = lat_lon_head_obj.latitude_degrees;
-              lat_lon_head_msg.latitude_minutes = lat_lon_head_obj.latitude_minutes;
-              lat_lon_head_msg.latitude_seconds = lat_lon_head_obj.latitude_seconds;
-              lat_lon_head_msg.longitude_degrees = lat_lon_head_obj.longitude_degrees;
-              lat_lon_head_msg.longitude_minutes = lat_lon_head_obj.longitude_minutes;
-              lat_lon_head_msg.longitude_seconds = lat_lon_head_obj.longitude_seconds;
-              lat_lon_head_msg.heading = lat_lon_head_obj.heading;
-              lat_lon_head_msg.header.stamp = ros::Time::now();
-              lat_lon_heading_rpt_pub.publish(lat_lon_head_msg);
-            }
-          } break;
-          case ParkingBrakeStatusRptMsg::CAN_ID:
+            pacmod_msgs::MotorRpt2 motor_rpt_2_msg;
+            motor_rpt_2_msg.header.stamp = now;
+            motor_rpt_2_msg.encoder_temp = detail2_obj.encoder_temp;
+            motor_rpt_2_msg.motor_temp = detail2_obj.motor_temp;
+            motor_rpt_2_msg.angular_velocity = detail2_obj.velocity;
+            motor_rpt_2_msg.header.stamp = ros::Time::now();
+            steering_rpt_detail_2_pub.publish(motor_rpt_2_msg);
+          }
+        }
+        else if (id == SteerMotorRpt3Msg::CAN_ID)
+        {
+          if (veh_type == VehicleType::POLARIS_GEM ||
+              veh_type == VehicleType::POLARIS_RANGER ||
+              veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
           {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              parking_brake_obj.parse(msg);
+            detail3_obj.parse(msg);
 
-              pacmod_msgs::ParkingBrakeStatusRpt parking_brake_status_msg;
-              parking_brake_status_msg.header.stamp = now;
-              parking_brake_status_msg.parking_brake_engaged = parking_brake_obj.parking_brake_engaged;
-              parking_brake_status_msg.header.stamp = ros::Time::now();
-              parking_brake_status_rpt_pub.publish(parking_brake_status_msg);
-            }
-          } break;
-          case BrakeMotorRpt1Msg::CAN_ID:
+            pacmod_msgs::MotorRpt3 motor_rpt_3_msg;
+            motor_rpt_3_msg.header.stamp = now;
+            motor_rpt_3_msg.torque_output = detail3_obj.torque_output;
+            motor_rpt_3_msg.torque_input = detail3_obj.torque_input;
+            motor_rpt_3_msg.header.stamp = ros::Time::now();
+            steering_rpt_detail_3_pub.publish(motor_rpt_3_msg);
+          }
+        }
+        else if (id == DateTimeRptMsg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            if (veh_type == VehicleType::POLARIS_GEM ||
-                veh_type == VehicleType::POLARIS_RANGER ||
-                veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
-            {
-              detail1_obj.parse(msg);
+            date_time_obj.parse(msg);
 
-              pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
-              motor_rpt_1_msg.header.stamp = now;
-              motor_rpt_1_msg.current = detail1_obj.current;
-              motor_rpt_1_msg.position = detail1_obj.position;
-              motor_rpt_1_msg.header.stamp = ros::Time::now();
-              brake_rpt_detail_1_pub.publish(motor_rpt_1_msg);
-            }
-          } break;
-          case BrakeMotorRpt2Msg::CAN_ID:
+            pacmod_msgs::DateTimeRpt date_time_rpt_msg;
+            date_time_rpt_msg.header.stamp = now;
+            date_time_rpt_msg.year = date_time_obj.year;
+            date_time_rpt_msg.month = date_time_obj.month;
+            date_time_rpt_msg.day = date_time_obj.day;
+            date_time_rpt_msg.hour = date_time_obj.hour;
+            date_time_rpt_msg.minute = date_time_obj.minute;
+            date_time_rpt_msg.second = date_time_obj.second;
+            date_time_rpt_pub.publish(date_time_rpt_msg);
+          }
+        }
+        else if (id == SteeringPIDRpt1Msg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            if (veh_type == VehicleType::POLARIS_GEM ||
-                veh_type == VehicleType::POLARIS_RANGER ||
-                veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
-            {
-              detail2_obj.parse(msg);
+            steering_pid_1_obj.parse(msg);
 
-              pacmod_msgs::MotorRpt2 motor_rpt_2_msg;
-              motor_rpt_2_msg.header.stamp = now;
-              motor_rpt_2_msg.encoder_temp = detail2_obj.encoder_temp;
-              motor_rpt_2_msg.motor_temp = detail2_obj.motor_temp;
-              motor_rpt_2_msg.angular_velocity = detail2_obj.velocity;
-              motor_rpt_2_msg.header.stamp = ros::Time::now();
-              brake_rpt_detail_2_pub.publish(motor_rpt_2_msg);
-            }
-          } break;
-          case BrakeMotorRpt3Msg::CAN_ID:
+            pacmod_msgs::SteeringPIDRpt1 steering_pid_1_msg;
+            steering_pid_1_msg.header.stamp = now;
+            steering_pid_1_msg.dt = steering_pid_1_obj.dt;
+            steering_pid_1_msg.Kp = steering_pid_1_obj.Kp;
+            steering_pid_1_msg.Ki = steering_pid_1_obj.Ki;
+            steering_pid_1_msg.Kd = steering_pid_1_obj.Kd;
+            steering_pid_1_msg.header.stamp = ros::Time::now();
+            steering_pid_rpt_1_pub.publish(steering_pid_1_msg);
+          }
+        }
+        else if (id == SteeringPIDRpt2Msg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            if (veh_type == VehicleType::POLARIS_GEM ||
-                veh_type == VehicleType::POLARIS_RANGER ||
-                veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
-            {
-              detail3_obj.parse(msg);
+            steering_pid_2_obj.parse(msg);
 
-              pacmod_msgs::MotorRpt3 motor_rpt_3_msg;
-              motor_rpt_3_msg.header.stamp = now;
-              motor_rpt_3_msg.torque_output = detail3_obj.torque_output;
-              motor_rpt_3_msg.torque_input = detail3_obj.torque_input;
-              motor_rpt_3_msg.header.stamp = ros::Time::now();
-              brake_rpt_detail_3_pub.publish(motor_rpt_3_msg);
-            }
-          } break;
-          case SteerMotorRpt1Msg::CAN_ID:
+            pacmod_msgs::SteeringPIDRpt2 steering_pid_2_msg;
+            steering_pid_2_msg.header.stamp = now;
+            steering_pid_2_msg.P_term = steering_pid_2_obj.P_term;
+            steering_pid_2_msg.I_term = steering_pid_2_obj.I_term;
+            steering_pid_2_msg.D_term = steering_pid_2_obj.D_term;
+            steering_pid_2_msg.all_terms = steering_pid_2_obj.all_terms;
+            steering_pid_2_msg.header.stamp = ros::Time::now();
+            steering_pid_rpt_2_pub.publish(steering_pid_2_msg);
+          }
+        }
+        else if (id == SteeringPIDRpt3Msg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            if (veh_type == VehicleType::POLARIS_GEM ||
-                veh_type == VehicleType::POLARIS_RANGER ||
-                veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
-            {
-              detail1_obj.parse(msg);
+            steering_pid_3_obj.parse(msg);
 
-              pacmod_msgs::MotorRpt1 motor_rpt_1_msg;
-              motor_rpt_1_msg.header.stamp = now;
-              motor_rpt_1_msg.current = detail1_obj.current;
-              motor_rpt_1_msg.position = detail1_obj.position;
-              motor_rpt_1_msg.header.stamp = ros::Time::now();
-              steering_rpt_detail_1_pub.publish(motor_rpt_1_msg);
-            }
-          } break;
-          case SteerMotorRpt2Msg::CAN_ID:
+            pacmod_msgs::SteeringPIDRpt3 steering_pid_3_msg;
+            steering_pid_3_msg.header.stamp = now;
+            steering_pid_3_msg.new_torque = steering_pid_3_obj.new_torque;
+            steering_pid_3_msg.str_angle_desired = steering_pid_3_obj.str_angle_desired;
+            steering_pid_3_msg.str_angle_actual = steering_pid_3_obj.str_angle_actual;
+            steering_pid_3_msg.error = steering_pid_3_obj.error;
+            steering_pid_3_msg.header.stamp = ros::Time::now();
+            steering_pid_rpt_3_pub.publish(steering_pid_3_msg);
+          }
+        }
+        else if (id == SteeringPIDRpt4Msg::CAN_ID)
+        {
+          if (veh_type == VehicleType::LEXUS_RX_450H)
           {
-            if (veh_type == VehicleType::POLARIS_GEM ||
-                veh_type == VehicleType::POLARIS_RANGER ||
-                veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
-            {
-              detail2_obj.parse(msg);
+            steering_pid_4_obj.parse(msg);
 
-              pacmod_msgs::MotorRpt2 motor_rpt_2_msg;
-              motor_rpt_2_msg.header.stamp = now;
-              motor_rpt_2_msg.encoder_temp = detail2_obj.encoder_temp;
-              motor_rpt_2_msg.motor_temp = detail2_obj.motor_temp;
-              motor_rpt_2_msg.angular_velocity = detail2_obj.velocity;
-              motor_rpt_2_msg.header.stamp = ros::Time::now();
-              steering_rpt_detail_2_pub.publish(motor_rpt_2_msg);
-            }
-          } break;
-          case SteerMotorRpt3Msg::CAN_ID:
-          {
-            if (veh_type == VehicleType::POLARIS_GEM ||
-                veh_type == VehicleType::POLARIS_RANGER ||
-                veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
-            {
-              detail3_obj.parse(msg);
-
-              pacmod_msgs::MotorRpt3 motor_rpt_3_msg;
-              motor_rpt_3_msg.header.stamp = now;
-              motor_rpt_3_msg.torque_output = detail3_obj.torque_output;
-              motor_rpt_3_msg.torque_input = detail3_obj.torque_input;
-              motor_rpt_3_msg.header.stamp = ros::Time::now();
-              steering_rpt_detail_3_pub.publish(motor_rpt_3_msg);
-            }
-          } break;
-          case DateTimeRptMsg::CAN_ID:
-          {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              date_time_obj.parse(msg);
-
-              pacmod_msgs::DateTimeRpt date_time_rpt_msg;
-              date_time_rpt_msg.header.stamp = now;
-              date_time_rpt_msg.year = date_time_obj.year;
-              date_time_rpt_msg.month = date_time_obj.month;
-              date_time_rpt_msg.day = date_time_obj.day;
-              date_time_rpt_msg.hour = date_time_obj.hour;
-              date_time_rpt_msg.minute = date_time_obj.minute;
-              date_time_rpt_msg.second = date_time_obj.second;
-              date_time_rpt_pub.publish(date_time_rpt_msg);
-            }
-          } break;
-          case SteeringPIDRpt1Msg::CAN_ID:
-          {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              steering_pid_1_obj.parse(msg);
-
-              pacmod_msgs::SteeringPIDRpt1 steering_pid_1_msg;
-              steering_pid_1_msg.header.stamp = now;
-              steering_pid_1_msg.dt = steering_pid_1_obj.dt;
-              steering_pid_1_msg.Kp = steering_pid_1_obj.Kp;
-              steering_pid_1_msg.Ki = steering_pid_1_obj.Ki;
-              steering_pid_1_msg.Kd = steering_pid_1_obj.Kd;
-              steering_pid_1_msg.header.stamp = ros::Time::now();
-              steering_pid_rpt_1_pub.publish(steering_pid_1_msg);
-            }
-          } break;
-          case SteeringPIDRpt2Msg::CAN_ID:
-          {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              steering_pid_2_obj.parse(msg);
-
-              pacmod_msgs::SteeringPIDRpt2 steering_pid_2_msg;
-              steering_pid_2_msg.header.stamp = now;
-              steering_pid_2_msg.P_term = steering_pid_2_obj.P_term;
-              steering_pid_2_msg.I_term = steering_pid_2_obj.I_term;
-              steering_pid_2_msg.D_term = steering_pid_2_obj.D_term;
-              steering_pid_2_msg.all_terms = steering_pid_2_obj.all_terms;
-              steering_pid_2_msg.header.stamp = ros::Time::now();
-              steering_pid_rpt_2_pub.publish(steering_pid_2_msg);
-            }
-          } break;
-          case SteeringPIDRpt3Msg::CAN_ID:
-          {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              steering_pid_3_obj.parse(msg);
-
-              pacmod_msgs::SteeringPIDRpt3 steering_pid_3_msg;
-              steering_pid_3_msg.header.stamp = now;
-              steering_pid_3_msg.new_torque = steering_pid_3_obj.new_torque;
-              steering_pid_3_msg.str_angle_desired = steering_pid_3_obj.str_angle_desired;
-              steering_pid_3_msg.str_angle_actual = steering_pid_3_obj.str_angle_actual;
-              steering_pid_3_msg.error = steering_pid_3_obj.error;
-              steering_pid_3_msg.header.stamp = ros::Time::now();
-              steering_pid_rpt_3_pub.publish(steering_pid_3_msg);
-            }
-          } break;
-          case SteeringPIDRpt4Msg::CAN_ID:
-          {
-            if (veh_type == VehicleType::LEXUS_RX_450H)
-            {
-              steering_pid_4_obj.parse(msg);
-
-              pacmod_msgs::SteeringPIDRpt4 steering_pid_4_msg;
-              steering_pid_4_msg.header.stamp = now;
-              steering_pid_4_msg.angular_velocity = steering_pid_4_obj.angular_velocity;
-              steering_pid_4_msg.angular_acceleration = steering_pid_4_obj.angular_acceleration;
-              steering_pid_4_msg.header.stamp = ros::Time::now();
-              steering_pid_rpt_4_pub.publish(steering_pid_4_msg);
-            }
-          } break;
+            pacmod_msgs::SteeringPIDRpt4 steering_pid_4_msg;
+            steering_pid_4_msg.header.stamp = now;
+            steering_pid_4_msg.angular_velocity = steering_pid_4_obj.angular_velocity;
+            steering_pid_4_msg.angular_acceleration = steering_pid_4_obj.angular_acceleration;
+            steering_pid_4_msg.header.stamp = ros::Time::now();
+            steering_pid_rpt_4_pub.publish(steering_pid_4_msg);
+          }
         }
       } //Read loop.
 
