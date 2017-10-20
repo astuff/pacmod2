@@ -289,10 +289,18 @@ void can_write()
 
   while (keep_going)
   {
-    // Open the channel.
-    return_statuses ret = can_writer.open(hardware_id, circuit_id, bit_rate);
-    
-    if (ret == OK)
+    if (!can_reader.is_open())
+    {
+      // Open the channel.
+      ret = can_reader.open(hardware_id, circuit_id, bit_rate);
+
+      if (ret != OK)
+      {
+        ROS_ERROR("PACMod - Error opening PACMod CAN writer: %d - %s", ret, return_status_desc(ret).c_str()); 
+        std::this_thread::sleep_for(can_error_pause);
+      }
+    }
+    else
     {
       //Global Command
       bool temp_enable_state;
@@ -547,11 +555,6 @@ void can_write()
 
       std::this_thread::sleep_until(next_time);
       next_time = std::chrono::system_clock::now() + loop_pause;
-    }
-    else
-    {
-      ROS_ERROR("PACMod - Error opening CAN writer: %d - %s", ret, return_status_desc(ret).c_str());
-      std::this_thread::sleep_for(can_error_pause);
     }
 
     //Set local to global immediately before next loop.
