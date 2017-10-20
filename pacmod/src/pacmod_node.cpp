@@ -287,16 +287,18 @@ void can_write()
   keep_going = global_keep_going;
   keep_going_mut.unlock();
 
+  return_statuses ret;
+
   while (keep_going)
   {
-    if (!can_reader.is_open())
+    if (!can_writer.is_open())
     {
       // Open the channel.
-      ret = can_reader.open(hardware_id, circuit_id, bit_rate);
+      ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
       if (ret != OK)
       {
-        ROS_ERROR("PACMod - Error opening PACMod CAN writer: %d - %s", ret, return_status_desc(ret).c_str()); 
+        ROS_ERROR("PACMod - Error opening CAN writer: %d - %s", ret, return_status_desc(ret).c_str()); 
         std::this_thread::sleep_for(can_error_pause);
       }
     }
@@ -623,7 +625,7 @@ void can_read()
 
       if (ret != OK)
       {
-        ROS_ERROR("PACMod - Error opening PACMod CAN reader: %d - %s", ret, return_status_desc(ret).c_str()); 
+        ROS_ERROR("PACMod - Error opening PACMod reader: %d - %s", ret, return_status_desc(ret).c_str()); 
         std::this_thread::sleep_for(can_error_pause);
       }
     }
