@@ -297,10 +297,9 @@ void can_write()
       ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
       if (ret != OK)
-      {
         ROS_ERROR("PACMod - Error opening CAN writer: %d - %s", ret, return_status_desc(ret).c_str()); 
-        std::this_thread::sleep_for(can_error_pause);
-      }
+
+      std::this_thread::sleep_for(can_error_pause);
     }
     else
     {
@@ -620,14 +619,12 @@ void can_read()
   {
     if (!can_reader.is_open())
     {
-      // Open the channel.
       ret = can_reader.open(hardware_id, circuit_id, bit_rate);
 
       if (ret != OK)
-      {
         ROS_ERROR("PACMod - Error opening PACMod reader: %d - %s", ret, return_status_desc(ret).c_str()); 
-        std::this_thread::sleep_for(can_error_pause);
-      }
+
+      std::this_thread::sleep_for(can_error_pause);
     }
     else
     {
@@ -1059,10 +1056,8 @@ void can_read()
         }
       } //Read loop.
 
-      if (ret != OK && ret != NO_MESSAGES_RECEIVED)
-      {
+      if (ret != NO_MESSAGES_RECEIVED)
         ROS_WARN("PACMod - Error reading CAN message: %d - %s", ret, return_status_desc(ret).c_str());
-      }
 
       std::this_thread::sleep_until(next_time);
       next_time = std::chrono::system_clock::now() + loop_pause;
@@ -1230,8 +1225,6 @@ int main(int argc, char *argv[])
   can_read_thread.join();
 
   spinner.stop();
-
-  ros::shutdown();
 
   return 0;
 }
