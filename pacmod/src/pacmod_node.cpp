@@ -695,7 +695,7 @@ void can_read()
         }
         else if (id == HeadlightRptMsg::CAN_ID)
         {
-          if (veh_type == VehicleType::LEXUS_RX_450H)
+          if (veh_type == VehicleType::LEXUS_RX_450H || veh_type == AUDI_A3_ETRON)
           {
             headlight_obj.parse(msg);
 
@@ -882,7 +882,7 @@ void can_read()
         }
         else if (id == ParkingBrakeStatusRptMsg::CAN_ID)
         {
-          if (veh_type == VehicleType::LEXUS_RX_450H)
+          if (veh_type == VehicleType::LEXUS_RX_450H || veh_type == VehicleType::AUDI_A3_ETRON)
           {
             parking_brake_obj.parse(msg);
 
@@ -1144,6 +1144,10 @@ int main(int argc, char *argv[])
     {
       veh_type = VehicleType::LEXUS_RX_450H;
     }
+    else if (veh_type_string == "AUDI_A3_ETRON")
+    {
+      veh_type = VehicleType::AUDI_A3_ETRON;
+    }
     else
     {
       veh_type = VehicleType::POLARIS_GEM;
@@ -1189,7 +1193,6 @@ int main(int argc, char *argv[])
 
   if (veh_type == VehicleType::LEXUS_RX_450H)
   {
-    headlight_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/headlight_rpt", 20);
     horn_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/horn_rpt", 20);
     steer_rpt_2_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/steer_rpt_2", 20);
     steer_rpt_3_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/steer_rpt_3", 20);
@@ -1201,10 +1204,15 @@ int main(int argc, char *argv[])
     yaw_rate_rpt_pub = n.advertise<pacmod_msgs::YawRateRpt>("parsed_tx/yaw_rate_rpt", 20);
     lat_lon_heading_rpt_pub = n.advertise<pacmod_msgs::LatLonHeadingRpt>("parsed_tx/lat_lon_heading_rpt", 20);
     date_time_rpt_pub = n.advertise<pacmod_msgs::DateTimeRpt>("parsed_tx/date_time_rpt", 20);
-    parking_brake_status_rpt_pub = n.advertise<pacmod_msgs::ParkingBrakeStatusRpt>("parsed_tx/parking_brake_status_rpt", 20);
 
     headlight_set_cmd_sub = new ros::Subscriber(n.subscribe("as_rx/headlight_cmd", 20, callback_headlight_set_cmd));
     horn_set_cmd_sub = new ros::Subscriber(n.subscribe("as_rx/horn_cmd", 20, callback_horn_set_cmd));
+  }
+
+  if (veh_type == VehicleType::LEXUS_RX_450H || veh_type == VehicleType::AUDI_A3_ETRON)
+  {
+    headlight_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/headlight_rpt", 20);
+    parking_brake_status_rpt_pub = n.advertise<pacmod_msgs::ParkingBrakeStatusRpt>("parsed_tx/parking_brake_status_rpt", 20);
   }
       
   // Subscribe to messages
