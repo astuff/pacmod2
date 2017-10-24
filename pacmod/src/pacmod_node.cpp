@@ -15,7 +15,6 @@
 * TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS, OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 */
 
-#include <can_interface/can_interface.h>
 #include <signal.h>
 #include <mutex>
 #include <queue>
@@ -52,16 +51,11 @@
 #include <pacmod_msgs/YawRateRpt.h>
 #include <pacmod_core.h>
 
-using namespace AS::CAN;
 using namespace AS::Drivers::PACMod;
 
-CanInterface can_reader, can_writer;
 std::mutex writerMut;
-int hardware_id = 0;
-int circuit_id = -1;
-int bit_rate = 500000;
 double last_global_rpt_msg_received = 0.0;
-const double watchdog_timeout = 0.3;
+//const double watchdog_timeout = 0.3;
 std::string veh_type_string = "POLARIS_GEM";
 VehicleType veh_type = VehicleType::POLARIS_GEM;
 
@@ -101,7 +95,6 @@ ros::Publisher brake_rpt_pub;
 ros::Publisher vehicle_speed_pub;
 ros::Publisher vehicle_speed_ms_pub;
 ros::Publisher enable_pub;
-ros::Publisher can_rx_echo_pub;
 
 class ThreadSafeCANQueue
 {
@@ -247,7 +240,7 @@ void callback_brake_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
   latest_brake_msg = msg;
 }
 
-void send_can_echo(long id, unsigned char * data)
+void send_can(long id, unsigned char * data)
 {
   can_msgs::Frame frame;
   frame.id = id;
@@ -259,7 +252,7 @@ void send_can_echo(long id, unsigned char * data)
 
   frame.header.stamp = ros::Time::now();
 
-  can_rx_echo_pub.publish(frame);
+  can_tx_pub.publish(frame);
 }
 
 void can_write()
@@ -291,18 +284,6 @@ void can_write()
 
   while (keep_going)
   {
-    if (!can_writer.is_open())
-    {
-      // Open the channel.
-      ret = can_writer.open(hardware_id, circuit_id, bit_rate);
-
-      if (ret != OK)
-        ROS_ERROR("PACMod - Error opening CAN writer: %d - %s", ret, return_status_desc(ret).c_str()); 
-
-      std::this_thread::sleep_for(can_error_pause);
-    }
-    else
-    {
       //Global Command
       bool temp_enable_state;
       enable_mut.lock();
@@ -310,7 +291,7 @@ void can_write()
       enable_mut.unlock();
 
       global_obj.encode(temp_enable_state, true, false);
-      ret = can_writer.write(GlobalCmdMsg::CAN_ID, global_obj.data, 8, true);
+      ret = can_send(GlobalCmdMsg::CAN_ID, global_obj.data, 8, true);
 
       if (ret != OK)
       {
@@ -319,7 +300,7 @@ void can_write()
       }
       else
       {
-        send_can_echo(GlobalCmdMsg::CAN_ID, global_obj.data);
+        send_can(GlobalCmdMsg::CAN_ID, global_obj.data);
       }
 
       std::this_thread::sleep_for(inter_msg_pause);
@@ -334,7 +315,7 @@ void can_write()
         turn_mut.unlock();
 
         turn_obj.encode(latest_turn_val);
-        ret = can_writer.write(TurnSignalCmdMsg::CAN_ID, turn_obj.data, 8, true);
+        ret = can_send(TurnSignalCmdMsg::CAN_ID, turn_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -343,7 +324,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(TurnSignalCmdMsg::CAN_ID, turn_obj.data);
+          send_can(TurnSignalCmdMsg::CAN_ID, turn_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -359,7 +340,7 @@ void can_write()
         headlight_mut.unlock();
 
         headlight_obj.encode(latest_headlight_val);
-        ret = can_writer.write(HeadlightCmdMsg::CAN_ID, headlight_obj.data, 8, true);
+        ret = can_send(HeadlightCmdMsg::CAN_ID, headlight_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -368,7 +349,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(HeadlightCmdMsg::CAN_ID, headlight_obj.data);
+          send_can(HeadlightCmdMsg::CAN_ID, headlight_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -384,7 +365,7 @@ void can_write()
         horn_mut.unlock();
 
         horn_obj.encode(latest_horn_val);
-        ret = can_writer.write(HornCmdMsg::CAN_ID, horn_obj.data, 8, true);
+        ret = send_can(HornCmdMsg::CAN_ID, horn_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -393,7 +374,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(HornCmdMsg::CAN_ID, horn_obj.data);
+          send_can(HornCmdMsg::CAN_ID, horn_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -409,7 +390,7 @@ void can_write()
         wiper_mut.unlock();
 
         wiper_obj.encode(latest_wiper_val);
-        ret = can_writer.write(WiperCmdMsg::CAN_ID, wiper_obj.data, 8, true);
+        ret = send_can(WiperCmdMsg::CAN_ID, wiper_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -418,7 +399,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(WiperCmdMsg::CAN_ID, wiper_obj.data);
+          send_can(WiperCmdMsg::CAN_ID, wiper_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -434,7 +415,7 @@ void can_write()
         shift_mut.unlock();
 
         shift_obj.encode(latest_shift_val);
-        ret = can_writer.write(ShiftCmdMsg::CAN_ID, shift_obj.data, 8, true);
+        ret = send_can(ShiftCmdMsg::CAN_ID, shift_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -443,7 +424,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(ShiftCmdMsg::CAN_ID, shift_obj.data);
+          send_can(ShiftCmdMsg::CAN_ID, shift_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -458,7 +439,7 @@ void can_write()
         accel_mut.unlock();
 
         accel_obj.encode(latest_accel_val);
-        ret = can_writer.write(AccelCmdMsg::CAN_ID, accel_obj.data, 8, true);
+        ret = send_can(AccelCmdMsg::CAN_ID, accel_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -467,7 +448,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(AccelCmdMsg::CAN_ID, accel_obj.data);
+          send_can(AccelCmdMsg::CAN_ID, accel_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -485,7 +466,7 @@ void can_write()
         steer_mut.unlock();
 
         steer_obj.encode(latest_steer_angle, latest_steer_vel);
-        ret = can_writer.write(SteerCmdMsg::CAN_ID, steer_obj.data, 8, true);
+        ret = send_can(SteerCmdMsg::CAN_ID, steer_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -494,7 +475,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(SteerCmdMsg::CAN_ID, steer_obj.data);
+          send_can(SteerCmdMsg::CAN_ID, steer_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -510,7 +491,7 @@ void can_write()
         brake_mut.unlock();
 
         brake_obj.encode(latest_brake_val);
-        ret = can_writer.write(BrakeCmdMsg::CAN_ID, brake_obj.data, 8, true);
+        ret = send_can(BrakeCmdMsg::CAN_ID, brake_obj.data, 8, true);
 
         if (ret != OK)
         {
@@ -519,7 +500,7 @@ void can_write()
         }
         else
         {
-          send_can_echo(BrakeCmdMsg::CAN_ID, brake_obj.data);
+          send_can(BrakeCmdMsg::CAN_ID, brake_obj.data);
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
@@ -531,7 +512,7 @@ void can_write()
         can_msgs::Frame::ConstPtr new_frame = can_queue.pop();
 
         //Write the RX message.
-        ret = can_writer.write(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]), new_frame->dlc, new_frame->is_extended);
+        ret = send_can(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]), new_frame->dlc, new_frame->is_extended);
 
         if (ret != OK)
         {
@@ -540,23 +521,14 @@ void can_write()
         }
         else
         {
-          send_can_echo(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]));
+          send_can(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]));
         }
 
         std::this_thread::sleep_for(inter_msg_pause);
       }
 
-      ret = can_writer.close();
-
-      if (ret != OK)
-      {
-        ROS_ERROR("PACMod - Error closing CAN writer: %d - %s", ret, return_status_desc(ret).c_str());
-        return;
-      }
-
       std::this_thread::sleep_until(next_time);
       next_time = std::chrono::system_clock::now() + loop_pause;
-    }
 
     //Set local to global immediately before next loop.
     keep_going_mut.lock();
@@ -617,19 +589,7 @@ void can_read()
 
   while (keep_going)
   {
-    if (!can_reader.is_open())
     {
-      ret = can_reader.open(hardware_id, circuit_id, bit_rate);
-
-      if (ret != OK)
-        ROS_ERROR("PACMod - Error opening PACMod reader: %d - %s", ret, return_status_desc(ret).c_str()); 
-
-      std::this_thread::sleep_for(can_error_pause);
-    }
-    else
-    {
-      while ((ret = can_reader.read(&id, msg, &size, &extended, &t)) == OK)
-      {
         ros::Time now = ros::Time::now();
 
         can_msgs::Frame can_pub_msg;
@@ -1054,7 +1014,7 @@ void can_read()
             steering_pid_rpt_4_pub.publish(steering_pid_4_msg);
           }
         }
-      } //Read loop.
+      //Read loop.
 
       if (ret != NO_MESSAGES_RECEIVED)
         ROS_WARN("PACMod - Error reading CAN message: %d - %s", ret, return_status_desc(ret).c_str());
