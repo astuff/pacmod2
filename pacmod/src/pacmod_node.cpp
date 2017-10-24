@@ -48,6 +48,7 @@
 #include <pacmod_msgs/SystemRptFloat.h>
 #include <pacmod_msgs/SystemRptInt.h>
 #include <pacmod_msgs/VehicleSpeedRpt.h>
+#include <pacmod_msgs/VinRpt.h>
 #include <pacmod_msgs/WheelSpeedRpt.h>
 #include <pacmod_msgs/YawRateRpt.h>
 #include <pacmod_core.h>
@@ -93,6 +94,7 @@ ros::Subscriber *wiper_set_cmd_sub, *headlight_set_cmd_sub, *horn_set_cmd_sub;
 // Advertise published messages
 ros::Publisher can_tx_pub;
 ros::Publisher global_rpt_pub;
+ros::Publisher vin_rpt_pub;
 ros::Publisher turn_rpt_pub;
 ros::Publisher shift_rpt_pub;
 ros::Publisher accel_rpt_pub;
@@ -578,6 +580,7 @@ void can_read()
   std_msgs::Bool bool_pub_msg;
 
   GlobalRptMsg global_obj;
+  VinRptMsg vin_obj;
   SystemRptIntMsg turn_obj;
   SystemRptIntMsg headlight_obj;
   SystemRptIntMsg horn_obj;
@@ -664,6 +667,19 @@ void can_read()
           {
             set_enable(false);
           }
+        }
+        else if (id == VinRptMsg::CAN_ID)
+        {
+          vin_obj.parse(msg);
+
+          pacmod_msgs::VinRpt vin_rpt_msg;
+          vin_rpt_msg.header.stamp = now;
+          vin_rpt_msg.mfg_code = vin_obj.mfg_code;
+          vin_rpt_msg.mfg = vin_obj.mfg_code;
+          vin_rpt_msg.model_year_code = vin_obj.model_year_code;
+          vin_rpt_msg.model_year = vin_obj.model_year;
+          vin_rpt_msg.serial = vin_obj.serial;
+          vin_rpt_pub.publish(vin_rpt_msg);
         }
         else if (id == TurnSignalRptMsg::CAN_ID)
         {
@@ -1141,6 +1157,7 @@ int main(int argc, char *argv[])
   // Advertise published messages
   can_tx_pub = n.advertise<can_msgs::Frame>("can_tx", 20);
   global_rpt_pub = n.advertise<pacmod_msgs::GlobalRpt>("parsed_tx/global_rpt", 20);
+  vin_rpt_pub = n.advertise<pacmod_msgs::VinRpt>("parsed_tx/vin_rpt", 5);
   turn_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/turn_rpt", 20);
   shift_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/shift_rpt", 20);
   accel_rpt_pub = n.advertise<pacmod_msgs::SystemRptFloat>("parsed_tx/accel_rpt", 20);
