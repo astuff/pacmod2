@@ -23,12 +23,14 @@ catkin_package(CATKIN_DEPENDS
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
+  include/${PROJECT_NAME}
   core_pacmod/include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ executable
 add_executable(${PROJECT_NAME}
+  src/pacmod_ros_msg_handler.cpp
   src/pacmod_node.cpp
   core_pacmod/src/pacmod_core.cpp
 )
