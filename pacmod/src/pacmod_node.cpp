@@ -15,6 +15,7 @@
 * TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS, OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 */
 
+#include <pacmod_common.h>
 #include <can_interface/can_interface.h>
 #include <signal.h>
 #include <mutex>
@@ -24,34 +25,12 @@
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
-#include <ros/ros.h>
 #include <algorithm>
 
 #include <std_msgs/Int16.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
 #include <can_msgs/Frame.h>
-
-#include <pacmod_msgs/DateTimeRpt.h>
-#include <pacmod_msgs/GlobalRpt.h>
-#include <pacmod_msgs/LatLonHeadingRpt.h>
-#include <pacmod_msgs/MotorRpt1.h>
-#include <pacmod_msgs/MotorRpt2.h>
-#include <pacmod_msgs/MotorRpt3.h>
-#include <pacmod_msgs/PacmodCmd.h>
-#include <pacmod_msgs/ParkingBrakeStatusRpt.h>
-#include <pacmod_msgs/PositionWithSpeed.h>
-#include <pacmod_msgs/SteeringPIDRpt1.h>
-#include <pacmod_msgs/SteeringPIDRpt2.h>
-#include <pacmod_msgs/SteeringPIDRpt3.h>
-#include <pacmod_msgs/SteeringPIDRpt4.h>
-#include <pacmod_msgs/SystemRptFloat.h>
-#include <pacmod_msgs/SystemRptInt.h>
-#include <pacmod_msgs/VehicleSpeedRpt.h>
-#include <pacmod_msgs/VinRpt.h>
-#include <pacmod_msgs/WheelSpeedRpt.h>
-#include <pacmod_msgs/YawRateRpt.h>
-#include <pacmod_core.h>
 
 using namespace AS::CAN;
 using namespace AS::Drivers::PACMod;
