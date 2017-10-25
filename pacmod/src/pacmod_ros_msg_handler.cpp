@@ -2,13 +2,13 @@
 
 using namespace AS::Drivers::PACMod;
 
-PacmodRosMsgHandler::PacmodRosMsgHandler(ros::Publisher& pub, std::string frame_id) :
+PacmodTxRosMsgHandler::PacmodTxRosMsgHandler(ros::Publisher& pub, std::string frame_id) :
   pub(pub),
   frame_id(frame_id)
 {
 }
 
-void PacmodRosMsgHandler::fillAndPublish(const int64_t& can_id, std::shared_ptr<PacmodTxMsg>& parser_class)
+void PacmodTxRosMsgHandler::fillAndPublish(const int64_t& can_id, std::shared_ptr<PacmodTxMsg>& parser_class)
 {
   if (can_id == TurnSignalRptMsg::CAN_ID ||
       can_id == ShiftRptMsg::CAN_ID ||
@@ -124,7 +124,7 @@ void PacmodRosMsgHandler::fillAndPublish(const int64_t& can_id, std::shared_ptr<
   }
 }
 
-void PacmodRosMsgHandler::fillSystemRptInt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SystemRptInt& new_msg)
+void PacmodTxRosMsgHandler::fillSystemRptInt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SystemRptInt& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<SystemRptIntMsg>(parser_class);
 
@@ -135,7 +135,7 @@ void PacmodRosMsgHandler::fillSystemRptInt(std::shared_ptr<PacmodTxMsg>& parser_
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillSystemRptFloat(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SystemRptFloat& new_msg)
+void PacmodTxRosMsgHandler::fillSystemRptFloat(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SystemRptFloat& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<SystemRptFloatMsg>(parser_class);
 
@@ -146,7 +146,7 @@ void PacmodRosMsgHandler::fillSystemRptFloat(std::shared_ptr<PacmodTxMsg>& parse
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillGlobalRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::GlobalRpt& new_msg)
+void PacmodTxRosMsgHandler::fillGlobalRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::GlobalRpt& new_msg)
 {
 	auto dc_parser = std::dynamic_pointer_cast<GlobalRptMsg>(parser_class);
 
@@ -161,7 +161,7 @@ void PacmodRosMsgHandler::fillGlobalRpt(std::shared_ptr<PacmodTxMsg>& parser_cla
 	new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillVehicleSpeedRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::VehicleSpeedRpt& new_msg)
+void PacmodTxRosMsgHandler::fillVehicleSpeedRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::VehicleSpeedRpt& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<VehicleSpeedRptMsg>(parser_class);
 
@@ -173,7 +173,7 @@ void PacmodRosMsgHandler::fillVehicleSpeedRpt(std::shared_ptr<PacmodTxMsg>& pars
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillMotorRpt1(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::MotorRpt1& new_msg)
+void PacmodTxRosMsgHandler::fillMotorRpt1(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::MotorRpt1& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<MotorRpt1Msg>(parser_class);
 
@@ -183,7 +183,7 @@ void PacmodRosMsgHandler::fillMotorRpt1(std::shared_ptr<PacmodTxMsg>& parser_cla
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillMotorRpt2(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::MotorRpt2& new_msg)
+void PacmodTxRosMsgHandler::fillMotorRpt2(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::MotorRpt2& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<MotorRpt2Msg>(parser_class);
 
@@ -194,7 +194,7 @@ void PacmodRosMsgHandler::fillMotorRpt2(std::shared_ptr<PacmodTxMsg>& parser_cla
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillMotorRpt3(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::MotorRpt3& new_msg)
+void PacmodTxRosMsgHandler::fillMotorRpt3(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::MotorRpt3& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<MotorRpt3Msg>(parser_class);
 
@@ -204,7 +204,7 @@ void PacmodRosMsgHandler::fillMotorRpt3(std::shared_ptr<PacmodTxMsg>& parser_cla
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillWheelSpeedRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::WheelSpeedRpt& new_msg)
+void PacmodTxRosMsgHandler::fillWheelSpeedRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::WheelSpeedRpt& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<WheelSpeedRptMsg>(parser_class);
 
@@ -216,7 +216,7 @@ void PacmodRosMsgHandler::fillWheelSpeedRpt(std::shared_ptr<PacmodTxMsg>& parser
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillSteeringPIDRpt1(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SteeringPIDRpt1& new_msg)
+void PacmodTxRosMsgHandler::fillSteeringPIDRpt1(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SteeringPIDRpt1& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<SteeringPIDRpt1Msg>(parser_class);
 
@@ -228,7 +228,7 @@ void PacmodRosMsgHandler::fillSteeringPIDRpt1(std::shared_ptr<PacmodTxMsg>& pars
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillSteeringPIDRpt2(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SteeringPIDRpt2& new_msg)
+void PacmodTxRosMsgHandler::fillSteeringPIDRpt2(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SteeringPIDRpt2& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<SteeringPIDRpt2Msg>(parser_class);
 
@@ -240,7 +240,7 @@ void PacmodRosMsgHandler::fillSteeringPIDRpt2(std::shared_ptr<PacmodTxMsg>& pars
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillSteeringPIDRpt3(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SteeringPIDRpt3& new_msg)
+void PacmodTxRosMsgHandler::fillSteeringPIDRpt3(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SteeringPIDRpt3& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<SteeringPIDRpt3Msg>(parser_class);
 
@@ -252,7 +252,7 @@ void PacmodRosMsgHandler::fillSteeringPIDRpt3(std::shared_ptr<PacmodTxMsg>& pars
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillParkingBrakeStatusRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::ParkingBrakeStatusRpt& new_msg)
+void PacmodTxRosMsgHandler::fillParkingBrakeStatusRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::ParkingBrakeStatusRpt& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<ParkingBrakeStatusRptMsg>(parser_class);
 
@@ -261,7 +261,7 @@ void PacmodRosMsgHandler::fillParkingBrakeStatusRpt(std::shared_ptr<PacmodTxMsg>
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillYawRateRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::YawRateRpt& new_msg)
+void PacmodTxRosMsgHandler::fillYawRateRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::YawRateRpt& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<YawRateRptMsg>(parser_class);
 
@@ -270,7 +270,7 @@ void PacmodRosMsgHandler::fillYawRateRpt(std::shared_ptr<PacmodTxMsg>& parser_cl
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillLatLonHeadingRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::LatLonHeadingRpt& new_msg)
+void PacmodTxRosMsgHandler::fillLatLonHeadingRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::LatLonHeadingRpt& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<LatLonHeadingRptMsg>(parser_class);
 
@@ -285,7 +285,7 @@ void PacmodRosMsgHandler::fillLatLonHeadingRpt(std::shared_ptr<PacmodTxMsg>& par
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillDateTimeRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::DateTimeRpt& new_msg)
+void PacmodTxRosMsgHandler::fillDateTimeRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::DateTimeRpt& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<DateTimeRptMsg>(parser_class);
 
@@ -299,7 +299,7 @@ void PacmodRosMsgHandler::fillDateTimeRpt(std::shared_ptr<PacmodTxMsg>& parser_c
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillSteeringPIDRpt4(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SteeringPIDRpt4& new_msg)
+void PacmodTxRosMsgHandler::fillSteeringPIDRpt4(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SteeringPIDRpt4& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<SteeringPIDRpt4Msg>(parser_class);
 
@@ -309,7 +309,7 @@ void PacmodRosMsgHandler::fillSteeringPIDRpt4(std::shared_ptr<PacmodTxMsg>& pars
   new_msg.header.stamp = ros::Time::now();
 }
 
-void PacmodRosMsgHandler::fillVinRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::VinRpt& new_msg)
+void PacmodTxRosMsgHandler::fillVinRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::VinRpt& new_msg)
 {
   auto dc_parser = std::dynamic_pointer_cast<VinRptMsg>(parser_class);
 

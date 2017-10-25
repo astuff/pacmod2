@@ -9,10 +9,10 @@ namespace Drivers
 {
 namespace PACMod
 {
-  class PacmodRosMsgHandler
+  class PacmodTxRosMsgHandler
   {
     public:
-      PacmodRosMsgHandler(ros::Publisher& pub, std::string frame_id);
+      PacmodTxRosMsgHandler(ros::Publisher& pub, std::string frame_id);
 
       void fillAndPublish(const int64_t& can_id, std::shared_ptr<PacmodTxMsg>& parser_class);
 
