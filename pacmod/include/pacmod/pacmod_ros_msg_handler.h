@@ -9,6 +9,24 @@ namespace Drivers
 {
 namespace PACMod
 {
+  class LockedData
+  {
+    public:
+      LockedData();
+
+      bool isValid() const;
+      void setIsValid(bool valid);
+
+      std::vector<unsigned char> getData() const;
+      void setData(std::vector<unsigned char> new_data);
+
+    private:
+      std::vector<unsigned char> _data;
+      bool _is_valid;
+      mutable std::mutex _data_mut;
+      mutable std::mutex _valid_mut;
+  };
+
   class PacmodTxRosMsgHandler
   {
     public:
@@ -37,6 +55,13 @@ namespace PACMod
       void fillDateTimeRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::DateTimeRpt& new_msg);
       void fillSteeringPIDRpt4(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::SteeringPIDRpt4& new_msg);
       void fillVinRpt(std::shared_ptr<PacmodTxMsg>& parser_class, pacmod_msgs::VinRpt& new_msg);
+  };
+
+  class PacmodRxRosMsgHandler
+  {
+    public:
+      static std::vector<uint8_t> unpackAndEncode(const int64_t& can_id, const pacmod_msgs::PacmodCmd::ConstPtr& msg);
+      static std::vector<uint8_t> unpackAndEncode(const int64_t& can_id, const pacmod_msgs::PositionWithSpeed::ConstPtr& msg);
   };
 }
 }

@@ -18,7 +18,6 @@
 #include <pacmod_ros_msg_handler.h>
 #include <can_interface/can_interface.h>
 #include <signal.h>
-#include <mutex>
 #include <queue>
 #include <condition_variable>
 #include <thread>
@@ -37,7 +36,6 @@ using namespace AS::CAN;
 using namespace AS::Drivers::PACMod;
 
 CanInterface can_reader, can_writer;
-std::mutex writerMut;
 int hardware_id = 0;
 int circuit_id = -1;
 int bit_rate = 500000;
@@ -88,6 +86,7 @@ ros::Publisher enable_pub;
 ros::Publisher can_rx_echo_pub;
 
 std::unordered_map<long long, PacmodTxRosMsgHandler> handler_tx_list;
+std::unordered_map<long long, std::shared_ptr<LockedData>> rx_list;
 
 class ThreadSafeCANQueue
 {
@@ -180,60 +179,140 @@ void callback_pacmod_enable(const std_msgs::Bool::ConstPtr& msg)
 // Listens for incoming requests to change the state of the turn signals
 void callback_turn_signal_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  std::lock_guard<std::mutex> lck(turn_mut);
-  latest_turn_msg = msg;
+  long long can_id = TurnSignalCmdMsg::CAN_ID;
+  auto rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+  else
+  {
+    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+  }
 }
 
 //Listens for incoming requests to change the state of the headlights
 void callback_headlight_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  std::lock_guard<std::mutex> lck(headlight_mut);
-  latest_headlight_msg = msg;
+  long long can_id = HeadlightCmdMsg::CAN_ID;
+  auto rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+  else
+  {
+    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+  }
 }
 
 //Listens for incoming requests to change the state of the horn
 void callback_horn_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  std::lock_guard<std::mutex> lck(horn_mut);
-  latest_horn_msg = msg;
+  long long can_id = HornCmdMsg::CAN_ID;
+  auto rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+  else
+  {
+    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+  }
 }
 
 // Listens for incoming requests to change the state of the windshield wipers
 void callback_wiper_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  std::lock_guard<std::mutex> lck(wiper_mut);
-  latest_wiper_msg = msg;
+  long long can_id = WiperCmdMsg::CAN_ID;
+  auto rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+  else
+  {
+    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+  }
 }
 
 // Listens for incoming requests to change the gear shifter state
 void callback_shift_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  std::lock_guard<std::mutex> lck(shift_mut);
-  latest_shift_msg = msg;
+  long long can_id = ShiftCmdMsg::CAN_ID;
+  auto rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+  else
+  {
+    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+  }
 }
 
 // Listens for incoming requests to change the position of the throttle pedal
 void callback_accelerator_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  std::lock_guard<std::mutex> lck(accel_mut);
-  latest_accel_msg = msg;
+  long long can_id = AccelCmdMsg::CAN_ID;
+  auto rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+  else
+  {
+    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+  }
 }
 
 // Listens for incoming requests to change the position of the steering wheel with a speed limit
 void callback_steering_set_cmd(const pacmod_msgs::PositionWithSpeed::ConstPtr& msg)
 {
-  std::lock_guard<std::mutex> lck(steer_mut);
-  latest_steer_msg = msg;
+  long long can_id = SteerCmdMsg::CAN_ID;
+  auto rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+  else
+  {
+    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+  }
 }
 
 // Listens for incoming requests to change the position of the brake pedal
 void callback_brake_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  std::lock_guard<std::mutex> lck(brake_mut);
-  latest_brake_msg = msg;
+  long long can_id = BrakeCmdMsg::CAN_ID;
+  auto rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+  else
+  {
+    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+  }
 }
 
-void send_can_echo(long id, unsigned char * data)
+void send_can_echo(long id, const std::vector<unsigned char>& vec)
 {
   can_msgs::Frame frame;
   frame.id = id;
@@ -241,7 +320,7 @@ void send_can_echo(long id, unsigned char * data)
   frame.is_extended = false;
   frame.is_error = false;
   frame.dlc = 8;
-  std::copy(data, data + 8, frame.data.begin());
+  std::copy(vec.begin(), vec.end(), frame.data.begin());
 
   frame.header.stamp = ros::Time::now();
 
@@ -250,16 +329,7 @@ void send_can_echo(long id, unsigned char * data)
 
 void can_write()
 {
-  //Message objects.
-  GlobalCmdMsg global_obj;
-  TurnSignalCmdMsg turn_obj;
-  HeadlightCmdMsg headlight_obj;
-  HornCmdMsg horn_obj;
-  WiperCmdMsg wiper_obj;
-  ShiftCmdMsg shift_obj;
-  AccelCmdMsg accel_obj;
-  SteerCmdMsg steer_obj;
-  BrakeCmdMsg brake_obj;
+  std::vector<unsigned char> data;
 
   const std::chrono::milliseconds inter_msg_pause = std::chrono::milliseconds(1);
   const std::chrono::milliseconds loop_pause = std::chrono::milliseconds(33);
@@ -289,247 +359,42 @@ void can_write()
     }
     else
     {
-      //Global Command
-      bool temp_enable_state;
+      // Create Global Command
+      pacmod_msgs::PacmodCmd global_cmd_msg;
+
       enable_mut.lock();
-      temp_enable_state = enable_state;
+      global_cmd_msg.enable = enable_state;
       enable_mut.unlock();
 
-      global_obj.encode(temp_enable_state, true, false);
-      ret = can_writer.write(GlobalCmdMsg::CAN_ID, global_obj.data, 8, true);
+      global_cmd_msg.clear = true;
+      global_cmd_msg.ignore = false;
 
-      if (ret != OK)
+      pacmod_msgs::PacmodCmd::ConstPtr global_cmd_msg_cpr(&global_cmd_msg);
+
+      auto rx_it = rx_list.find(GlobalCmdMsg::CAN_ID);
+      rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(GlobalCmdMsg::CAN_ID, global_cmd_msg_cpr));
+      rx_it->second->setIsValid(true);
+
+      // Write all the data that we have received.
+      for (const auto& element : rx_list)
       {
-        ROS_WARN("PACMod - CAN send error - Global Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
-        return;
-      }
-      else
-      {
-        send_can_echo(GlobalCmdMsg::CAN_ID, global_obj.data);
-      }
-
-      std::this_thread::sleep_for(inter_msg_pause);
-
-      //Turn Command
-      if (latest_turn_msg != nullptr)
-      {
-        unsigned short latest_turn_val;
-
-        turn_mut.lock();
-        latest_turn_val = latest_turn_msg->ui16_cmd;
-        turn_mut.unlock();
-
-        turn_obj.encode(latest_turn_val);
-        ret = can_writer.write(TurnSignalCmdMsg::CAN_ID, turn_obj.data, 8, true);
-
-        if (ret != OK)
+        // Make sure the data are valid.
+        if (element.second->isValid())
         {
-          ROS_WARN("PACMod - CAN send error - Turn Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
-          return;
+          ret = can_writer.write(element.first, &(element.second->getData()[0]), 8, true);
+
+          if (ret != OK)
+          {
+            ROS_WARN("PACMod - CAN send error - CAN ID 0x%llx: %d - %s\n", element.first, ret, return_status_desc(ret).c_str());
+            return;
+          }
+          else
+          {
+            send_can_echo(element.first, element.second->getData());
+          }
+
+          std::this_thread::sleep_for(inter_msg_pause);
         }
-        else
-        {
-          send_can_echo(TurnSignalCmdMsg::CAN_ID, turn_obj.data);
-        }
-
-        std::this_thread::sleep_for(inter_msg_pause);
-      }
-      
-      //Headlights
-      if (latest_headlight_msg != nullptr)
-      {
-        unsigned short latest_headlight_val;
-
-        headlight_mut.lock();
-        latest_headlight_val = latest_headlight_msg->ui16_cmd;
-        headlight_mut.unlock();
-
-        headlight_obj.encode(latest_headlight_val);
-        ret = can_writer.write(HeadlightCmdMsg::CAN_ID, headlight_obj.data, 8, true);
-
-        if (ret != OK)
-        {
-          ROS_WARN("PACMod - CAN send error - Wiper Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
-          return;
-        }
-        else
-        {
-          send_can_echo(HeadlightCmdMsg::CAN_ID, headlight_obj.data);
-        }
-
-        std::this_thread::sleep_for(inter_msg_pause);
-      }
-
-      //Horn
-      if (latest_horn_msg != nullptr)
-      {
-        unsigned short latest_horn_val;
-
-        horn_mut.lock();
-        latest_horn_val = latest_horn_msg->ui16_cmd;
-        horn_mut.unlock();
-
-        horn_obj.encode(latest_horn_val);
-        ret = can_writer.write(HornCmdMsg::CAN_ID, horn_obj.data, 8, true);
-
-        if (ret != OK)
-        {
-          ROS_WARN("PACMod - CAN send error - Horn Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
-          return;
-        }
-        else
-        {
-          send_can_echo(HornCmdMsg::CAN_ID, horn_obj.data);
-        }
-
-        std::this_thread::sleep_for(inter_msg_pause);
-      }
-
-      //Windshield wipers
-      if (latest_wiper_msg != nullptr)
-      {
-        unsigned short latest_wiper_val;
-
-        wiper_mut.lock();
-        latest_wiper_val = latest_wiper_msg->ui16_cmd;
-        wiper_mut.unlock();
-
-        wiper_obj.encode(latest_wiper_val);
-        ret = can_writer.write(WiperCmdMsg::CAN_ID, wiper_obj.data, 8, true);
-
-        if (ret != OK)
-        {
-          ROS_WARN("PACMod - CAN send error - wiper Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
-          return;
-        }
-        else
-        {
-          send_can_echo(WiperCmdMsg::CAN_ID, wiper_obj.data);
-        }
-
-        std::this_thread::sleep_for(inter_msg_pause);
-      }    
-
-      //Shift Command
-      if (latest_shift_msg != nullptr)
-      {
-        unsigned short latest_shift_val;
-
-        shift_mut.lock();
-        latest_shift_val = latest_shift_msg->ui16_cmd;
-        shift_mut.unlock();
-
-        shift_obj.encode(latest_shift_val);
-        ret = can_writer.write(ShiftCmdMsg::CAN_ID, shift_obj.data, 8, true);
-
-        if (ret != OK)
-        {
-          ROS_WARN("PACMod - CAN send error - Shift Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
-          return;
-        }
-        else
-        {
-          send_can_echo(ShiftCmdMsg::CAN_ID, shift_obj.data);
-        }
-
-        std::this_thread::sleep_for(inter_msg_pause);
-      }
-
-      //Accel Command
-      if (latest_accel_msg != nullptr)
-      {
-        double latest_accel_val;
-        accel_mut.lock();
-        latest_accel_val = latest_accel_msg->f64_cmd;
-        accel_mut.unlock();
-
-        accel_obj.encode(latest_accel_val);
-        ret = can_writer.write(AccelCmdMsg::CAN_ID, accel_obj.data, 8, true);
-
-        if (ret != OK)
-        {
-          ROS_WARN("PACMod - CAN send error - Accel Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
-          return;
-        }
-        else
-        {
-          send_can_echo(AccelCmdMsg::CAN_ID, accel_obj.data);
-        }
-
-        std::this_thread::sleep_for(inter_msg_pause);
-      }
-
-      //Steer Command
-      if (latest_steer_msg != nullptr)
-      {
-        double latest_steer_angle;
-        double latest_steer_vel;
-
-        steer_mut.lock();
-        latest_steer_angle = latest_steer_msg->angular_position;
-        latest_steer_vel = latest_steer_msg->angular_velocity_limit;
-        steer_mut.unlock();
-
-        steer_obj.encode(latest_steer_angle, latest_steer_vel);
-        ret = can_writer.write(SteerCmdMsg::CAN_ID, steer_obj.data, 8, true);
-
-        if (ret != OK)
-        {
-          ROS_WARN("PACMod - CAN send error - Steer Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
-          return;
-        }
-        else
-        {
-          send_can_echo(SteerCmdMsg::CAN_ID, steer_obj.data);
-        }
-
-        std::this_thread::sleep_for(inter_msg_pause);
-      }
-
-      //Brake Command
-      if (latest_brake_msg != nullptr)
-      {
-        double latest_brake_val;
-
-        brake_mut.lock();
-        latest_brake_val = latest_brake_msg->f64_cmd;
-        brake_mut.unlock();
-
-        brake_obj.encode(latest_brake_val);
-        ret = can_writer.write(BrakeCmdMsg::CAN_ID, brake_obj.data, 8, true);
-
-        if (ret != OK)
-        {
-          ROS_WARN("PACMod - CAN send error - Brake Cmd: %d - %s\n", ret, return_status_desc(ret).c_str());
-          return;
-        }
-        else
-        {
-          send_can_echo(BrakeCmdMsg::CAN_ID, brake_obj.data);
-        }
-
-        std::this_thread::sleep_for(inter_msg_pause);
-      }
-
-      //Send the CAN queue.
-      while (!can_queue.empty())
-      {
-        can_msgs::Frame::ConstPtr new_frame = can_queue.pop();
-
-        //Write the RX message.
-        ret = can_writer.write(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]), new_frame->dlc, new_frame->is_extended);
-
-        if (ret != OK)
-        {
-          ROS_WARN("PACMod - CAN send error - CAN_RX Message: %d - %s\n", ret, return_status_desc(ret).c_str());
-          return;
-        }
-        else
-        {
-          send_can_echo(new_frame->id, const_cast<unsigned char*>(&new_frame->data[0]));
-        }
-
-        std::this_thread::sleep_for(inter_msg_pause);
       }
 
       ret = can_writer.close();
@@ -643,7 +508,10 @@ void can_read()
     keep_going_mut.unlock();
   }
 
-  can_reader.close();
+  ret = can_reader.close();
+
+  if (ret != OK)
+    ROS_ERROR("PACMod - Error closing CAN link: %d - %s", ret, return_status_desc(ret).c_str());
 }
 
 int main(int argc, char *argv[])
@@ -760,6 +628,21 @@ int main(int argc, char *argv[])
   ros::Subscriber brake_set_cmd = n.subscribe("as_rx/brake_cmd", 20, callback_brake_set_cmd);
   ros::Subscriber enable_sub = n.subscribe("as_rx/enable", 20, callback_pacmod_enable);
 
+  // Populate rx list
+  std::shared_ptr<LockedData> global_data(new LockedData);
+  std::shared_ptr<LockedData> turn_data(new LockedData);
+  std::shared_ptr<LockedData> shift_data(new LockedData);
+  std::shared_ptr<LockedData> accel_data(new LockedData);
+  std::shared_ptr<LockedData> steer_data(new LockedData);
+  std::shared_ptr<LockedData> brake_data(new LockedData);
+
+  rx_list.insert(std::make_pair(GlobalCmdMsg::CAN_ID, global_data));
+  rx_list.insert(std::make_pair(TurnSignalCmdMsg::CAN_ID, turn_data));
+  rx_list.insert(std::make_pair(ShiftCmdMsg::CAN_ID, shift_data));
+  rx_list.insert(std::make_pair(AccelCmdMsg::CAN_ID, accel_data));
+  rx_list.insert(std::make_pair(SteerCmdMsg::CAN_ID, steer_data));
+  rx_list.insert(std::make_pair(BrakeCmdMsg::CAN_ID, brake_data));
+
   if (veh_type == VehicleType::POLARIS_GEM ||
       veh_type == VehicleType::POLARIS_RANGER ||
       veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
@@ -794,6 +677,9 @@ int main(int argc, char *argv[])
     handler_tx_list.insert(std::make_pair(WiperRptMsg::CAN_ID, handler_wiper));
 
     wiper_set_cmd_sub = std::shared_ptr<ros::Subscriber>(new ros::Subscriber(n.subscribe("as_rx/wiper_cmd", 20, callback_wiper_set_cmd)));
+
+    std::shared_ptr<LockedData> wiper_data(new LockedData);
+    rx_list.insert(std::make_pair(WiperCmdMsg::CAN_ID, wiper_data));
   }
 
   if (veh_type == VehicleType::LEXUS_RX_450H)
@@ -836,6 +722,12 @@ int main(int argc, char *argv[])
 
     headlight_set_cmd_sub = std::shared_ptr<ros::Subscriber>(new ros::Subscriber(n.subscribe("as_rx/headlight_cmd", 20, callback_headlight_set_cmd)));
     horn_set_cmd_sub = std::shared_ptr<ros::Subscriber>(new ros::Subscriber(n.subscribe("as_rx/horn_cmd", 20, callback_horn_set_cmd)));
+
+    std::shared_ptr<LockedData> headlight_data(new LockedData);
+    std::shared_ptr<LockedData> horn_data(new LockedData);
+
+    rx_list.insert(std::make_pair(HeadlightCmdMsg::CAN_ID, headlight_data));
+    rx_list.insert(std::make_pair(HornCmdMsg::CAN_ID, horn_data));
   }
 
   if (veh_type == VehicleType::LEXUS_RX_450H || veh_type == VehicleType::AUDI_A3_ETRON)

@@ -2,6 +2,7 @@
 #define PACMOD_COMMON_H
 
 #include <memory>
+#include <mutex>
 
 #include <pacmod_core.h>
 #include <ros/ros.h>

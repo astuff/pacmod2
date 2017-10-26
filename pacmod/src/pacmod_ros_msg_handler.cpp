@@ -2,6 +2,38 @@
 
 using namespace AS::Drivers::PACMod;
 
+LockedData::LockedData() :
+  _data(),
+  _data_mut(),
+  _is_valid(false),
+  _valid_mut()
+{
+}
+
+bool LockedData::isValid() const
+{
+  std::lock_guard<std::mutex> lck(_valid_mut);
+  return _is_valid;
+}
+
+void LockedData::setIsValid(bool valid)
+{
+  std::lock_guard<std::mutex> lck(_valid_mut);
+  _is_valid = valid;
+}
+
+std::vector<unsigned char> LockedData::getData() const
+{
+  std::lock_guard<std::mutex> lck(_data_mut);
+  return _data;
+}
+
+void LockedData::setData(std::vector<unsigned char> new_data)
+{
+  std::lock_guard<std::mutex> lck(_data_mut);
+  _data = new_data;
+}
+
 PacmodTxRosMsgHandler::PacmodTxRosMsgHandler(ros::Publisher& pub, std::string frame_id) :
   pub(pub),
   frame_id(frame_id)
@@ -320,4 +352,68 @@ void PacmodTxRosMsgHandler::fillVinRpt(std::shared_ptr<PacmodTxMsg>& parser_clas
 	new_msg.serial = dc_parser->serial;
 
   new_msg.header.stamp = ros::Time::now();
+}
+
+std::vector<uint8_t> PacmodRxRosMsgHandler::unpackAndEncode(const int64_t& can_id, const pacmod_msgs::PacmodCmd::ConstPtr& msg)
+{
+	if (can_id == TurnSignalCmdMsg::CAN_ID)
+	{
+    TurnSignalCmdMsg encoder;
+    encoder.encode(msg->ui16_cmd);
+    return encoder.data;
+	}
+	else if (can_id == ShiftCmdMsg::CAN_ID)
+	{
+    ShiftCmdMsg encoder;
+    encoder.encode(msg->ui16_cmd);
+    return encoder.data;
+	}
+	else if (can_id == AccelCmdMsg::CAN_ID)
+	{
+    AccelCmdMsg encoder;
+    encoder.encode(msg->f64_cmd);
+    return encoder.data;
+	}
+  else if (can_id == GlobalCmdMsg::CAN_ID)
+  {
+    GlobalCmdMsg encoder;
+    encoder.encode(msg->enable, msg->clear, msg->ignore);
+    return encoder.data;
+  }
+	else if (can_id == BrakeCmdMsg::CAN_ID)
+	{
+    BrakeCmdMsg encoder;
+    encoder.encode(msg->f64_cmd);
+    return encoder.data;
+	}
+	else if (can_id == HeadlightCmdMsg::CAN_ID)
+	{
+    HeadlightCmdMsg encoder;
+    encoder.encode(msg->ui16_cmd);
+    return encoder.data;
+	}
+	else if (can_id == HornCmdMsg::CAN_ID)
+	{
+    HornCmdMsg encoder;
+    encoder.encode(msg->ui16_cmd);
+    return encoder.data;
+	}
+	else if (can_id == WiperCmdMsg::CAN_ID)
+	{
+    WiperCmdMsg encoder;
+    encoder.encode(msg->ui16_cmd);
+    return encoder.data;
+	}
+}
+
+std::vector<uint8_t> PacmodRxRosMsgHandler::unpackAndEncode(const int64_t& can_id, const pacmod_msgs::PositionWithSpeed::ConstPtr& msg)
+{
+  std::vector<uint8_t> ret_vec;
+
+  if (can_id == SteerCmdMsg::CAN_ID)
+  {
+    SteerCmdMsg encoder;
+    encoder.encode(msg->angular_position, msg->angular_velocity_limit);
+    return encoder.data;
+  }
 }
