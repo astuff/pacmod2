@@ -346,7 +346,7 @@ void PacmodTxRosMsgHandler::fillVinRpt(std::shared_ptr<PacmodTxMsg>& parser_clas
   auto dc_parser = std::dynamic_pointer_cast<VinRptMsg>(parser_class);
 
 	new_msg.mfg_code = dc_parser->mfg_code;
-	new_msg.mfg = dc_parser->mfg_code;
+	new_msg.mfg = dc_parser->mfg;
 	new_msg.model_year_code = dc_parser->model_year_code;
 	new_msg.model_year = dc_parser->model_year;
 	new_msg.serial = dc_parser->serial;
