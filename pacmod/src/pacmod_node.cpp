@@ -298,8 +298,7 @@ void can_write()
 
       if (ret != OK)
       {
-        ROS_ERROR("PACMod - Error opening CAN writer: %d - %s", ret, return_status_desc(ret).c_str()); 
-        std::this_thread::sleep_for(can_error_pause);
+        ROS_ERROR_THROTTLE(1.0, "PACMod - Error opening CAN writer: %d - %s", ret, return_status_desc(ret).c_str()); 
       }
       else
       {
@@ -364,10 +363,10 @@ void can_write()
           ROS_ERROR("PACMod - Error closing CAN writer: %d - %s", ret, return_status_desc(ret).c_str());
           return;
         }
-
-        std::this_thread::sleep_until(next_time);
       }
     }
+
+    std::this_thread::sleep_until(next_time);
 
     //Set local to global immediately before next loop.
     keep_going_mut.lock();
@@ -406,9 +405,7 @@ void can_read()
       ret = can_reader.open(hardware_id, circuit_id, bit_rate);
 
       if (ret != OK)
-        ROS_ERROR("PACMod - Error opening PACMod reader: %d - %s", ret, return_status_desc(ret).c_str()); 
-
-      std::this_thread::sleep_for(can_error_pause);
+        ROS_ERROR_THROTTLE(1.0, "PACMod - Error opening PACMod reader: %d - %s", ret, return_status_desc(ret).c_str()); 
     }
     else
     {
@@ -459,9 +456,9 @@ void can_read()
 
       if (ret != NO_MESSAGES_RECEIVED)
         ROS_WARN("PACMod - Error reading CAN message: %d - %s", ret, return_status_desc(ret).c_str());
-
-      std::this_thread::sleep_until(next_time);
     }
+
+    std::this_thread::sleep_until(next_time);
 
     //Set local to global immediately before next loop.
     keep_going_mut.lock();
