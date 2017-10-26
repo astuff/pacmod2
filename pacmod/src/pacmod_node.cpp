@@ -88,79 +88,23 @@ ros::Publisher can_rx_echo_pub;
 std::unordered_map<long long, PacmodTxRosMsgHandler> handler_tx_list;
 std::unordered_map<long long, std::shared_ptr<LockedData>> rx_list;
 
-class ThreadSafeCANQueue
-{
-  public:
-    ThreadSafeCANQueue(void) :
-      q(),
-      m(),
-      c()
-    {}
-
-    ~ThreadSafeCANQueue(void)
-    {}
-
-    void push(can_msgs::Frame::ConstPtr frame)
-    {
-      std::lock_guard<std::mutex> lock(m);
-      q.push(frame);
-      c.notify_one();
-    }
-
-    can_msgs::Frame::ConstPtr pop(void)
-    {
-      std::unique_lock<std::mutex> lock(m);
-      while (q.empty())
-      {
-        c.wait(lock);
-      }
-      can_msgs::Frame::ConstPtr& val = q.front();
-      q.pop();
-      return val;
-    }
-
-    bool empty()
-    {
-      std::lock_guard<std::mutex> lock(m);
-      return q.empty();
-    }
-
-  private:
-    std::queue<can_msgs::Frame::ConstPtr> q;
-    mutable std::mutex m;
-    std::condition_variable c;
-};
-
 bool enable_state = false;
 std::mutex enable_mut;
 bool override_state = false;
 std::mutex override_mut;
-pacmod_msgs::PacmodCmd::ConstPtr latest_turn_msg;
-std::mutex turn_mut;
-pacmod_msgs::PacmodCmd::ConstPtr latest_headlight_msg;
-std::mutex headlight_mut;
-pacmod_msgs::PacmodCmd::ConstPtr latest_horn_msg;
-std::mutex horn_mut;
-pacmod_msgs::PacmodCmd::ConstPtr latest_wiper_msg;
-std::mutex wiper_mut;
-pacmod_msgs::PacmodCmd::ConstPtr latest_shift_msg;
-std::mutex shift_mut;
-pacmod_msgs::PacmodCmd::ConstPtr latest_accel_msg;
-std::mutex accel_mut;
-pacmod_msgs::PositionWithSpeed::ConstPtr latest_steer_msg;
-std::mutex steer_mut;
-pacmod_msgs::PacmodCmd::ConstPtr latest_brake_msg;
-std::mutex brake_mut;
-ThreadSafeCANQueue can_queue;
 bool global_keep_going = true;
 std::mutex keep_going_mut;
 
+/*
+pacmod_msgs::PacmodCmd global_cmd_msg;
+pacmod_msgs::PacmodCmd::ConstPtr global_cmd_msg_cpr(&global_cmd_msg);
+*/
 std::chrono::milliseconds can_error_pause = std::chrono::milliseconds(1000);
 
 // Listens for incoming raw CAN messages and forwards them to the PACMod
 void callback_can_rx(const can_msgs::Frame::ConstPtr& msg)
 {
-  can_queue.push(msg);
+  //TODO: Figure out what to do here.
 }
 
 // Sets the PACMod enable flag through CAN.
@@ -353,59 +297,76 @@ void can_write()
       ret = can_writer.open(hardware_id, circuit_id, bit_rate);
 
       if (ret != OK)
+      {
         ROS_ERROR("PACMod - Error opening CAN writer: %d - %s", ret, return_status_desc(ret).c_str()); 
-
-      std::this_thread::sleep_for(can_error_pause);
-    }
-    else
-    {
-      // Create Global Command
-      pacmod_msgs::PacmodCmd global_cmd_msg;
-
-      enable_mut.lock();
-      global_cmd_msg.enable = enable_state;
-      enable_mut.unlock();
-
-      global_cmd_msg.clear = true;
-      global_cmd_msg.ignore = false;
-
-      pacmod_msgs::PacmodCmd::ConstPtr global_cmd_msg_cpr(&global_cmd_msg);
-
-      auto rx_it = rx_list.find(GlobalCmdMsg::CAN_ID);
-      rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(GlobalCmdMsg::CAN_ID, global_cmd_msg_cpr));
-      rx_it->second->setIsValid(true);
-
-      // Write all the data that we have received.
-      for (const auto& element : rx_list)
+        std::this_thread::sleep_for(can_error_pause);
+      }
+      else
       {
-        // Make sure the data are valid.
-        if (element.second->isValid())
+        /*
+        // Create Global Command
+        enable_mut.lock();
+        global_cmd_msg.enable = enable_state;
+        enable_mut.unlock();
+
+        global_cmd_msg.clear = true;
+        global_cmd_msg.ignore = false;
+
+        auto rx_it = rx_list.find(GlobalCmdMsg::CAN_ID);
+        rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(GlobalCmdMsg::CAN_ID, global_cmd_msg_cpr));
+        rx_it->second->setIsValid(true);
+        */
+
+        //Temporarily write the Global message separately.
+        GlobalCmdMsg global_obj;
+        bool local_enable;
+
+        enable_mut.lock();
+        local_enable = enable_state;
+        enable_mut.unlock();
+
+        global_obj.encode(local_enable, true, false);
+
+        ret = can_writer.write(GlobalCmdMsg::CAN_ID, &global_obj.data[0], 8, true);
+
+        if (ret != OK)
         {
-          ret = can_writer.write(element.first, &(element.second->getData()[0]), 8, true);
-
-          if (ret != OK)
-          {
-            ROS_WARN("PACMod - CAN send error - CAN ID 0x%llx: %d - %s\n", element.first, ret, return_status_desc(ret).c_str());
-            return;
-          }
-          else
-          {
-            send_can_echo(element.first, element.second->getData());
-          }
-
-          std::this_thread::sleep_for(inter_msg_pause);
+          ROS_WARN("PACMod - CAN send error on Global Cmd: %d - %s", ret, return_status_desc(ret).c_str());
         }
+
+        std::this_thread::sleep_for(inter_msg_pause);
+
+        // Write all the data that we have received.
+        for (const auto& element : rx_list)
+        {
+          // Make sure the data are valid.
+          if (element.second->isValid())
+          {
+            ret = can_writer.write(element.first, &(element.second->getData()[0]), 8, true);
+
+            if (ret != OK)
+            {
+              ROS_WARN("PACMod - CAN send error - CAN ID 0x%llx: %d - %s\n", element.first, ret, return_status_desc(ret).c_str());
+            }
+            else
+            {
+              send_can_echo(element.first, element.second->getData());
+            }
+
+            std::this_thread::sleep_for(inter_msg_pause);
+          }
+        }
+
+        ret = can_writer.close();
+
+        if (ret != OK)
+        {
+          ROS_ERROR("PACMod - Error closing CAN writer: %d - %s", ret, return_status_desc(ret).c_str());
+          return;
+        }
+
+        std::this_thread::sleep_until(next_time);
       }
-
-      ret = can_writer.close();
-
-      if (ret != OK)
-      {
-        ROS_ERROR("PACMod - Error closing CAN writer: %d - %s", ret, return_status_desc(ret).c_str());
-        return;
-      }
-
-      std::this_thread::sleep_until(next_time);
     }
 
     //Set local to global immediately before next loop.
@@ -745,11 +706,11 @@ int main(int argc, char *argv[])
   // Set initial state
   set_enable(false);
     
-  //Start CAN sending thread.
+  // Start CAN sending thread.
   std::thread can_write_thread(can_write);
-  //Start CAN receiving thread.
+  // Start CAN receiving thread.
   std::thread can_read_thread(can_read);
-  //Start callback spinner.
+  // Start callback spinner.
   spinner.start();
 
   while(ros::ok())
