@@ -38,7 +38,7 @@ double last_global_rpt_msg_received = 0.0;
 const double watchdog_timeout = 0.3;
 std::string veh_type_string = "POLARIS_GEM";
 VehicleType veh_type = VehicleType::POLARIS_GEM;
-std::unordered_map<int64_t, ros::Publisher> handler_tx_list;
+std::unordered_map<int64_t, ros::Publisher> pub_tx_list;
 PacmodTxRosMsgHandler handler;
 
 //Vehicle-Specific Publishers
@@ -366,10 +366,10 @@ void can_read()
     can_tx_pub.publish(can_pub_msg);
 
     auto parser_class = PacmodTxMsg::make_message(id);
-    auto msg_handler = handler_tx_list.find(id);
+    auto pub = pub_tx_list.find(id);
 
     // Only parse messages for which we have a parser and a publisher.
-    if (parser_class != NULL && pub != handler_tx_list.end())
+    if (parser_class != NULL && pub != pub_tx_list.end())
     {
       parser_class->parse(msg);
       handler.fillAndPublish(id, "pacmod", pub->second, parser_class);
@@ -530,7 +530,7 @@ int main(int argc, char *argv[])
   {
     wiper_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/wiper_rpt", 20);
 
-    handler_tx_list.insert(std::make_pair(WiperRptMsg::CAN_ID, wiper_rpt_pub));
+    pub_tx_list.insert(std::make_pair(WiperRptMsg::CAN_ID, wiper_rpt_pub));
 
     wiper_set_cmd_sub = std::shared_ptr<ros::Subscriber>(new ros::Subscriber(n.subscribe("as_rx/wiper_cmd", 20, callback_wiper_set_cmd)));
 
