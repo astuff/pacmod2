@@ -80,7 +80,7 @@ ros::Publisher brake_rpt_pub;
 ros::Publisher vehicle_speed_pub;
 ros::Publisher vehicle_speed_ms_pub;
 ros::Publisher enable_pub;
-ros::Publisher can_rx_pub;
+ros::Publisher can_tx_pub;
 
 std::unordered_map<long long, std::shared_ptr<LockedData>> rx_list;
 
@@ -264,7 +264,7 @@ void send_can(long id, const std::vector<unsigned char>& vec)
 
   frame.header.stamp = ros::Time::now();
 
-  can_rx_pub.publish(frame);
+  can_tx_pub.publish(frame);
 }
 
 void can_write()
@@ -320,11 +320,11 @@ void can_write()
       // Make sure the data are valid.
       if (element.second->isValid())
       {
+        send_can(element.first, element.second->getData());
         std::this_thread::sleep_for(inter_msg_pause);
       }
     }
 
-    std::this_thread::sleep_until(next_time);
 
     //Set local to global immediately before next loop.
     keep_going_mut.lock();
@@ -420,7 +420,7 @@ int main(int argc, char *argv[])
 
   // Advertise published messages
   //can_tx_pub = n.advertise<can_msgs::Frame>("can_tx", 20);
-  can_rx_pub = n.advertise<can_msgs::Frame>("receive_messages", 20);
+  can_tx_pub = n.advertise<can_msgs::Frame>("sent_messages", 20);
   global_rpt_pub = n.advertise<pacmod_msgs::GlobalRpt>("parsed_tx/global_rpt", 20);
   vin_rpt_pub = n.advertise<pacmod_msgs::VinRpt>("parsed_tx/vin_rpt", 5);
   turn_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/turn_rpt", 20);
@@ -445,7 +445,7 @@ int main(int argc, char *argv[])
   pub_tx_list.insert(std::make_pair(VehicleSpeedRptMsg::CAN_ID, vehicle_speed_pub));
 
   // Subscribe to messages
-  ros::Subscriber can_tx_sub = n.subscribe("sent_messages", 20, can_read);
+  ros::Subscriber can_rx_sub = n.subscribe("received_messages", 20, can_read);
   ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);  
   ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);  
   ros::Subscriber accelerator_set_cmd = n.subscribe("as_rx/accel_cmd", 20, callback_accelerator_set_cmd);
