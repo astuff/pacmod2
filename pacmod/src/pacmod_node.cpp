@@ -252,7 +252,7 @@ void callback_brake_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
   }
 }
 
-void send_can_echo(long id, const std::vector<unsigned char>& vec)
+void send_can(long id, const std::vector<unsigned char>& vec)
 {
   can_msgs::Frame frame;
   frame.id = id;
@@ -264,7 +264,7 @@ void send_can_echo(long id, const std::vector<unsigned char>& vec)
 
   frame.header.stamp = ros::Time::now();
 
-  can_rx_echo_pub.publish(frame);
+  can_tx_pub.publish(frame);
 }
 
 void can_write()
@@ -310,7 +310,7 @@ void can_write()
     global_obj.encode(local_enable, true, false);
   
     //ret = can_writer.write(GlobalCmdMsg::CAN_ID, &global_obj.data[0], 8, true);
-    can_tx_pub.publish(GlobalCmdMsg::CAN_ID, &global_obj.data[0]);
+    send_can(GlobalCmdMsg::CAN_ID, global_obj.data);
   
     std::this_thread::sleep_for(inter_msg_pause);
   
