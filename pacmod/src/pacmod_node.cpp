@@ -63,13 +63,13 @@ ros::Publisher brake_rpt_detail_1_pub;
 ros::Publisher brake_rpt_detail_2_pub;
 ros::Publisher brake_rpt_detail_3_pub;
 
+
 //Vehicle-Specific Subscribers
 std::shared_ptr<ros::Subscriber> wiper_set_cmd_sub,
                                  headlight_set_cmd_sub,
                                  horn_set_cmd_sub;
 
 // Advertise published messages
-ros::Publisher can_tx_pub;
 ros::Publisher global_rpt_pub;
 ros::Publisher vin_rpt_pub;
 ros::Publisher turn_rpt_pub;
@@ -80,7 +80,7 @@ ros::Publisher brake_rpt_pub;
 ros::Publisher vehicle_speed_pub;
 ros::Publisher vehicle_speed_ms_pub;
 ros::Publisher enable_pub;
-ros::Publisher can_rx_echo_pub;
+ros::Publisher can_rx_pub;
 
 std::unordered_map<long long, std::shared_ptr<LockedData>> rx_list;
 
@@ -264,7 +264,7 @@ void send_can(long id, const std::vector<unsigned char>& vec)
 
   frame.header.stamp = ros::Time::now();
 
-  can_tx_pub.publish(frame);
+  can_rx_pub.publish(frame);
 }
 
 void can_write()
@@ -333,79 +333,41 @@ void can_write()
   }
 }
 
-void can_read()
+void can_read(const can_msgs::Frame::ConstPtr &msg)
 {
-  //Allocate for reading.
-  long id;
-  uint8_t msg[8];
-  unsigned int size;
-  bool extended;
-  unsigned long t;
   std_msgs::Bool bool_pub_msg;
+  auto parser_class = PacmodTxMsg::make_message(msg->id);
+  auto pub = pub_tx_list.find(msg->id);
 
-  const std::chrono::milliseconds loop_pause = std::chrono::milliseconds(25);
-  bool keep_going = true;
-
-  std::chrono::system_clock::time_point next_time = std::chrono::system_clock::now();
-  next_time += loop_pause;
-
-  //Set local to global value before looping.
-  keep_going_mut.lock();
-  keep_going = global_keep_going;
-  keep_going_mut.unlock();
-
-  while (keep_going)
+  // Only parse messages for which we have a parser and a publisher.
+  if (parser_class != NULL && pub != pub_tx_list.end())
   {
-    can_msgs::Frame can_pub_msg;
-    can_pub_msg.header.stamp = ros::Time::now();
-    can_pub_msg.header.frame_id = "0";
-    can_pub_msg.id = id;
-    can_pub_msg.dlc = size;
-    std::copy(msg, msg + 8, can_pub_msg.data.begin());
-    can_pub_msg.header.stamp = ros::Time::now();
-    can_tx_pub.publish(can_pub_msg);
-
-    auto parser_class = PacmodTxMsg::make_message(id);
-    auto pub = pub_tx_list.find(id);
-
-    // Only parse messages for which we have a parser and a publisher.
-    if (parser_class != NULL && pub != pub_tx_list.end())
+    parser_class->parse(const_cast<unsigned char *>(&msg->data[0]));
+    handler.fillAndPublish(msg->id, "pacmod", pub->second, parser_class);
+  
+    // Special cases
+    if (msg->id == GlobalRptMsg::CAN_ID)
     {
-      parser_class->parse(msg);
-      handler.fillAndPublish(id, "pacmod", pub->second, parser_class);
-    
-      // Special cases
-      if (id == GlobalRptMsg::CAN_ID)
+      auto dc_parser = std::dynamic_pointer_cast<GlobalRptMsg>(parser_class);
+
+      bool_pub_msg.data = (dc_parser->enabled);
+      enable_pub.publish(bool_pub_msg);
+
+      if (dc_parser->overridden)
       {
-        auto dc_parser = std::dynamic_pointer_cast<GlobalRptMsg>(parser_class);
-
-        bool_pub_msg.data = (dc_parser->enabled);
-        enable_pub.publish(bool_pub_msg);
-
-        if (dc_parser->overridden)
-        {
-          set_enable(false);
-        }
-      }
-      else if (id == VehicleSpeedRptMsg::CAN_ID)
-      {
-        auto dc_parser = std::dynamic_pointer_cast<VehicleSpeedRptMsg>(parser_class);
-
-        // Now publish in m/s
-        std_msgs::Float64 veh_spd_ms_msg;
-        veh_spd_ms_msg.data = (dc_parser->vehicle_speed)*0.44704;
-        vehicle_speed_ms_pub.publish(veh_spd_ms_msg);
+        set_enable(false);
       }
     }
-  } //Read loop.
+    else if (msg->id == VehicleSpeedRptMsg::CAN_ID)
+    {
+      auto dc_parser = std::dynamic_pointer_cast<VehicleSpeedRptMsg>(parser_class);
 
-
-    std::this_thread::sleep_until(next_time);
-
-    //Set local to global immediately before next loop.
-    keep_going_mut.lock();
-    keep_going = global_keep_going;
-    keep_going_mut.unlock();
+      // Now publish in m/s
+      std_msgs::Float64 veh_spd_ms_msg;
+      veh_spd_ms_msg.data = (dc_parser->vehicle_speed)*0.44704;
+      vehicle_speed_ms_pub.publish(veh_spd_ms_msg);
+    }
+  }
 }
 
 int main(int argc, char *argv[])
@@ -458,7 +420,7 @@ int main(int argc, char *argv[])
 
   // Advertise published messages
   //can_tx_pub = n.advertise<can_msgs::Frame>("can_tx", 20);
-  can_tx_pub = n.advertise<can_msgs::Frame>("received_messages", 20);
+  can_rx_pub = n.advertise<can_msgs::Frame>("receive_messages", 20);
   global_rpt_pub = n.advertise<pacmod_msgs::GlobalRpt>("parsed_tx/global_rpt", 20);
   vin_rpt_pub = n.advertise<pacmod_msgs::VinRpt>("parsed_tx/vin_rpt", 5);
   turn_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/turn_rpt", 20);
@@ -483,8 +445,7 @@ int main(int argc, char *argv[])
   pub_tx_list.insert(std::make_pair(VehicleSpeedRptMsg::CAN_ID, vehicle_speed_pub));
 
   // Subscribe to messages
-  //ros::Subscriber can_rx_sub = n.subscribe("can_rx", 20, callback_can_rx);
-  ros::Subscriber can_rx_sub = n.subscribe("sent_messages", 20, callback_can_rx);
+  ros::Subscriber can_tx_sub = n.subscribe("sent_messages", 20, can_read);
   ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);  
   ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);  
   ros::Subscriber accelerator_set_cmd = n.subscribe("as_rx/accel_cmd", 20, callback_accelerator_set_cmd);
@@ -588,8 +549,6 @@ int main(int argc, char *argv[])
     
   // Start CAN sending thread.
   std::thread can_write_thread(can_write);
-  // Start CAN receiving thread.
-  std::thread can_read_thread(can_read);
   // Start callback spinner.
   spinner.start();
 
@@ -606,7 +565,6 @@ int main(int argc, char *argv[])
   keep_going_mut.unlock();
 
   can_write_thread.join();
-  can_read_thread.join();
 
   spinner.stop();
 
