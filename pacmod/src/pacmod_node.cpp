@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
   }
 
   // Advertise published messages
-  can_rx_pub = n.advertise<can_msgs::Frame>("sent_messages", 20);
+  can_rx_pub = n.advertise<can_msgs::Frame>("can_rx", 20);
   global_rpt_pub = n.advertise<pacmod_msgs::GlobalRpt>("parsed_tx/global_rpt", 20);
   vin_rpt_pub = n.advertise<pacmod_msgs::VinRpt>("parsed_tx/vin_rpt", 5);
   turn_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/turn_rpt", 20);
@@ -430,7 +430,7 @@ int main(int argc, char *argv[])
   pub_tx_list.insert(std::make_pair(VehicleSpeedRptMsg::CAN_ID, vehicle_speed_pub));
 
   // Subscribe to messages
-  ros::Subscriber can_tx_sub = n.subscribe("received_messages", 20, can_read);
+  ros::Subscriber can_tx_sub = n.subscribe("can_tx", 20, can_read);
   ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);  
   ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);  
   ros::Subscriber accelerator_set_cmd = n.subscribe("as_rx/accel_cmd", 20, callback_accelerator_set_cmd);
