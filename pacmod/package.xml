@@ -13,13 +13,11 @@
 
   <build_depend>roscpp</build_depend>
   <build_depend>std_msgs</build_depend>
-  <build_depend>can_interface</build_depend>  
   <build_depend>pacmod_msgs</build_depend>
   <build_depend>can_msgs</build_depend>
   
   <run_depend>roscpp</run_depend>
   <run_depend>std_msgs</run_depend>
-  <run_depend>can_interface</run_depend>
   <run_depend>pacmod_msgs</run_depend>
   <run_depend>can_msgs</run_depend>
 </package>

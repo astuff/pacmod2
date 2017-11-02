@@ -15,7 +15,6 @@
 * TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS, OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 */
 
-
 #include <pacmod_ros_msg_handler.h>
 #include <signal.h>
 #include <queue>
@@ -63,7 +62,6 @@ ros::Publisher brake_rpt_detail_1_pub;
 ros::Publisher brake_rpt_detail_2_pub;
 ros::Publisher brake_rpt_detail_3_pub;
 
-
 //Vehicle-Specific Subscribers
 std::shared_ptr<ros::Subscriber> wiper_set_cmd_sub,
                                  headlight_set_cmd_sub,
@@ -80,7 +78,7 @@ ros::Publisher brake_rpt_pub;
 ros::Publisher vehicle_speed_pub;
 ros::Publisher vehicle_speed_ms_pub;
 ros::Publisher enable_pub;
-ros::Publisher can_tx_pub;
+ros::Publisher can_rx_pub;
 
 std::unordered_map<long long, std::shared_ptr<LockedData>> rx_list;
 
@@ -96,12 +94,6 @@ pacmod_msgs::PacmodCmd global_cmd_msg;
 pacmod_msgs::PacmodCmd::ConstPtr global_cmd_msg_cpr(&global_cmd_msg);
 */
 std::chrono::milliseconds can_error_pause = std::chrono::milliseconds(1000);
-
-// Listens for incoming raw CAN messages and forwards them to the PACMod
-void callback_can_rx(const can_msgs::Frame::ConstPtr& msg)
-{
-  //TODO: Figure out what to do here.
-}
 
 // Sets the PACMod enable flag through CAN.
 void set_enable(bool val)
@@ -264,7 +256,7 @@ void send_can(long id, const std::vector<unsigned char>& vec)
 
   frame.header.stamp = ros::Time::now();
 
-  can_tx_pub.publish(frame);
+  can_rx_pub.publish(frame);
 }
 
 void can_write()
@@ -325,7 +317,6 @@ void can_write()
       }
     }
 
-
     //Set local to global immediately before next loop.
     keep_going_mut.lock();
     keep_going = global_keep_going;
@@ -372,8 +363,6 @@ void can_read(const can_msgs::Frame::ConstPtr &msg)
 
 int main(int argc, char *argv[])
 { 
-  bool willExit = false;
-      
   ros::init(argc, argv, "pacmod");
   ros::AsyncSpinner spinner(2);
   ros::NodeHandle n;
@@ -415,12 +404,8 @@ int main(int argc, char *argv[])
     }
   }
 
-  if (willExit)
-    return 0;
-
   // Advertise published messages
-  //can_tx_pub = n.advertise<can_msgs::Frame>("can_tx", 20);
-  can_tx_pub = n.advertise<can_msgs::Frame>("sent_messages", 20);
+  can_rx_pub = n.advertise<can_msgs::Frame>("sent_messages", 20);
   global_rpt_pub = n.advertise<pacmod_msgs::GlobalRpt>("parsed_tx/global_rpt", 20);
   vin_rpt_pub = n.advertise<pacmod_msgs::VinRpt>("parsed_tx/vin_rpt", 5);
   turn_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/turn_rpt", 20);
@@ -445,7 +430,7 @@ int main(int argc, char *argv[])
   pub_tx_list.insert(std::make_pair(VehicleSpeedRptMsg::CAN_ID, vehicle_speed_pub));
 
   // Subscribe to messages
-  ros::Subscriber can_rx_sub = n.subscribe("received_messages", 20, can_read);
+  ros::Subscriber can_tx_sub = n.subscribe("received_messages", 20, can_read);
   ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);  
   ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);  
   ros::Subscriber accelerator_set_cmd = n.subscribe("as_rx/accel_cmd", 20, callback_accelerator_set_cmd);
@@ -552,10 +537,7 @@ int main(int argc, char *argv[])
   // Start callback spinner.
   spinner.start();
 
-  while(ros::ok())
-  {
-    loop_rate.sleep();
-  }
+  ros::waitForShutdown();
 
   // Make sure it's disabled when node shuts down
   set_enable(false);
@@ -565,8 +547,6 @@ int main(int argc, char *argv[])
   keep_going_mut.unlock();
 
   can_write_thread.join();
-
-  spinner.stop();
 
   return 0;
 }

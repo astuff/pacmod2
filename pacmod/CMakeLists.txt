@@ -8,7 +8,6 @@ add_definitions(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
-  #can_interface
   pacmod_msgs
   can_msgs
 )
