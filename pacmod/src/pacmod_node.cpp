@@ -317,6 +317,8 @@ void can_write()
       }
     }
 
+    std::this_thread::sleep_until(next_time);
+
     //Set local to global immediately before next loop.
     keep_going_mut.lock();
     keep_going = global_keep_going;
