@@ -263,12 +263,9 @@ void can_write()
 {
   std::vector<unsigned char> data;
 
-  const std::chrono::milliseconds inter_msg_pause = std::chrono::milliseconds(1);
   const std::chrono::milliseconds loop_pause = std::chrono::milliseconds(33);
+  const std::chrono::milliseconds inter_msg_pause = std::chrono::milliseconds(1);
   bool keep_going = true;
-
-  std::chrono::system_clock::time_point next_time = std::chrono::system_clock::now();
-  next_time += loop_pause;
 
   //Set local to global value before looping.
   keep_going_mut.lock();
@@ -317,6 +314,8 @@ void can_write()
       }
     }
 
+    std::chrono::system_clock::time_point next_time = std::chrono::system_clock::now();
+    next_time += loop_pause;
     std::this_thread::sleep_until(next_time);
 
     //Set local to global immediately before next loop.
