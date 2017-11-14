@@ -8,4 +8,5 @@ This ROS node is designed to allow the user to control a vehicle (see SUPPORTED 
 - Polaris eLXD MY 2016+
 - Polaris Ranger X900
 - International Prostar+ 122
+- Lexus RX-450h MY 2016+
 - More coming soon...
