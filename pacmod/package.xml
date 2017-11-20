@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>pacmod</name>
   <version>2.0.0</version>
   <description>AutonomouStuff PACMod driver package</description>
@@ -11,13 +11,8 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>roscpp</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>pacmod_msgs</build_depend>
-  <build_depend>can_msgs</build_depend>
-  
-  <run_depend>roscpp</run_depend>
-  <run_depend>std_msgs</run_depend>
-  <run_depend>pacmod_msgs</run_depend>
-  <run_depend>can_msgs</run_depend>
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>pacmod_msgs</depend>
+  <depend>can_msgs</depend>
 </package>
