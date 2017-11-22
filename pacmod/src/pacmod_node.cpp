@@ -85,11 +85,133 @@ pacmod_msgs::PacmodCmd::ConstPtr global_cmd_msg_cpr(&global_cmd_msg);
 */
 std::chrono::milliseconds can_error_pause = std::chrono::milliseconds(1000);
 
+void set_defaults()
+{
+  // Set TurnSignal to off.
+  long long can_id = TurnSignalCmdMsg::CAN_ID;
+  auto rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    pacmod_msgs::PacmodCmd new_msg;
+    new_msg.ui16_cmd = pacmod_msgs::PacmodCmd::TURN_NONE;
+    pacmod_msgs::PacmodCmd::ConstPtr msg(new pacmod_msgs::PacmodCmd(new_msg));
+
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+
+  // Set Headlights to off.
+  can_id = HeadlightCmdMsg::CAN_ID;
+  rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    pacmod_msgs::PacmodCmd new_msg;
+    new_msg.ui16_cmd = 0;
+    pacmod_msgs::PacmodCmd::ConstPtr msg(new pacmod_msgs::PacmodCmd(new_msg));
+
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+
+  // Set Horn to off.
+  can_id = HornCmdMsg::CAN_ID;
+  rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    pacmod_msgs::PacmodCmd new_msg;
+    new_msg.ui16_cmd = 0;
+    pacmod_msgs::PacmodCmd::ConstPtr msg(new pacmod_msgs::PacmodCmd(new_msg));
+
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+
+  // Set Wipers to off.
+  can_id = WiperCmdMsg::CAN_ID;
+  rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    pacmod_msgs::PacmodCmd new_msg;
+    new_msg.ui16_cmd = 0;
+    pacmod_msgs::PacmodCmd::ConstPtr msg(new pacmod_msgs::PacmodCmd(new_msg));
+
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+
+  // Set Shift to PARK.
+  can_id = ShiftCmdMsg::CAN_ID;
+  rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    pacmod_msgs::PacmodCmd new_msg;
+    new_msg.ui16_cmd = pacmod_msgs::PacmodCmd::SHIFT_PARK;
+    pacmod_msgs::PacmodCmd::ConstPtr msg(new pacmod_msgs::PacmodCmd(new_msg));
+    
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+
+  // Set Accelerator to 0.
+  can_id = AccelCmdMsg::CAN_ID;
+  rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    pacmod_msgs::PacmodCmd new_msg;
+    new_msg.f64_cmd = 0;
+    pacmod_msgs::PacmodCmd::ConstPtr msg(new pacmod_msgs::PacmodCmd(new_msg));
+
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+
+  // Set Steering to center.
+  can_id = SteerCmdMsg::CAN_ID;
+  rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    pacmod_msgs::PositionWithSpeed new_msg;
+    new_msg.angular_position = 0;
+    new_msg.angular_velocity_limit = 0;
+    pacmod_msgs::PositionWithSpeed::ConstPtr msg(new pacmod_msgs::PositionWithSpeed(new_msg));
+
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+
+  // Set Brake to 0.
+  can_id = BrakeCmdMsg::CAN_ID;
+  rx_it = rx_list.find(can_id);
+
+  if (rx_it != rx_list.end())
+  {
+    pacmod_msgs::PacmodCmd new_msg;
+    new_msg.f64_cmd = 0;
+    pacmod_msgs::PacmodCmd::ConstPtr msg(new pacmod_msgs::PacmodCmd(new_msg));
+
+    rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(can_id, msg));
+    rx_it->second->setIsValid(true);
+  }
+}
+
 // Sets the PACMod enable flag through CAN.
 void set_enable(bool val)
 {
   std::lock_guard<std::mutex> lck(enable_mut);
   enable_state = val;
+
+  // Reset to defaults on disable.
+  if (val == false)
+  {
+    set_defaults();
+  }
 }
 
 // Listens for incoming requests to enable the PACMod
