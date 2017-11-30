@@ -71,6 +71,7 @@ ros::Publisher enable_pub;
 ros::Publisher can_rx_pub;
 
 std::unordered_map<long long, std::shared_ptr<LockedData>> rx_list;
+std::unordered_map<long long, long long> rpt_cmd_list;
 
 bool enable_state = false;
 std::mutex enable_mut;
@@ -327,7 +328,90 @@ void can_read(const can_msgs::Frame::ConstPtr &msg)
     parser_class->parse(const_cast<unsigned char *>(&msg->data[0]));
     handler.fillAndPublish(msg->id, "pacmod", pub->second, parser_class);
   
-    // Special cases
+    bool local_enable = false;
+
+    enable_mut.lock();
+    local_enable = enable_state;
+    enable_mut.unlock();
+
+    if (!local_enable)
+    {
+      // If we're disabled, set all of the system commands
+      // to be the current report values. This ensures that
+      // when we enable, we are in the same state as the vehicle.
+
+      // Find the cmd value for this rpt.
+      auto cmd = rpt_cmd_list.find(msg->id);
+
+      if (cmd != rpt_cmd_list.end())
+      {
+        // Find the data we need to set.
+        auto rx_it = rx_list.find(cmd->second);
+
+        if (rx_it != rx_list.end())
+        {
+          if (msg->id == TurnSignalRptMsg::CAN_ID)
+          {
+            auto dc_parser = std::dynamic_pointer_cast<TurnSignalRptMsg>(parser_class);
+            TurnSignalCmdMsg encoder;
+
+            encoder.encode(dc_parser->manual_input);
+            rx_it->second->setData(encoder.data);
+          }
+          else if (msg->id == ShiftRptMsg::CAN_ID)
+          {
+            auto dc_parser = std::dynamic_pointer_cast<ShiftRptMsg>(parser_class);
+            ShiftCmdMsg encoder;
+
+            encoder.encode(dc_parser->manual_input);
+            rx_it->second->setData(encoder.data);
+          }
+          else if (msg->id == AccelRptMsg::CAN_ID)
+          {
+            auto dc_parser = std::dynamic_pointer_cast<AccelRptMsg>(parser_class);
+            AccelCmdMsg encoder;
+
+            encoder.encode(dc_parser->manual_input);
+            rx_it->second->setData(encoder.data);
+          }
+          else if (msg->id == SteerRptMsg::CAN_ID)
+          {
+            auto dc_parser = std::dynamic_pointer_cast<SteerRptMsg>(parser_class);
+            SteerCmdMsg encoder;
+
+            encoder.encode(dc_parser->manual_input, 2.0);
+            rx_it->second->setData(encoder.data);
+          }
+          else if (msg->id == BrakeRptMsg::CAN_ID)
+          {
+            auto dc_parser = std::dynamic_pointer_cast<BrakeRptMsg>(parser_class);
+            BrakeCmdMsg encoder;
+
+            encoder.encode(dc_parser->manual_input);
+            rx_it->second->setData(encoder.data);
+          }
+          else if (msg->id == WiperRptMsg::CAN_ID)
+          {
+            auto dc_parser = std::dynamic_pointer_cast<WiperRptMsg>(parser_class);
+            WiperCmdMsg encoder;
+
+            encoder.encode(dc_parser->manual_input);
+            rx_it->second->setData(encoder.data);
+          }
+          else if (msg->id == HornRptMsg::CAN_ID)
+          {
+            auto dc_parser = std::dynamic_pointer_cast<HornRptMsg>(parser_class);
+            HornCmdMsg encoder;
+
+            encoder.encode(dc_parser->manual_input);
+            rx_it->second->setData(encoder.data);
+          }
+
+          rx_it->second->setIsValid(true);
+        }
+      }
+    }
+
     if (msg->id == GlobalRptMsg::CAN_ID)
     {
       auto dc_parser = std::dynamic_pointer_cast<GlobalRptMsg>(parser_class);
@@ -518,6 +602,22 @@ int main(int argc, char *argv[])
 
     pub_tx_list.insert(std::make_pair(HeadlightRptMsg::CAN_ID, headlight_rpt_pub));
     pub_tx_list.insert(std::make_pair(ParkingBrakeStatusRptMsg::CAN_ID, parking_brake_status_rpt_pub));
+  }
+
+  // Populate report/command list.
+  rpt_cmd_list.insert(std::make_pair(TurnSignalRptMsg::CAN_ID, TurnSignalCmdMsg::CAN_ID));
+  rpt_cmd_list.insert(std::make_pair(ShiftRptMsg::CAN_ID, ShiftCmdMsg::CAN_ID));
+  rpt_cmd_list.insert(std::make_pair(AccelRptMsg::CAN_ID, AccelCmdMsg::CAN_ID));
+  rpt_cmd_list.insert(std::make_pair(SteerRptMsg::CAN_ID, SteerCmdMsg::CAN_ID));
+  rpt_cmd_list.insert(std::make_pair(BrakeRptMsg::CAN_ID, BrakeCmdMsg::CAN_ID));
+
+  if (veh_type == VehicleType::INTERNATIONAL_PROSTAR_122)
+  {
+    rpt_cmd_list.insert(std::make_pair(WiperRptMsg::CAN_ID, WiperCmdMsg::CAN_ID));
+  }
+  else if (veh_type == VehicleType::LEXUS_RX_450H)
+  {
+    rpt_cmd_list.insert(std::make_pair(HornRptMsg::CAN_ID, HornCmdMsg::CAN_ID));
   }
 
   // Set initial state
