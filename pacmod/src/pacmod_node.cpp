@@ -355,7 +355,7 @@ void can_read(const can_msgs::Frame::ConstPtr &msg)
             auto dc_parser = std::dynamic_pointer_cast<TurnSignalRptMsg>(parser_class);
             TurnSignalCmdMsg encoder;
 
-            encoder.encode(dc_parser->manual_input);
+            encoder.encode(dc_parser->output);
             rx_it->second->setData(encoder.data);
           }
           else if (msg->id == ShiftRptMsg::CAN_ID)
@@ -363,7 +363,7 @@ void can_read(const can_msgs::Frame::ConstPtr &msg)
             auto dc_parser = std::dynamic_pointer_cast<ShiftRptMsg>(parser_class);
             ShiftCmdMsg encoder;
 
-            encoder.encode(dc_parser->manual_input);
+            encoder.encode(dc_parser->output);
             rx_it->second->setData(encoder.data);
           }
           else if (msg->id == AccelRptMsg::CAN_ID)
@@ -371,7 +371,7 @@ void can_read(const can_msgs::Frame::ConstPtr &msg)
             auto dc_parser = std::dynamic_pointer_cast<AccelRptMsg>(parser_class);
             AccelCmdMsg encoder;
 
-            encoder.encode(dc_parser->manual_input);
+            encoder.encode(dc_parser->output);
             rx_it->second->setData(encoder.data);
           }
           else if (msg->id == SteerRptMsg::CAN_ID)
@@ -379,7 +379,7 @@ void can_read(const can_msgs::Frame::ConstPtr &msg)
             auto dc_parser = std::dynamic_pointer_cast<SteerRptMsg>(parser_class);
             SteerCmdMsg encoder;
 
-            encoder.encode(dc_parser->manual_input, 2.0);
+            encoder.encode(dc_parser->output, 2.0);
             rx_it->second->setData(encoder.data);
           }
           else if (msg->id == BrakeRptMsg::CAN_ID)
@@ -387,7 +387,7 @@ void can_read(const can_msgs::Frame::ConstPtr &msg)
             auto dc_parser = std::dynamic_pointer_cast<BrakeRptMsg>(parser_class);
             BrakeCmdMsg encoder;
 
-            encoder.encode(dc_parser->manual_input);
+            encoder.encode(dc_parser->output);
             rx_it->second->setData(encoder.data);
           }
           else if (msg->id == WiperRptMsg::CAN_ID)
@@ -395,7 +395,7 @@ void can_read(const can_msgs::Frame::ConstPtr &msg)
             auto dc_parser = std::dynamic_pointer_cast<WiperRptMsg>(parser_class);
             WiperCmdMsg encoder;
 
-            encoder.encode(dc_parser->manual_input);
+            encoder.encode(dc_parser->output);
             rx_it->second->setData(encoder.data);
           }
           else if (msg->id == HornRptMsg::CAN_ID)
@@ -403,7 +403,7 @@ void can_read(const can_msgs::Frame::ConstPtr &msg)
             auto dc_parser = std::dynamic_pointer_cast<HornRptMsg>(parser_class);
             HornCmdMsg encoder;
 
-            encoder.encode(dc_parser->manual_input);
+            encoder.encode(dc_parser->output);
             rx_it->second->setData(encoder.data);
           }
 
