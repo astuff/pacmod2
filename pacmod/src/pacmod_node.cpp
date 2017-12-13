@@ -294,14 +294,17 @@ void can_write()
   
     std::this_thread::sleep_for(inter_msg_pause);
   
-    // Write all the data that we have received.
-    for (const auto& element : rx_list)
+    if (local_enable)
     {
-      // Make sure the data are valid.
-      if (element.second->isValid())
+      // Write all the data that we have received.
+      for (const auto& element : rx_list)
       {
-        send_can(element.first, element.second->getData());
-        std::this_thread::sleep_for(inter_msg_pause);
+        // Make sure the data are valid.
+        if (element.second->isValid())
+        {
+          send_can(element.first, element.second->getData());
+          std::this_thread::sleep_for(inter_msg_pause);
+        }
       }
     }
 
