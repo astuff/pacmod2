@@ -471,10 +471,6 @@ int main(int argc, char *argv[])
     {
       veh_type = VehicleType::LEXUS_RX_450H;
     }
-    else if (veh_type_string == "AUDI_A3_ETRON")
-    {
-      veh_type = VehicleType::AUDI_A3_ETRON;
-    }
     else
     {
       veh_type = VehicleType::POLARIS_GEM;
@@ -598,7 +594,7 @@ int main(int argc, char *argv[])
     rx_list.insert(std::make_pair(HornCmdMsg::CAN_ID, horn_data));
   }
 
-  if (veh_type == VehicleType::LEXUS_RX_450H || veh_type == VehicleType::AUDI_A3_ETRON)
+  if (veh_type == VehicleType::LEXUS_RX_450H)
   {
     headlight_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/headlight_rpt", 20);
     parking_brake_status_rpt_pub = n.advertise<pacmod_msgs::ParkingBrakeStatusRpt>("parsed_tx/parking_brake_status_rpt", 20);

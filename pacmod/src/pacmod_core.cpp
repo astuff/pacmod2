@@ -164,8 +164,6 @@ void VinRptMsg::parse(uint8_t *in)
     mfg = "NAVISTAR, INC.";
   else if (mfg_code == "2T2")
     mfg = "TOYOTA MOTOR MANUFACTURING CANADA";
-  else if (mfg_code == "WAU")
-    mfg = "AUDI";
 
   model_year_code = in[3];
 

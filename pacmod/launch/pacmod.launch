@@ -4,8 +4,7 @@
        POLARIS_GEM: The Polaris GEM e2, e4, e6, and eLXD.
        POLARIS_RANGER: The Polaris Ranger series of off-road vehicles.
        INTERNATIONAL_PROSTAR_122: The International PROSTAR+ 122 semi-tractor trailer.
-       LEXUS_RX_450H: The hybrid version of the Lexus RX-450 SUV.
-       AUDI_A3_ETRON: The plugin-electric A3 from Audi. -->
+       LEXUS_RX_450H: The hybrid version of the Lexus RX-450 SUV. -->
   <arg name="pacmod_vehicle_type" default="POLARIS_GEM" />
   <arg name="use_kvaser" default="false" />
   <arg name="kvaser_hardware_id" default="27733" />
