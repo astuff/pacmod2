@@ -3,7 +3,7 @@
   <name>pacmod</name>
   <version>2.0.0</version>
   <description>AutonomouStuff PACMod driver package</description>
-  <license>Closed Source</license>
+  <license>MIT</license>
 
   <maintainer email="software@autonomoustuff.com">AutonomouStuff Software Team</maintainer>
   <author email="jdriscoll@autonomoustuff.com">Joe Driscoll</author>
