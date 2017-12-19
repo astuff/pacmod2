@@ -1,0 +1,3 @@
+- git:
+    local-name: astuff_sensor_msgs
+    uri: https://github.com/astuff/astuff_sensor_msgs
