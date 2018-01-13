@@ -422,7 +422,7 @@ void can_read(const can_msgs::Frame::ConstPtr &msg)
       bool_pub_msg.data = (dc_parser->enabled);
       enable_pub.publish(bool_pub_msg);
 
-      if (dc_parser->overridden)
+      if (dc_parser->override_active)
       {
         set_enable(false);
       }

@@ -43,7 +43,7 @@ namespace PACMod
       static const int64_t CAN_ID;
 
       bool enabled;
-      bool overridden;
+      bool override_active;
       bool user_can_timeout;
       bool brake_can_timeout;
       bool steering_can_timeout;

@@ -190,7 +190,7 @@ void PacmodTxRosMsgHandler::fillGlobalRpt(std::shared_ptr<PacmodTxMsg>& parser_c
 	auto dc_parser = std::dynamic_pointer_cast<GlobalRptMsg>(parser_class);
 
 	new_msg.enabled = dc_parser->enabled;
-	new_msg.overridden = dc_parser->overridden;
+	new_msg.override_active = dc_parser->override_active;
 	new_msg.user_can_timeout = dc_parser->user_can_timeout;
 	new_msg.brake_can_timeout = dc_parser->brake_can_timeout;
 	new_msg.steering_can_timeout = dc_parser->steering_can_timeout;

@@ -144,7 +144,7 @@ std::shared_ptr<PacmodTxMsg> PacmodTxMsg::make_message(const int64_t& can_id)
 void GlobalRptMsg::parse(uint8_t *in)
 {
   enabled = in[0] & 0x01;
-  overridden = ((in[0] & 0x02) >> 1) != 0;
+  override_active = ((in[0] & 0x02) >> 1) != 0;
   user_can_timeout = ((in[0] & 0x20) >> 5) != 0;
   brake_can_timeout = ((in[0] & 0x10) >> 4) != 0;
   steering_can_timeout = ((in[0] & 0x08) >> 3) != 0;
