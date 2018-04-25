@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   pacmod_msgs
   can_msgs
+  roslint
 )
 
 catkin_package(CATKIN_DEPENDS
@@ -54,3 +55,6 @@ install(TARGETS ${PROJECT_NAME}
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
 )
+
+set(ROSLINT_CPP_OPTS "--filter=-build/include_what_you_use,-build/namespaces,-build/c++11")
+roslint_cpp()

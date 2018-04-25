@@ -9,6 +9,8 @@
   <author email="jdriscoll@autonomoustuff.com">Joe Driscoll</author>
   <author email="jwhitley@autonomoustuff.com">Josh Whitley</author>
 
+  <build_depend>roslint</build_depend>
+
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>roscpp</depend>
