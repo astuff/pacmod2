@@ -6,11 +6,7 @@
 */
 
 #include <pacmod_ros_msg_handler.h>
-#include <signal.h>
-#include <queue>
-#include <condition_variable>
 #include <thread>
-#include <errno.h>
 #include <unistd.h>
 #include <time.h>
 #include <algorithm>
@@ -30,7 +26,7 @@ VehicleType veh_type = VehicleType::POLARIS_GEM;
 std::unordered_map<int64_t, ros::Publisher> pub_tx_list;
 PacmodTxRosMsgHandler handler;
 
-//Vehicle-Specific Publishers
+// Vehicle-Specific Publishers
 ros::Publisher wiper_rpt_pub;
 ros::Publisher headlight_rpt_pub;
 ros::Publisher horn_rpt_pub;
@@ -52,10 +48,10 @@ ros::Publisher brake_rpt_detail_1_pub;
 ros::Publisher brake_rpt_detail_2_pub;
 ros::Publisher brake_rpt_detail_3_pub;
 
-//Vehicle-Specific Subscribers
+// Vehicle-Specific Subscribers
 std::shared_ptr<ros::Subscriber> wiper_set_cmd_sub,
-                                 headlight_set_cmd_sub,
-                                 horn_set_cmd_sub;
+    headlight_set_cmd_sub,
+    horn_set_cmd_sub;
 
 // Advertise published messages
 ros::Publisher global_rpt_pub;
@@ -70,8 +66,8 @@ ros::Publisher vehicle_speed_ms_pub;
 ros::Publisher enable_pub;
 ros::Publisher can_rx_pub;
 
-std::unordered_map<long long, std::shared_ptr<LockedData>> rx_list;
-std::unordered_map<long long, long long> rpt_cmd_list;
+std::unordered_map<int64_t, std::shared_ptr<LockedData>> rx_list;
+std::unordered_map<int64_t, int64_t> rpt_cmd_list;
 
 bool enable_state = false;
 std::mutex enable_mut;
@@ -96,13 +92,13 @@ void set_enable(bool val)
 // Listens for incoming requests to enable the PACMod
 void callback_pacmod_enable(const std_msgs::Bool::ConstPtr& msg)
 {
-  set_enable(msg->data);  
+  set_enable(msg->data);
 }
 
 // Listens for incoming requests to change the state of the turn signals
 void callback_turn_signal_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  long long can_id = TurnSignalCmdMsg::CAN_ID;
+  int64_t can_id = TurnSignalCmdMsg::CAN_ID;
   auto rx_it = rx_list.find(can_id);
 
   if (rx_it != rx_list.end())
@@ -112,14 +108,14 @@ void callback_turn_signal_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
   }
   else
   {
-    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+    ROS_WARN("Received command message for ID 0x%lx for which we did not have an encoder.", can_id);
   }
 }
 
-//Listens for incoming requests to change the state of the headlights
+// Listens for incoming requests to change the state of the headlights
 void callback_headlight_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  long long can_id = HeadlightCmdMsg::CAN_ID;
+  int64_t can_id = HeadlightCmdMsg::CAN_ID;
   auto rx_it = rx_list.find(can_id);
 
   if (rx_it != rx_list.end())
@@ -129,14 +125,14 @@ void callback_headlight_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
   }
   else
   {
-    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+    ROS_WARN("Received command message for ID 0x%lx for which we did not have an encoder.", can_id);
   }
 }
 
-//Listens for incoming requests to change the state of the horn
+// Listens for incoming requests to change the state of the horn
 void callback_horn_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  long long can_id = HornCmdMsg::CAN_ID;
+  int64_t can_id = HornCmdMsg::CAN_ID;
   auto rx_it = rx_list.find(can_id);
 
   if (rx_it != rx_list.end())
@@ -146,14 +142,14 @@ void callback_horn_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
   }
   else
   {
-    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+    ROS_WARN("Received command message for ID 0x%lx for which we did not have an encoder.", can_id);
   }
 }
 
 // Listens for incoming requests to change the state of the windshield wipers
 void callback_wiper_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  long long can_id = WiperCmdMsg::CAN_ID;
+  int64_t can_id = WiperCmdMsg::CAN_ID;
   auto rx_it = rx_list.find(can_id);
 
   if (rx_it != rx_list.end())
@@ -163,14 +159,14 @@ void callback_wiper_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
   }
   else
   {
-    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+    ROS_WARN("Received command message for ID 0x%lx for which we did not have an encoder.", can_id);
   }
 }
 
 // Listens for incoming requests to change the gear shifter state
 void callback_shift_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  long long can_id = ShiftCmdMsg::CAN_ID;
+  int64_t can_id = ShiftCmdMsg::CAN_ID;
   auto rx_it = rx_list.find(can_id);
 
   if (rx_it != rx_list.end())
@@ -180,14 +176,14 @@ void callback_shift_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
   }
   else
   {
-    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+    ROS_WARN("Received command message for ID 0x%lx for which we did not have an encoder.", can_id);
   }
 }
 
 // Listens for incoming requests to change the position of the throttle pedal
 void callback_accelerator_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  long long can_id = AccelCmdMsg::CAN_ID;
+  int64_t can_id = AccelCmdMsg::CAN_ID;
   auto rx_it = rx_list.find(can_id);
 
   if (rx_it != rx_list.end())
@@ -197,14 +193,14 @@ void callback_accelerator_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
   }
   else
   {
-    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+    ROS_WARN("Received command message for ID 0x%lx for which we did not have an encoder.", can_id);
   }
 }
 
 // Listens for incoming requests to change the position of the steering wheel with a speed limit
 void callback_steering_set_cmd(const pacmod_msgs::PositionWithSpeed::ConstPtr& msg)
 {
-  long long can_id = SteerCmdMsg::CAN_ID;
+  int64_t can_id = SteerCmdMsg::CAN_ID;
   auto rx_it = rx_list.find(can_id);
 
   if (rx_it != rx_list.end())
@@ -214,14 +210,14 @@ void callback_steering_set_cmd(const pacmod_msgs::PositionWithSpeed::ConstPtr& m
   }
   else
   {
-    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+    ROS_WARN("Received command message for ID 0x%lx for which we did not have an encoder.", can_id);
   }
 }
 
 // Listens for incoming requests to change the position of the brake pedal
 void callback_brake_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
 {
-  long long can_id = BrakeCmdMsg::CAN_ID;
+  int64_t can_id = BrakeCmdMsg::CAN_ID;
   auto rx_it = rx_list.find(can_id);
 
   if (rx_it != rx_list.end())
@@ -231,11 +227,11 @@ void callback_brake_set_cmd(const pacmod_msgs::PacmodCmd::ConstPtr& msg)
   }
   else
   {
-    ROS_WARN("Received command message for ID 0x%llx for which we did not have an encoder.", can_id);
+    ROS_WARN("Received command message for ID 0x%lx for which we did not have an encoder.", can_id);
   }
 }
 
-void send_can(long id, const std::vector<unsigned char>& vec)
+void send_can(int32_t id, const std::vector<unsigned char>& vec)
 {
   can_msgs::Frame frame;
   frame.id = id;
@@ -258,7 +254,7 @@ void can_write()
   const std::chrono::milliseconds inter_msg_pause = std::chrono::milliseconds(1);
   bool keep_going = true;
 
-  //Set local to global value before looping.
+  // Set local to global value before looping.
   keep_going_mut.lock();
   keep_going = global_keep_going;
   keep_going_mut.unlock();
@@ -270,30 +266,30 @@ void can_write()
     enable_mut.lock();
     global_cmd_msg.enable = enable_state;
     enable_mut.unlock();
-  
+
     global_cmd_msg.clear = true;
     global_cmd_msg.ignore = false;
-  
+
     auto rx_it = rx_list.find(GlobalCmdMsg::CAN_ID);
     rx_it->second->setData(PacmodRxRosMsgHandler::unpackAndEncode(GlobalCmdMsg::CAN_ID, global_cmd_msg_cpr));
     rx_it->second->setIsValid(true);
     */
-  
-    //Temporarily write the Global message separately.
+
+    // Temporarily write the Global message separately.
     GlobalCmdMsg global_obj;
     bool local_enable;
-  
+
     enable_mut.lock();
     local_enable = enable_state;
     enable_mut.unlock();
-  
+
     global_obj.encode(local_enable, true, false);
-  
-    //ret = can_writer.write(GlobalCmdMsg::CAN_ID, &global_obj.data[0], 8, true);
+
+    // ret = can_writer.write(GlobalCmdMsg::CAN_ID, &global_obj.data[0], 8, true);
     send_can(GlobalCmdMsg::CAN_ID, global_obj.data);
-  
+
     std::this_thread::sleep_for(inter_msg_pause);
-  
+
     if (local_enable)
     {
       // Write all the data that we have received.
@@ -312,7 +308,7 @@ void can_write()
     next_time += loop_pause;
     std::this_thread::sleep_until(next_time);
 
-    //Set local to global immediately before next loop.
+    // Set local to global immediately before next loop.
     keep_going_mut.lock();
     keep_going = global_keep_going;
     keep_going_mut.unlock();
@@ -330,7 +326,7 @@ void can_read(const can_msgs::Frame::ConstPtr &msg)
   {
     parser_class->parse(const_cast<unsigned char *>(&msg->data[0]));
     handler.fillAndPublish(msg->id, "pacmod", pub->second, parser_class);
-  
+
     bool local_enable = false;
 
     enable_mut.lock();
@@ -433,24 +429,24 @@ void can_read(const can_msgs::Frame::ConstPtr &msg)
 
       // Now publish in m/s
       std_msgs::Float64 veh_spd_ms_msg;
-      veh_spd_ms_msg.data = (dc_parser->vehicle_speed)*0.44704;
+      veh_spd_ms_msg.data = (dc_parser->vehicle_speed) * 0.44704;
       vehicle_speed_ms_pub.publish(veh_spd_ms_msg);
     }
   }
 }
 
 int main(int argc, char *argv[])
-{ 
+{
   ros::init(argc, argv, "pacmod");
   ros::AsyncSpinner spinner(2);
   ros::NodeHandle n;
   ros::NodeHandle priv("~");
-  ros::Rate loop_rate(1.0); //PACMod is sending at ~30Hz.
+  ros::Rate loop_rate(1.0);    // PACMod is sending at ~30Hz.
 
   // Wait for time to be valid
-  while (ros::Time::now().nsec == 0);
+  while (ros::Time::now().nsec == 0) {}
 
-  // Get and validate parameters    
+  // Get and validate parameters
   if (priv.getParam("vehicle_type", veh_type_string))
   {
     ROS_INFO("PACMod - Got vehicle type of: %s", veh_type_string.c_str());
@@ -493,7 +489,7 @@ int main(int argc, char *argv[])
 
   std::string frame_id = "pacmod";
 
-  //Populate handler list
+  // Populate handler list
   pub_tx_list.insert(std::make_pair(GlobalRptMsg::CAN_ID, global_rpt_pub));
   pub_tx_list.insert(std::make_pair(VinRptMsg::CAN_ID, vin_rpt_pub));
   pub_tx_list.insert(std::make_pair(TurnSignalRptMsg::CAN_ID, turn_rpt_pub));
@@ -505,8 +501,8 @@ int main(int argc, char *argv[])
 
   // Subscribe to messages
   ros::Subscriber can_tx_sub = n.subscribe("can_tx", 20, can_read);
-  ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);  
-  ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);  
+  ros::Subscriber turn_set_cmd_sub = n.subscribe("as_rx/turn_cmd", 20, callback_turn_signal_set_cmd);
+  ros::Subscriber shift_set_cmd_sub = n.subscribe("as_rx/shift_cmd", 20, callback_shift_set_cmd);
   ros::Subscriber accelerator_set_cmd = n.subscribe("as_rx/accel_cmd", 20, callback_accelerator_set_cmd);
   ros::Subscriber steering_set_cmd = n.subscribe("as_rx/steer_cmd", 20, callback_steering_set_cmd);
   ros::Subscriber brake_set_cmd = n.subscribe("as_rx/brake_cmd", 20, callback_brake_set_cmd);
@@ -552,7 +548,9 @@ int main(int argc, char *argv[])
 
     pub_tx_list.insert(std::make_pair(WiperRptMsg::CAN_ID, wiper_rpt_pub));
 
-    wiper_set_cmd_sub = std::shared_ptr<ros::Subscriber>(new ros::Subscriber(n.subscribe("as_rx/wiper_cmd", 20, callback_wiper_set_cmd)));
+    wiper_set_cmd_sub = std::shared_ptr<ros::Subscriber>(new ros::Subscriber(n.subscribe("as_rx/wiper_cmd",
+                                                                                         20,
+                                                                                         callback_wiper_set_cmd)));
 
     std::shared_ptr<LockedData> wiper_data(new LockedData);
     rx_list.insert(std::make_pair(WiperCmdMsg::CAN_ID, wiper_data));
@@ -584,8 +582,14 @@ int main(int argc, char *argv[])
     pub_tx_list.insert(std::make_pair(LatLonHeadingRptMsg::CAN_ID, lat_lon_heading_rpt_pub));
     pub_tx_list.insert(std::make_pair(DateTimeRptMsg::CAN_ID, date_time_rpt_pub));
 
-    headlight_set_cmd_sub = std::shared_ptr<ros::Subscriber>(new ros::Subscriber(n.subscribe("as_rx/headlight_cmd", 20, callback_headlight_set_cmd)));
-    horn_set_cmd_sub = std::shared_ptr<ros::Subscriber>(new ros::Subscriber(n.subscribe("as_rx/horn_cmd", 20, callback_horn_set_cmd)));
+    headlight_set_cmd_sub =
+      std::shared_ptr<ros::Subscriber>(new ros::Subscriber(n.subscribe("as_rx/headlight_cmd",
+                                                                       20,
+                                                                       callback_headlight_set_cmd)));
+    horn_set_cmd_sub =
+      std::shared_ptr<ros::Subscriber>(new ros::Subscriber(n.subscribe("as_rx/horn_cmd",
+                                                                       20,
+                                                                       callback_horn_set_cmd)));
 
     std::shared_ptr<LockedData> headlight_data(new LockedData);
     std::shared_ptr<LockedData> horn_data(new LockedData);
@@ -597,7 +601,8 @@ int main(int argc, char *argv[])
   if (veh_type == VehicleType::LEXUS_RX_450H)
   {
     headlight_rpt_pub = n.advertise<pacmod_msgs::SystemRptInt>("parsed_tx/headlight_rpt", 20);
-    parking_brake_status_rpt_pub = n.advertise<pacmod_msgs::ParkingBrakeStatusRpt>("parsed_tx/parking_brake_status_rpt", 20);
+    parking_brake_status_rpt_pub =
+      n.advertise<pacmod_msgs::ParkingBrakeStatusRpt>("parsed_tx/parking_brake_status_rpt", 20);
 
     pub_tx_list.insert(std::make_pair(HeadlightRptMsg::CAN_ID, headlight_rpt_pub));
     pub_tx_list.insert(std::make_pair(ParkingBrakeStatusRptMsg::CAN_ID, parking_brake_status_rpt_pub));
@@ -621,7 +626,7 @@ int main(int argc, char *argv[])
 
   // Set initial state
   set_enable(false);
-    
+
   // Start CAN sending thread.
   std::thread can_write_thread(can_write);
   // Start callback spinner.

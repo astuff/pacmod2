@@ -56,4 +56,5 @@ install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
 )
 
+set(ROSLINT_CPP_OPTS "--filter=-build/include_what_you_use,-build/namespaces,-build/c++11")
 roslint_cpp()

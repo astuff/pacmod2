@@ -1,5 +1,5 @@
-#ifndef PACMOD_COMMON_H
-#define PACMOD_COMMON_H
+#ifndef PACMOD_PACMOD_COMMON_H
+#define PACMOD_PACMOD_COMMON_H
 
 /*
 * Unpublished Copyright (c) 2009-2017 AutonomouStuff, LLC, All Rights Reserved.
@@ -34,4 +34,4 @@
 #include <pacmod_msgs/WheelSpeedRpt.h>
 #include <pacmod_msgs/YawRateRpt.h>
 
-#endif
+#endif  // PACMOD_PACMOD_COMMON_H
