@@ -10,18 +10,18 @@ notifications:
 
 env:
   matrix:
-    - ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:indigo-robot
-    - ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:indigo-robot
-    - ROS_DISTRO="kinetic" ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:kinetic-robot
-    - ROS_DISTRO="kinetic" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:kinetic-robot
-    - ROS_DISTRO="lunar" ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:lunar-robot
-    - ROS_DISTRO="lunar" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:lunar-robot
+    - ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:indigo-core
+    - ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:indigo-core
+    - ROS_DISTRO="kinetic" ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:kinetic-core
+    - ROS_DISTRO="kinetic" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:kinetic-core
+    - ROS_DISTRO="lunar" ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:lunar-core
+    - ROS_DISTRO="lunar" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:lunar-core
 
 matrix:
   allow_failures:
-    env: ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:indigo-robot
-    env: ROS_DISTRO="kinetic" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:kinetic-robot
-    env: ROS_DISTRO="lunar" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:lunar-robot
+    env: ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:indigo-core
+    env: ROS_DISTRO="kinetic" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:kinetic-core
+    env: ROS_DISTRO="lunar" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu UPSTREAM_WORKSPACE=file DOCKER_BASE_IMAGE=ros:lunar-core
 
 install:
   git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
