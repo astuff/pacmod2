@@ -1,0 +1,7 @@
+- git:
+    local-name: ros_canopen
+    uri: https://github.com/ros-industrial/ros_canopen
+    version: melodic-devel
+- git:
+    local-name: astuff_sensor_msgs
+    uri: https://github.com/astuff/astuff_sensor_msgs
