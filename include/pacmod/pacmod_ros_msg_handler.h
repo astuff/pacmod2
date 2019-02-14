@@ -8,7 +8,10 @@
 * See file LICENSE included with this software or go to https://opensource.org/licenses/MIT for full license details.
 */
 
-#include <pacmod_common.h>
+#include <pacmod/pacmod_common.h>
+
+#include <string>
+#include <vector>
 
 namespace AS
 {

@@ -23,7 +23,7 @@ catkin_package(CATKIN_DEPENDS
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include/${PROJECT_NAME}
+  include/
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -46,6 +46,9 @@ target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
 
+set(ROSLINT_CPP_OPTS "--filter=-build/namespaces,-build/c++11")
+roslint_cpp()
+
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
@@ -55,6 +58,3 @@ install(TARGETS ${PROJECT_NAME}
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
 )
-
-set(ROSLINT_CPP_OPTS "--filter=-build/include_what_you_use,-build/namespaces,-build/c++11")
-roslint_cpp()
