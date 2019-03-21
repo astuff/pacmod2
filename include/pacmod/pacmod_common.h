@@ -11,7 +11,7 @@
 #include <memory>
 #include <mutex>
 
-#include <pacmod_core.h>
+#include <pacmod/pacmod_core.h>
 #include <ros/ros.h>
 
 #include <pacmod_msgs/DateTimeRpt.h>

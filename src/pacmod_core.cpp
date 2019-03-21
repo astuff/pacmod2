@@ -5,7 +5,7 @@
 * See file LICENSE included with this software or go to https://opensource.org/licenses/MIT for full license details.
 */
 
-#include <pacmod_core.h>
+#include <pacmod/pacmod_core.h>
 
 using namespace AS::Drivers::PACMod;
 

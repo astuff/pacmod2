@@ -5,7 +5,7 @@
 * See file LICENSE included with this software or go to https://opensource.org/licenses/MIT for full license details.
 */
 
-#include <pacmod_ros_msg_handler.h>
+#include <pacmod/pacmod_ros_msg_handler.h>
 
 #include <string>
 #include <vector>
