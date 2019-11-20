@@ -1,51 +1,69 @@
-/*
-* Unpublished Copyright (c) 2009-2017 AutonomouStuff, LLC, All Rights Reserved.
-*
-* This file is part of the PACMod ROS 1.0 driver which is released under the MIT license.
-* See file LICENSE included with this software or go to https://opensource.org/licenses/MIT for full license details.
-*/
+// Copyright (c) 2019 AutonomouStuff, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
 #include <pacmod/pacmod_core.h>
 
-using namespace AS::Drivers::PACMod;
+namespace AS
+{
+namespace Drivers
+{
+namespace PACMod
+{
 
-const int64_t AS::Drivers::PACMod::TurnSignalCmdMsg::CAN_ID = 0x63;
-const int64_t AS::Drivers::PACMod::TurnSignalRptMsg::CAN_ID = 0x64;
-const int64_t AS::Drivers::PACMod::ShiftCmdMsg::CAN_ID = 0x65;
-const int64_t AS::Drivers::PACMod::ShiftRptMsg::CAN_ID = 0x66;
-const int64_t AS::Drivers::PACMod::AccelCmdMsg::CAN_ID = 0x67;
-const int64_t AS::Drivers::PACMod::AccelRptMsg::CAN_ID = 0x68;
-const int64_t AS::Drivers::PACMod::GlobalCmdMsg::CAN_ID = 0x69;
-const int64_t AS::Drivers::PACMod::GlobalRptMsg::CAN_ID = 0x6A;
-const int64_t AS::Drivers::PACMod::BrakeCmdMsg::CAN_ID = 0x6B;
-const int64_t AS::Drivers::PACMod::SteerCmdMsg::CAN_ID = 0x6D;
-const int64_t AS::Drivers::PACMod::BrakeRptMsg::CAN_ID = 0x6C;
-const int64_t AS::Drivers::PACMod::SteerRptMsg::CAN_ID = 0x6E;
-const int64_t AS::Drivers::PACMod::VehicleSpeedRptMsg::CAN_ID = 0x6F;
-const int64_t AS::Drivers::PACMod::BrakeMotorRpt1Msg::CAN_ID = 0x70;
-const int64_t AS::Drivers::PACMod::BrakeMotorRpt2Msg::CAN_ID = 0x71;
-const int64_t AS::Drivers::PACMod::BrakeMotorRpt3Msg::CAN_ID = 0x72;
-const int64_t AS::Drivers::PACMod::SteerMotorRpt1Msg::CAN_ID = 0x73;
-const int64_t AS::Drivers::PACMod::SteerMotorRpt2Msg::CAN_ID = 0x74;
-const int64_t AS::Drivers::PACMod::SteerMotorRpt3Msg::CAN_ID = 0x75;
-const int64_t AS::Drivers::PACMod::HeadlightCmdMsg::CAN_ID = 0x76;
-const int64_t AS::Drivers::PACMod::HeadlightRptMsg::CAN_ID = 0x77;
-const int64_t AS::Drivers::PACMod::HornCmdMsg::CAN_ID = 0x78;
-const int64_t AS::Drivers::PACMod::HornRptMsg::CAN_ID = 0x79;
-const int64_t AS::Drivers::PACMod::WheelSpeedRptMsg::CAN_ID = 0x7A;
-const int64_t AS::Drivers::PACMod::SteeringPIDRpt1Msg::CAN_ID = 0x7B;
-const int64_t AS::Drivers::PACMod::SteeringPIDRpt2Msg::CAN_ID = 0x7C;
-const int64_t AS::Drivers::PACMod::SteeringPIDRpt3Msg::CAN_ID = 0x7D;
-const int64_t AS::Drivers::PACMod::SteerRpt2Msg::CAN_ID = 0x7E;
-const int64_t AS::Drivers::PACMod::SteerRpt3Msg::CAN_ID = 0x7F;
-const int64_t AS::Drivers::PACMod::ParkingBrakeStatusRptMsg::CAN_ID = 0x80;
-const int64_t AS::Drivers::PACMod::YawRateRptMsg::CAN_ID = 0x81;
-const int64_t AS::Drivers::PACMod::LatLonHeadingRptMsg::CAN_ID = 0x82;
-const int64_t AS::Drivers::PACMod::DateTimeRptMsg::CAN_ID = 0x83;
-const int64_t AS::Drivers::PACMod::SteeringPIDRpt4Msg::CAN_ID = 0x84;
-const int64_t AS::Drivers::PACMod::WiperCmdMsg::CAN_ID = 0x90;
-const int64_t AS::Drivers::PACMod::WiperRptMsg::CAN_ID = 0x91;
-const int64_t AS::Drivers::PACMod::VinRptMsg::CAN_ID = 0xFF;
+const int64_t TurnSignalCmdMsg::CAN_ID = 0x63;
+const int64_t TurnSignalRptMsg::CAN_ID = 0x64;
+const int64_t ShiftCmdMsg::CAN_ID = 0x65;
+const int64_t ShiftRptMsg::CAN_ID = 0x66;
+const int64_t AccelCmdMsg::CAN_ID = 0x67;
+const int64_t AccelRptMsg::CAN_ID = 0x68;
+const int64_t GlobalCmdMsg::CAN_ID = 0x69;
+const int64_t GlobalRptMsg::CAN_ID = 0x6A;
+const int64_t BrakeCmdMsg::CAN_ID = 0x6B;
+const int64_t SteerCmdMsg::CAN_ID = 0x6D;
+const int64_t BrakeRptMsg::CAN_ID = 0x6C;
+const int64_t SteerRptMsg::CAN_ID = 0x6E;
+const int64_t VehicleSpeedRptMsg::CAN_ID = 0x6F;
+const int64_t BrakeMotorRpt1Msg::CAN_ID = 0x70;
+const int64_t BrakeMotorRpt2Msg::CAN_ID = 0x71;
+const int64_t BrakeMotorRpt3Msg::CAN_ID = 0x72;
+const int64_t SteerMotorRpt1Msg::CAN_ID = 0x73;
+const int64_t SteerMotorRpt2Msg::CAN_ID = 0x74;
+const int64_t SteerMotorRpt3Msg::CAN_ID = 0x75;
+const int64_t HeadlightCmdMsg::CAN_ID = 0x76;
+const int64_t HeadlightRptMsg::CAN_ID = 0x77;
+const int64_t HornCmdMsg::CAN_ID = 0x78;
+const int64_t HornRptMsg::CAN_ID = 0x79;
+const int64_t WheelSpeedRptMsg::CAN_ID = 0x7A;
+const int64_t SteeringPIDRpt1Msg::CAN_ID = 0x7B;
+const int64_t SteeringPIDRpt2Msg::CAN_ID = 0x7C;
+const int64_t SteeringPIDRpt3Msg::CAN_ID = 0x7D;
+const int64_t SteerRpt2Msg::CAN_ID = 0x7E;
+const int64_t SteerRpt3Msg::CAN_ID = 0x7F;
+const int64_t ParkingBrakeStatusRptMsg::CAN_ID = 0x80;
+const int64_t YawRateRptMsg::CAN_ID = 0x81;
+const int64_t LatLonHeadingRptMsg::CAN_ID = 0x82;
+const int64_t DateTimeRptMsg::CAN_ID = 0x83;
+const int64_t SteeringPIDRpt4Msg::CAN_ID = 0x84;
+const int64_t WiperCmdMsg::CAN_ID = 0x90;
+const int64_t WiperRptMsg::CAN_ID = 0x91;
+const int64_t VinRptMsg::CAN_ID = 0xFF;
 
 std::shared_ptr<PacmodTxMsg> PacmodTxMsg::make_message(const int64_t& can_id)
 {
@@ -514,3 +532,7 @@ void BrakeCmdMsg::encode(double brake_pct)
   data[0] = (raw_pct & 0xFF00) >> 8;
   data[1] = (raw_pct & 0x00FF);
 }
+
+}  // namespace PACMod
+}  // namespace Drivers
+}  // namespace AS
