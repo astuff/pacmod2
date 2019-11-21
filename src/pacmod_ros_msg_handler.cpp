@@ -1,16 +1,34 @@
-/*
-* Unpublished Copyright (c) 2009-2017 AutonomouStuff, LLC, All Rights Reserved.
-*
-* This file is part of the PACMod ROS 1.0 driver which is released under the MIT license.
-* See file LICENSE included with this software or go to https://opensource.org/licenses/MIT for full license details.
-*/
+// Copyright (c) 2019 AutonomouStuff, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
 #include <pacmod/pacmod_ros_msg_handler.h>
 
 #include <string>
 #include <vector>
 
-using namespace AS::Drivers::PACMod;
+namespace AS
+{
+namespace Drivers
+{
+namespace PACMod
+{
 
 LockedData::LockedData() :
   _data(),
@@ -478,3 +496,7 @@ std::vector<uint8_t> PacmodRxRosMsgHandler::unpackAndEncode(const int64_t& can_i
     return encoder.data;
   }
 }
+
+}  // namespace PACMod
+}  // namespace Drivers
+}  // namespace AS
