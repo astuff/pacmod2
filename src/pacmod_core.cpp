@@ -398,13 +398,13 @@ void SteeringPIDRpt1Msg::parse(uint8_t *in)
   dt = static_cast<double>(temp / 1000.0);
 
   temp = (static_cast<int16_t>(in[2]) << 8) | in[3];
-  Kp = static_cast<double>(temp / 1000.0);
+  kp = static_cast<double>(temp / 1000.0);
 
   temp = (static_cast<int16_t>(in[4]) << 8) | in[5];
-  Ki = static_cast<double>(temp / 1000.0);
+  ki = static_cast<double>(temp / 1000.0);
 
   temp = (static_cast<int16_t>(in[6]) << 8) | in[7];
-  Kd = static_cast<double>(temp / 1000.0);
+  kd = static_cast<double>(temp / 1000.0);
 }
 
 void SteeringPIDRpt2Msg::parse(uint8_t *in)
@@ -412,13 +412,13 @@ void SteeringPIDRpt2Msg::parse(uint8_t *in)
   int16_t temp;
 
   temp = (static_cast<int16_t>(in[0]) << 8) | in[1];
-  P_term = static_cast<double>(temp / 1000.0);
+  p_term = static_cast<double>(temp / 1000.0);
 
   temp = (static_cast<int16_t>(in[2]) << 8) | in[3];
-  I_term = static_cast<double>(temp / 1000.0);
+  i_term = static_cast<double>(temp / 1000.0);
 
   temp = (static_cast<int16_t>(in[4]) << 8) | in[5];
-  D_term = static_cast<double>(temp / 1000.0);
+  d_term = static_cast<double>(temp / 1000.0);
 
   temp = (static_cast<int16_t>(in[6]) << 8) | in[7];
   all_terms = static_cast<double>(temp / 1000.0);

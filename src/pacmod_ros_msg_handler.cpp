@@ -305,9 +305,9 @@ void PacmodTxRosMsgHandler::fillSteeringPIDRpt1(const std::shared_ptr<PacmodTxMs
   auto dc_parser = std::dynamic_pointer_cast<SteeringPIDRpt1Msg>(parser_class);
 
   new_msg->dt = dc_parser->dt;
-  new_msg->Kp = dc_parser->Kp;
-  new_msg->Ki = dc_parser->Ki;
-  new_msg->Kd = dc_parser->Kd;
+  new_msg->kp = dc_parser->kp;
+  new_msg->ki = dc_parser->ki;
+  new_msg->kd = dc_parser->kd;
 
   new_msg->header.frame_id = frame_id;
   new_msg->header.stamp = ros::Time::now();
@@ -319,9 +319,9 @@ void PacmodTxRosMsgHandler::fillSteeringPIDRpt2(const std::shared_ptr<PacmodTxMs
 {
   auto dc_parser = std::dynamic_pointer_cast<SteeringPIDRpt2Msg>(parser_class);
 
-  new_msg->P_term = dc_parser->P_term;
-  new_msg->I_term = dc_parser->I_term;
-  new_msg->D_term = dc_parser->D_term;
+  new_msg->p_term = dc_parser->p_term;
+  new_msg->i_term = dc_parser->i_term;
+  new_msg->d_term = dc_parser->d_term;
   new_msg->all_terms = dc_parser->all_terms;
 
   new_msg->header.frame_id = frame_id;
