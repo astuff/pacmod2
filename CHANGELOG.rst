@@ -2,8 +2,8 @@
 Changelog for package pacmod
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.1.0 (2020-02-10)
+------------------
 * Merge pull request `#14 <https://github.com/astuff/pacmod/issues/14>`_ from astuff/fix/updated_msgs
   URGENT: Fix message changes from pacmod_msgs.
 * Merge pull request `#13 <https://github.com/astuff/pacmod/issues/13>`_ from astuff/maint/code_cleanup
