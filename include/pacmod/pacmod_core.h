@@ -324,9 +324,9 @@ public:
   static const int64_t CAN_ID;
 
   double dt;
-  double Kp;
-  double Ki;
-  double Kd;
+  double kp;
+  double ki;
+  double kd;
 
   void parse(uint8_t *in);
 };
@@ -337,9 +337,9 @@ class SteeringPIDRpt2Msg :
 public:
   static const int64_t CAN_ID;
 
-  double P_term;
-  double I_term;
-  double D_term;
+  double p_term;
+  double i_term;
+  double d_term;
   double all_terms;
 
   void parse(uint8_t *in);
