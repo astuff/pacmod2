@@ -4,6 +4,27 @@ Changelog for package pacmod
 
 Forthcoming
 -----------
+* Merge pull request `#14 <https://github.com/astuff/pacmod/issues/14>`_ from astuff/fix/updated_msgs
+  URGENT: Fix message changes from pacmod_msgs.
+* Merge pull request `#13 <https://github.com/astuff/pacmod/issues/13>`_ from astuff/maint/code_cleanup
+  Formatting clean-up of code and updating of license headers.
+* Merge pull request `#11 <https://github.com/astuff/pacmod/issues/11>`_ from astuff/maint/roslint_cleanup
+  Removing roslint exception. Cleaning up include paths.
+* Merge pull request `#10 <https://github.com/astuff/pacmod/issues/10>`_ from astuff/maint/remove_redundant_folders
+  Moving all files up a directory, consistent with other packages.
+* Moving DBC to new repo. CI: Removing Indigo.
+* Merge pull request `#6 <https://github.com/astuff/pacmod/issues/6>`_ from astuff/maint/add_melodic_build
+  Maint/add melodic build
+* Allowed_failures wasn't working before.
+* Forgot to remove ROSINSTALL_FILENAME from allowed failures.
+* Removing ROSINSTALL_FILE as it isn't necessary with a version postfix.
+* Fixing ROSINSTALL_FILENAME in Travis.
+* Adding separate rosinstall files for lunar and melodic.
+* Adding melodic build to Travis.
+* Contributors: Daniel-Stanek, Joe Kale, Joshua Whitley, Nishanth Samala, Sam Rustan, Zach Oakes
+
+2.0.2 (2018-06-11)
+------------------
 * Merge pull request `#3 <https://github.com/astuff/ros_pacmod/issues/3>`_ from astuff/maint/adding_roslint
   Maint/adding roslint
 * Applying all recommended changes from roslint.
