@@ -28,6 +28,8 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <memory>
+#include <utility>
 
 #include <std_msgs/Int16.h>
 #include <std_msgs/Bool.h>
@@ -38,7 +40,7 @@ using namespace AS::Drivers::PACMod;  // NOLINT
 
 double last_global_rpt_msg_received = 0.0;
 const double watchdog_timeout = 0.3;
-std::string veh_type_string = "POLARIS_GEM";
+std::string veh_type_string = "POLARIS_GEM";  // NOLINT
 VehicleType veh_type = VehicleType::POLARIS_GEM;
 std::unordered_map<int64_t, ros::Publisher> pub_tx_list;
 PacmodTxRosMsgHandler handler;

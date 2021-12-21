@@ -20,6 +20,8 @@
 
 #include <pacmod/pacmod_core.h>
 
+#include <memory>
+
 namespace AS
 {
 namespace Drivers
