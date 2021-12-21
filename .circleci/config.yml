@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  melodic:
+  noetic:
     docker:
       - image: autonomoustuff/docker-builds:noetic-ros-base
     steps:
