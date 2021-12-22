@@ -11,20 +11,23 @@
   <arg name="kvaser_circuit_id" default="0" />
   <arg name="use_socketcan" default="false" />
   <arg name="socketcan_device" default="can0" />
+  <arg name="namespace" default="pacmod" />
 
-  <include file="$(find kvaser_interface)/launch/kvaser_can_bridge.launch" if="$(arg use_kvaser)">
-    <arg name="can_hardware_id" value="$(arg kvaser_hardware_id)" />
-    <arg name="can_circuit_id" value="$(arg kvaser_circuit_id)" />
-    <arg name="can_bit_rate" value="500000" />
-  </include>
+  <group ns="$(arg namespace)">
+    <include file="$(find kvaser_interface)/launch/kvaser_can_bridge.launch" if="$(arg use_kvaser)">
+      <arg name="can_hardware_id" value="$(arg kvaser_hardware_id)" />
+      <arg name="can_circuit_id" value="$(arg kvaser_circuit_id)" />
+      <arg name="can_bit_rate" value="500000" />
+    </include>
 
-  <node pkg="socketcan_bridge" type="socketcan_bridge_node" name="socketcan_bridge" if="$(arg use_socketcan)">
-    <param name="can_device" value="$(arg socketcan_device)" />
-    <remap from="received_messages" to="can_tx" />
-    <remap from="sent_messages" to="can_rx" />
-  </node>
+    <node pkg="socketcan_bridge" type="socketcan_bridge_node" name="socketcan_bridge" if="$(arg use_socketcan)">
+      <param name="can_device" value="$(arg socketcan_device)" />
+      <remap from="received_messages" to="can_tx" />
+      <remap from="sent_messages" to="can_rx" />
+    </node>
 
-  <node pkg="pacmod" type="pacmod" name="pacmod">
-    <param name="vehicle_type" value="$(arg pacmod_vehicle_type)" />
-  </node>  
+    <node pkg="pacmod" type="pacmod" name="pacmod">
+      <param name="vehicle_type" value="$(arg pacmod_vehicle_type)" />
+    </node>
+  </group>
 </launch>
