@@ -1,4 +1,4 @@
-# PACMod (Platform Actuation and Control MODule) ROS Driver #
+# PACMod2 (Platform Actuation and Control MODule) ROS Driver #
 
 [![CircleCI](https://circleci.com/gh/astuff/pacmod/tree/master.svg?style=svg)](https://circleci.com/gh/astuff/pacmod/tree/master)
 
@@ -16,7 +16,7 @@ Install pacmod using our debian repository:
 sudo apt install apt-transport-https
 sudo sh -c 'echo "deb [trusted=yes] https://s3.amazonaws.com/autonomoustuff-repo/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/autonomoustuff-public.list'
 sudo apt update
-sudo apt install ros-$ROS_DISTRO-pacmod
+sudo apt install ros-$ROS_DISTRO-pacmod2
 ```
 
 Note: Previously the pacmod driver was released via the ROS buildfarm.
