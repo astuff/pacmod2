@@ -2,8 +2,8 @@
 Changelog for package pacmod2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2022-01-05)
+------------------
 * Rename to pacmod2 (`#20 <https://github.com/astuff/pacmod/issues/20>`_)
 * Update README (`#18 <https://github.com/astuff/pacmod/issues/18>`_)
 * Noetic Updates (`#19 <https://github.com/astuff/pacmod/issues/19>`_)
