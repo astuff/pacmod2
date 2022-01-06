@@ -2,6 +2,13 @@
 Changelog for package pacmod2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.0.0 (2022-01-05)
+------------------
+* Rename to pacmod2 (`#20 <https://github.com/astuff/pacmod/issues/20>`_)
+* Update README (`#18 <https://github.com/astuff/pacmod/issues/18>`_)
+* Noetic Updates (`#19 <https://github.com/astuff/pacmod/issues/19>`_)
+* Contributors: icolwell-as
+
 2.1.0 (2020-02-10)
 ------------------
 * Merge pull request `#14 <https://github.com/astuff/pacmod/issues/14>`_ from astuff/fix/updated_msgs
