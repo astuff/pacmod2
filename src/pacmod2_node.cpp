@@ -397,7 +397,7 @@ void PACMod2Node::publish_cmds()
   while (rclcpp::ok() &&
     this->get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    auto next_time = std::chrono::steady_clock::now() + PACMod2Node::SEND_CMD_INTERVAL;
+    auto next_time = std::chrono::steady_clock::now() + SEND_CMD_INTERVAL;
 
     for (auto & cmd : can_subs_) {
       auto msg = std::make_unique<can_msgs::msg::Frame>();
