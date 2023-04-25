@@ -1,35 +1,43 @@
-version: 2
-jobs:
-  noetic:
-    docker:
-      - image: autonomoustuff/docker-builds:noetic-ros-base
+version: 2.1
+
+commands:
+  ros_build:
     steps:
       - checkout
       - run:
           name: Set Up Container
           command: |
-            apt-get update -qq
+            mkdir $CIRCLE_PROJECT_REPONAME
+            mv `find -maxdepth 1 -not -name . -not -name $CIRCLE_PROJECT_REPONAME` $CIRCLE_PROJECT_REPONAME/
+      - run:
+          name: Install Dependencies
+          command: |
             source /opt/ros/*/setup.bash
-            rosdep update && rosdep install --from-paths . --ignore-src -y
-            cd ..
-            catkin init
-            catkin config --extend /opt/ros/$ROS_DISTRO
+            apt update
+            rosdep update
+            rosdep install --from-paths . --ignore-src -y
       - run:
           name: Build
           command: |
+            source /opt/ros/*/setup.bash
             cd ..
-            catkin build
+            colcon build
       - run:
           name: Run Tests
           command: |
             source /opt/ros/*/setup.bash
             cd ..
-            catkin run_tests
-            catkin_test_results
+            colcon test --packages-select $CIRCLE_PROJECT_REPONAME
+            colcon test-result --verbose
+jobs:
+  foxy:
+    docker:
+      - image: autonomoustuff/docker-builds:foxy-ros-base
+    steps:
+      - ros_build
     working_directory: ~/src
 
 workflows:
-  version: 2
   ros_build:
     jobs:
-      - noetic
+      - foxy
