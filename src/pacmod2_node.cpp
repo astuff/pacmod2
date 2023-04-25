@@ -133,12 +133,7 @@ LNI::CallbackReturn PACMod2Node::on_configure(const lc::State & state)
       std::bind(&PACMod2Node::callback_turn_cmd, this, std::placeholders::_1)),
     std::shared_ptr<LockedData>(new LockedData(TurnSignalCmdMsg::DATA_LENGTH)));
 
-  // Need to initialize TurnSignalCmdMsg with non-0 starting value
-  //TurnSignalCmdMsg turn_encoder;
-  //turn_encoder.encode(false, false, false, false, pacmod2_msgs::msg::SystemCmdInt::TURN_NONE);
-  //can_subs_[TurnSignalCmdMsg::CAN_ID].second->setData(std::move(turn_encoder.data));
-
-  pub_thread_ = std::make_shared<std::thread>();
+  pub_thread_ = std::make_unique<std::thread>();
 
   return LNI::CallbackReturn::SUCCESS;
 }
@@ -156,7 +151,7 @@ LNI::CallbackReturn PACMod2Node::on_activate(const lc::State & state)
   pub_enabled_->on_activate();
   pub_all_system_statuses_->on_activate();
 
-  pub_thread_ = std::make_shared<std::thread>(std::bind(&PACMod2Node::publish_cmds, this));
+  pub_thread_ = std::make_unique<std::thread>(std::bind(&PACMod2Node::publish_cmds, this));
 
   return LNI::CallbackReturn::SUCCESS;
 }
@@ -402,7 +397,7 @@ void PACMod2Node::publish_cmds()
   while (rclcpp::ok() &&
     this->get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
   {
-    auto next_time = std::chrono::steady_clock::now() + SEND_CMD_INTERVAL;
+    auto next_time = std::chrono::steady_clock::now() + PACMod2Node::SEND_CMD_INTERVAL;
 
     for (auto & cmd : can_subs_) {
       auto msg = std::make_unique<can_msgs::msg::Frame>();
@@ -423,18 +418,6 @@ void PACMod2Node::publish_cmds()
     std::this_thread::sleep_until(next_time);
   }
 }
-
-
-// void PACMod2Node::set_enable(bool enable)
-// {
-//   if (enable) {
-//     current_data[0] |= 0x01;  // Set Enable True
-//   } else {
-//     current_data[0] &= 0xFE;  // Set Enable False
-//   }
-
-//   cmd.second.second->setData(std::move(current_data));
-// }
 
 }  // namespace pacmod2
 

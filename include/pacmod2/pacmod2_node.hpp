@@ -82,11 +82,9 @@ public:
 private:
   void initializeBrakeMotorRptApi();
   void initializeSteeringMotorRptApi();
-  //void initializeWiperApi();
   void initializeHeadlightApi();
   void initializeHornApi();
   void initializeWheelSpeedApi();
-  //void initializeParkingBrakeRptApi();
   void initializeHazardLightApi();
 
   void initializeApiForMsg(uint32_t msg_can_id);
@@ -119,7 +117,6 @@ private:
   }
 
   void publish_cmds();
-  //void set_enable(bool enable);
 
   static constexpr auto SEND_CMD_INTERVAL = std::chrono::milliseconds(33);
   static constexpr auto INTER_MSG_PAUSE = std::chrono::milliseconds(1);
@@ -141,7 +138,7 @@ private:
     std::pair<std::shared_ptr<rclcpp::SubscriptionBase>,
     std::shared_ptr<LockedData>>> can_subs_;
 
-  std::shared_ptr<std::thread> pub_thread_;
+  std::unique_ptr<std::thread> pub_thread_ = nullptr;
 };
 
 }  // namespace pacmod2
