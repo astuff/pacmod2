@@ -87,7 +87,7 @@ LNI::CallbackReturn PACMod2Node::on_configure(const lc::State & state)
     this->create_publisher<pacmod2_msgs::msg::VehicleSpeedRpt>("vehicle_speed_rpt", 20);
   can_pubs_[WheelSpeedRptMsg::CAN_ID] =
     this->create_publisher<pacmod2_msgs::msg::WheelSpeedRpt>("wheel_speed_rpt", 20);
-	 
+
   pub_enabled_ = this->create_publisher<std_msgs::msg::Bool>(
     "enabled", rclcpp::QoS(1).transient_local());
   pub_all_system_statuses_ = this->create_publisher<pacmod2_msgs::msg::AllSystemStatuses>(
@@ -102,13 +102,13 @@ LNI::CallbackReturn PACMod2Node::on_configure(const lc::State & state)
       "accel_cmd", 20,
       std::bind(&PACMod2Node::callback_accel_cmd, this, std::placeholders::_1)),
     std::shared_ptr<LockedData>(new LockedData(AccelCmdMsg::DATA_LENGTH)));
-	 
+
   can_subs_[GlobalCmdMsg::CAN_ID] = std::make_pair(
     this->create_subscription<pacmod2_msgs::msg::GlobalCmd>(
       "global_cmd", 20,
       std::bind(&PACMod2Node::callback_global_cmd, this, std::placeholders::_1)),
-    std::shared_ptr<LockedData>(new LockedData(GlobalCmdMsg::DATA_LENGTH)));  
-	
+    std::shared_ptr<LockedData>(new LockedData(GlobalCmdMsg::DATA_LENGTH)));
+
   can_subs_[BrakeCmdMsg::CAN_ID] = std::make_pair(
     this->create_subscription<pacmod2_msgs::msg::SystemCmdFloat>(
       "brake_cmd", 20,
@@ -342,7 +342,6 @@ void PACMod2Node::callback_can_tx(const can_msgs::msg::Frame::SharedPtr msg)
       auto enabled_msg = std::make_unique<std_msgs::msg::Bool>();
       enabled_msg->data = dc_parser->enabled;
       pub_enabled_->publish(std::move(enabled_msg));
-
     }
   }
 }

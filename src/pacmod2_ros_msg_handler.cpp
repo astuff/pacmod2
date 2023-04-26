@@ -67,7 +67,7 @@ void Pacmod2TxRosMsgHandler::fillAndPublish(
 
     fillSystemRptBool(parser_class, &new_msg, frame_id);
     dc_pub->publish(new_msg);
-  } else if (can_id == TurnSignalRptMsg::CAN_ID || can_id == ShiftRptMsg::CAN_ID ||
+  } else if (can_id == TurnSignalRptMsg::CAN_ID || can_id == ShiftRptMsg::CAN_ID ||  // NOLINT
     can_id == HeadlightRptMsg::CAN_ID)
   {
     pacmod2_msgs::msg::SystemRptInt new_msg;
@@ -160,7 +160,7 @@ void Pacmod2TxRosMsgHandler::fillSystemRptInt(
   const std::string & frame_id)
 {
   auto dc_parser = std::dynamic_pointer_cast<SystemRptIntMsg>(parser_class);
-  
+
   new_msg->manual_input = dc_parser->manual_input;
   new_msg->command = dc_parser->command;
   new_msg->output = dc_parser->output;
@@ -281,14 +281,13 @@ std::vector<uint8_t> Pacmod2RxRosMsgHandler::unpackAndEncode(
   const uint32_t & can_id,
   const pacmod2_msgs::msg::GlobalCmd::SharedPtr & msg)
 {
-
   if (can_id == GlobalCmdMsg::CAN_ID) {
     GlobalCmdMsg encoder;
-	encoder.encode(
-		msg->enable,
-		msg->clear_override,
-		msg->ignore_override);
-	return encoder.data;
+    encoder.encode(
+      msg->enable,
+      msg->clear_override,
+      msg->ignore_override);
+    return encoder.data;
   } else {
     std::vector<uint8_t> bad_id;
     bad_id.assign(8, 0);
@@ -339,7 +338,6 @@ std::vector<uint8_t> Pacmod2RxRosMsgHandler::unpackAndEncode(
   const uint32_t & can_id,
   const pacmod2_msgs::msg::SystemCmdInt::SharedPtr & msg)
 {
-
   if (can_id == HeadlightCmdMsg::CAN_ID) {
     HeadlightCmdMsg encoder;
     encoder.encode(msg->command);

@@ -116,8 +116,8 @@ std::shared_ptr<Pacmod2TxMsg> Pacmod2TxMsg::make_message(const uint32_t & can_id
       break;
     case WheelSpeedRptMsg::CAN_ID:
       return std::shared_ptr<Pacmod2TxMsg>(new WheelSpeedRptMsg);
-      break;    
-	  default:
+      break;
+      default:
       return nullptr;
   }
 }
