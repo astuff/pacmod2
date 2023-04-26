@@ -58,7 +58,7 @@ void Pacmod2TxRosMsgHandler::fillAndPublish(
   const std::shared_ptr<Pacmod2TxMsg> & parser_class)
 {
   if (can_id == HornRptMsg::CAN_ID ||
-  can_id == ParkingBrakeRptMsg::CAN_ID)
+    can_id == ParkingBrakeRptMsg::CAN_ID)
   {
     pacmod2_msgs::msg::SystemRptBool new_msg;
     auto dc_pub =
