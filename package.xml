@@ -1,20 +1,29 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>pacmod2</name>
-  <version>3.0.0</version>
-  <description>AutonomouStuff PACMod driver package</description>
-  <license>MIT</license>
-
+  <version>2003.1.0</version>
+  <description>AutonomouStuff PACMod v2 Driver Package</description>
   <maintainer email="software@autonomoustuff.com">AutonomouStuff Software Team</maintainer>
+  <license>MIT</license>
+  <url type="repository">https://github.com/astuff/pacmod2</url>
+  <url type="bugtracker">https://github.com/astuff/pacmod2/issues</url>
   <author email="jdriscoll@autonomoustuff.com">Joe Driscoll</author>
   <author email="jwhitley@autonomoustuff.com">Josh Whitley</author>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <build_depend>roslint</build_depend>
-
-  <depend>roscpp</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>rclcpp_lifecycle</depend>
   <depend>std_msgs</depend>
-  <depend>pacmod_msgs</depend>
+  <depend>pacmod2_msgs</depend>
   <depend>can_msgs</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

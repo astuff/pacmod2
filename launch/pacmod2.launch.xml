@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="use_kvaser" default="false" />
+  <arg name="kvaser_hardware_id" default="12345" />
+  <arg name="kvaser_circuit_id" default="0" />
+  <arg name="use_socketcan" default="true" />
+  <arg name="socketcan_device" default="can0" />
+  <arg name="namespace" default="pacmod" />
+
+  <group>
+    <push-ros-namespace namespace="$(var namespace)" />
+
+    <group if="$(var use_kvaser)">
+      <include file="$(find-pkg-share kvaser_interface)/launch/kvaser_bridge.launch.xml">
+        <arg name="hardware_id" value="$(var kvaser_hardware_id)" />
+        <arg name="circuit_id" value="$(var kvaser_circuit_id)" />
+        <arg name="bit_rate" value="500000" />
+      </include>
+
+      <node pkg="pacmod2" exec="pacmod2_driver" name="pacmod" output="screen" />
+    </group>
+
+    <group if="$(var use_socketcan)">
+      <include file="$(find-pkg-share ros2_socketcan)/launch/socket_can_bridge.launch.xml">
+        <arg name="interface" value="$(var socketcan_device)" />
+      </include>
+
+      <node pkg="pacmod2" exec="pacmod2_driver" name="pacmod" output="screen">
+        <remap from="can_tx" to="from_can_bus" />
+        <remap from="can_rx" to="to_can_bus" />
+      </node>
+    </group>
+  </group>
+</launch>

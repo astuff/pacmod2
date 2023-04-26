@@ -18,30 +18,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef PACMOD_PACMOD_COMMON_H
-#define PACMOD_PACMOD_COMMON_H
+#ifndef PACMOD2__PACMOD2_COMMON_HPP_
+#define PACMOD2__PACMOD2_COMMON_HPP_
 
-#include <pacmod/pacmod_core.h>
-#include <ros/ros.h>
+#include "pacmod2/pacmod2_core.hpp"
 
-#include <pacmod_msgs/DateTimeRpt.h>
-#include <pacmod_msgs/GlobalRpt.h>
-#include <pacmod_msgs/LatLonHeadingRpt.h>
-#include <pacmod_msgs/MotorRpt1.h>
-#include <pacmod_msgs/MotorRpt2.h>
-#include <pacmod_msgs/MotorRpt3.h>
-#include <pacmod_msgs/PacmodCmd.h>
-#include <pacmod_msgs/ParkingBrakeStatusRpt.h>
-#include <pacmod_msgs/PositionWithSpeed.h>
-#include <pacmod_msgs/SteeringPIDRpt1.h>
-#include <pacmod_msgs/SteeringPIDRpt2.h>
-#include <pacmod_msgs/SteeringPIDRpt3.h>
-#include <pacmod_msgs/SteeringPIDRpt4.h>
-#include <pacmod_msgs/SystemRptFloat.h>
-#include <pacmod_msgs/SystemRptInt.h>
-#include <pacmod_msgs/VehicleSpeedRpt.h>
-#include <pacmod_msgs/VinRpt.h>
-#include <pacmod_msgs/WheelSpeedRpt.h>
-#include <pacmod_msgs/YawRateRpt.h>
+#include <rclcpp/rclcpp.hpp>
 
-#endif  // PACMOD_PACMOD_COMMON_H
+#include <pacmod2_msgs/msg/system_cmd_bool.hpp>
+#include <pacmod2_msgs/msg/system_cmd_float.hpp>
+#include <pacmod2_msgs/msg/system_cmd_int.hpp>
+#include <pacmod2_msgs/msg/global_rpt.hpp>
+#include <pacmod2_msgs/msg/global_cmd.hpp>
+#include <pacmod2_msgs/msg/all_system_statuses.hpp>
+#include <pacmod2_msgs/msg/motor_rpt1.hpp>
+#include <pacmod2_msgs/msg/motor_rpt2.hpp>
+#include <pacmod2_msgs/msg/motor_rpt3.hpp>
+#include <pacmod2_msgs/msg/position_with_speed.hpp>
+#include <pacmod2_msgs/msg/system_rpt_bool.hpp>
+#include <pacmod2_msgs/msg/system_rpt_float.hpp>
+#include <pacmod2_msgs/msg/system_rpt_int.hpp>
+#include <pacmod2_msgs/msg/vehicle_speed_rpt.hpp>
+#include <pacmod2_msgs/msg/wheel_speed_rpt.hpp>
+
+#endif  // PACMOD2__PACMOD2_COMMON_HPP_
