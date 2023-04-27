@@ -30,9 +30,9 @@ commands:
             colcon test --packages-select $CIRCLE_PROJECT_REPONAME
             colcon test-result --verbose
 jobs:
-  foxy:
+  humble:
     docker:
-      - image: autonomoustuff/docker-builds:foxy-ros-base
+      - image: autonomoustuff/docker-builds:humble-ros-base
     steps:
       - ros_build
     working_directory: ~/src
@@ -40,4 +40,4 @@ jobs:
 workflows:
   ros_build:
     jobs:
-      - foxy
+      - humble
