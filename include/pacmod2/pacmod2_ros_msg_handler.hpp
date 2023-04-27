@@ -21,11 +21,11 @@
 #ifndef PACMOD2__PACMOD2_ROS_MSG_HANDLER_HPP_
 #define PACMOD2__PACMOD2_ROS_MSG_HANDLER_HPP_
 
-#include <rclcpp_lifecycle/lifecycle_publisher.hpp>
-
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <rclcpp_lifecycle/lifecycle_publisher.hpp>
 
 #include "pacmod2/pacmod2_common.hpp"
 

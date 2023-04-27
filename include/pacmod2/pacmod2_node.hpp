@@ -21,12 +21,6 @@
 #ifndef PACMOD2__PACMOD2_NODE_HPP_
 #define PACMOD2__PACMOD2_NODE_HPP_
 
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_lifecycle/lifecycle_node.hpp>
-#include <can_msgs/msg/frame.hpp>
-#include <std_msgs/msg/bool.hpp>
-#include <std_msgs/msg/float64.hpp>
-
 #include <chrono>
 #include <map>
 #include <memory>
@@ -35,6 +29,12 @@
 #include <tuple>
 #include <utility>
 #include <unordered_map>
+
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_lifecycle/lifecycle_node.hpp>
+#include <can_msgs/msg/frame.hpp>
+#include <std_msgs/msg/bool.hpp>
+#include <std_msgs/msg/float64.hpp>
 
 #include "pacmod2/pacmod2_common.hpp"
 #include "pacmod2/pacmod2_ros_msg_handler.hpp"
