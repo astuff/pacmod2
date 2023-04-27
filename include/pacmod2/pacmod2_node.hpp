@@ -128,7 +128,7 @@ private:
 
   std::shared_ptr<rclcpp::TimerBase> system_statuses_timer_;
   std::shared_ptr<lc::LifecyclePublisher<can_msgs::msg::Frame>> pub_can_rx_;
-  std::unordered_map<unsigned int, std::shared_ptr<lc::LifecyclePublisherInterface>> can_pubs_;
+  std::unordered_map<unsigned int, std::shared_ptr<lc::ManagedEntityInterface>> can_pubs_;
   std::shared_ptr<lc::LifecyclePublisher<std_msgs::msg::Bool>> pub_enabled_;
   std::shared_ptr<lc::LifecyclePublisher<
       pacmod2_msgs::msg::AllSystemStatuses>> pub_all_system_statuses_;

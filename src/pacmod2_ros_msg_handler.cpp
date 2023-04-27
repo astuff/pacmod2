@@ -54,7 +54,7 @@ void LockedData::setData(std::vector<unsigned char> && new_data)
 void Pacmod2TxRosMsgHandler::fillAndPublish(
   const uint32_t & can_id,
   const std::string & frame_id,
-  const std::shared_ptr<lc::LifecyclePublisherInterface> & pub,
+  const std::shared_ptr<lc::ManagedEntityInterface> & pub,
   const std::shared_ptr<Pacmod2TxMsg> & parser_class)
 {
   if (can_id == HornRptMsg::CAN_ID ||
