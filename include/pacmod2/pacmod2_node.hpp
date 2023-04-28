@@ -21,12 +21,6 @@
 #ifndef PACMOD2__PACMOD2_NODE_HPP_
 #define PACMOD2__PACMOD2_NODE_HPP_
 
-#include <rclcpp/rclcpp.hpp>
-#include <rclcpp_lifecycle/lifecycle_node.hpp>
-#include <can_msgs/msg/frame.hpp>
-#include <std_msgs/msg/bool.hpp>
-#include <std_msgs/msg/float64.hpp>
-
 #include <chrono>
 #include <map>
 #include <memory>
@@ -35,6 +29,12 @@
 #include <tuple>
 #include <utility>
 #include <unordered_map>
+
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_lifecycle/lifecycle_node.hpp>
+#include <can_msgs/msg/frame.hpp>
+#include <std_msgs/msg/bool.hpp>
+#include <std_msgs/msg/float64.hpp>
 
 #include "pacmod2/pacmod2_common.hpp"
 #include "pacmod2/pacmod2_ros_msg_handler.hpp"
@@ -128,7 +128,7 @@ private:
 
   std::shared_ptr<rclcpp::TimerBase> system_statuses_timer_;
   std::shared_ptr<lc::LifecyclePublisher<can_msgs::msg::Frame>> pub_can_rx_;
-  std::unordered_map<unsigned int, std::shared_ptr<lc::LifecyclePublisherInterface>> can_pubs_;
+  std::unordered_map<unsigned int, std::shared_ptr<lc::ManagedEntityInterface>> can_pubs_;
   std::shared_ptr<lc::LifecyclePublisher<std_msgs::msg::Bool>> pub_enabled_;
   std::shared_ptr<lc::LifecyclePublisher<
       pacmod2_msgs::msg::AllSystemStatuses>> pub_all_system_statuses_;

@@ -2,6 +2,11 @@
 Changelog for package pacmod2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2003.1.1 (2023-04-27)
+------------------
+* Humble Updates 
+* Contributors: cullenstoneAS
+
 3.0.0 (2022-01-05)
 ------------------
 * Rename to pacmod2 (`#20 <https://github.com/astuff/pacmod/issues/20>`_)

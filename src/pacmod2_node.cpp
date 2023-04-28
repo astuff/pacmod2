@@ -18,8 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <lifecycle_msgs/msg/state.hpp>
-
 #include <chrono>
 #include <iostream>
 #include <memory>
@@ -27,6 +25,8 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
+#include <lifecycle_msgs/msg/state.hpp>
 
 #include "pacmod2/pacmod2_node.hpp"
 

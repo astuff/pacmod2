@@ -18,11 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <memory>
+
 #include <rclcpp/rclcpp.hpp>
 #include <lifecycle_msgs/msg/state.hpp>
 #include <lifecycle_msgs/msg/transition.hpp>
-
-#include <memory>
 
 #include "pacmod2/pacmod2_node.hpp"
 
